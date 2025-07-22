@@ -1,4 +1,5 @@
 ﻿using DatabaseAccessLayer.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
@@ -16,11 +17,13 @@ namespace MAP.Options
 
             builder.HasOne(x => x.Current)
                    .WithMany()
-                   .HasForeignKey(x => x.CurrentId);
+                   .HasForeignKey(x => x.CurrentId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(x => x.CustomerSupplier)
                    .WithMany()
-                   .HasForeignKey(x => x.CustomerSupplierId);
+                   .HasForeignKey(x => x.CustomerSupplierId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 
