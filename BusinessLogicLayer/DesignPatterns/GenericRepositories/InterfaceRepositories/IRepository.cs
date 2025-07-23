@@ -1,4 +1,5 @@
 ﻿using DatabaseAccessLayer.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessLogicLayer.DesignPattern.GenericRepository.IntRep
+namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories
 {
     public interface IRepository<T> where T : BaseEntity
     {
@@ -36,6 +37,7 @@ namespace BusinessLogicLayer.DesignPattern.GenericRepository.IntRep
         T FirstOrDefault(Expression<Func<T, bool>> expression); // İlk uyumlu kayıt
         int Count(Expression<Func<T, bool>> expression);     // Kaç kayıt var?
         IQueryable<X> Select<X>(Expression<Func<T, X>> selector); // DTO'ya dönüştür
+        
 
 
     }

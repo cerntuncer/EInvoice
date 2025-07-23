@@ -12,11 +12,10 @@ namespace DatabaseAccessLayer.Entities
     [Table("Users")]
     public class User :BaseEntity
     {
-        public UserStatus Status { get; set; }
+        public Status Status { get; set; }
         public CustomerOrSupplierType Type { get; set; }
         public long PersonId {  get; set; }
         [ForeignKey("PersonId")]
-        public Person Person { get; set; }
         public ICollection<Current> Current { get; set; } = new List<Current>();
 
     }

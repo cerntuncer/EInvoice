@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DatabaseAccessLayer.Enumerations
 {
-    public enum UserStatus
+    public enum Status 
     {
         Passive = 0,
         Active = 1

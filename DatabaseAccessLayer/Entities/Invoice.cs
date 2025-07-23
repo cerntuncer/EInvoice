@@ -23,5 +23,6 @@ namespace DatabaseAccessLayer.Entities
         [ForeignKey("CustomerSupplierId")]
         public CustomerSupplier CustomerSupplier { get; set; } 
         public ICollection<LineOfInvoice> LineOfInvoices { get; set; } = new List<LineOfInvoice>();
+        public Status Status { get; set; }
     }
 }

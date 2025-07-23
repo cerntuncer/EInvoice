@@ -11,8 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DesignPattern\GenericRepository\BaseRep\" />
-    <Folder Include="DesignPattern\GenericRepository\ConcRep\" />
+    <Folder Include="DesignPatternss\GenericRepositories\ConcreteRepositories\" />
   </ItemGroup>
 
   <ItemGroup>

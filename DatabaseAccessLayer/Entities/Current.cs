@@ -25,7 +25,8 @@ namespace DatabaseAccessLayer.Entities
         public long UserId { get; set; }
         [ForeignKey("UserId")]
         public User User { get; set; }
-       
+        public Status Status { get; set; }
+
 
     }
 }

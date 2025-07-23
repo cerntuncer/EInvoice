@@ -1,4 +1,5 @@
-﻿using DatabaseAccessLayer.Models;
+﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace DatabaseAccessLayer.Entities
@@ -18,5 +19,6 @@ namespace DatabaseAccessLayer.Entities
 
         [ForeignKey("CurrentId")]
         public Current Current { get; set; }
+        public Status Status { get; set; }
     }
 }

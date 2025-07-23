@@ -1,4 +1,5 @@
-﻿using DatabaseAccessLayer.Models;
+﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -19,5 +20,6 @@ namespace DatabaseAccessLayer.Entities
 
         [ForeignKey("InvoiceID")]
         public Invoice Invoice { get; set; }
+        public Status Status { get; set; }
     }
 }
