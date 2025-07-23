@@ -13,7 +13,7 @@ namespace DatabaseAccessLayer.Entities
     public class CustomerSupplier : BaseEntity
     {
         public CustomerOrSupplierType Type { get; set; }
-        public long PersonId {  get; set; }
+        public long PersonId {  get; set; } 
         [ForeignKey("PersonId")]
         public Person Person { get; set; }
 

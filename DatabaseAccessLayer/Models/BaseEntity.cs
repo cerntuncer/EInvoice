@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DatabaseAccessLayer.Enumerations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,6 @@ namespace DatabaseAccessLayer.Models
        
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
+        public Status Status { get; set; }
     }
 }

@@ -9,6 +9,7 @@ namespace DatabaseAccessLayer.Enumerations
     public enum Status 
     {
         Passive = 0,
-        Active = 1
+        Active = 1,
+        
     }
 }

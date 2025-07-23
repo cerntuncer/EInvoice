@@ -7,11 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+    <Compile Remove="DesignPatternss\**" />
+    <EmbeddedResource Remove="DesignPatternss\**" />
+    <None Remove="DesignPatternss\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DesignPatternss\GenericRepositories\ConcreteRepositories\" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
   </ItemGroup>
 
   <ItemGroup>

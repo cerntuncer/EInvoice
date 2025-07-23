@@ -2,6 +2,7 @@
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.DesignPatterns.SingletonPattern;
 using DatabaseAccessLayer.Contexts;
+using DatabaseAccessLayer.Enumerations;
 using DatabaseAccessLayer.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System;
@@ -46,93 +47,144 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
 
         public int Count(Expression<Func<T, bool>> expression)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Count(expression);
         }
 
         public void Delete(T item)
         {
-           //delete aslında veriyi yok etmek değil pasife çekmek bu yüzden durumunu değiştirecez.
-           
+            //delete aslında veriyi yok etmek değil pasife çekmek bu yüzden durumunu değiştirecez.
+            item.Status = Status.Passive;
+            item.UpdatedDate = DateTime.Now;
+            _db.Set<T>().Update(item);
+            Save();
+
+
         }
 
         public void DeleteRange(List<T> list)
         {
-            throw new NotImplementedException();
+            foreach (var item in list)
+            {
+                item.Status = Status.Passive;
+                item.UpdatedDate = DateTime.Now;
+            }
+            _db.Set<T>().UpdateRange(list);
+            Save();
         }
+        
 
         public void Destroy(T item)
         {
-            throw new NotImplementedException();
+           _db.Set<T>().Remove(item);
+            Save();
+
         }
 
         public void DestroyRange(List<T> list)
         {
-            throw new NotImplementedException();
+            _db.Set<T>().RemoveRange(list);
+            Save();
         }
 
         public T Find(long id)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Find(id);
+
         }
 
         public T FirstOrDefault(Expression<Func<T, bool>> expression)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().FirstOrDefault(expression);
         }
 
         public List<T> GetActives()
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Where(x => x.Status == Status.Active).ToList();
         }
 
         public List<T> GetAll()
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().ToList();
         }
 
         public T GetById(long id)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().FirstOrDefault(x => x.Id == id);
         }
 
         public List<T> GetDeleteds()
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Where(x => x.Status == Status.Passive).ToList();
         }
-
         public List<T> GetModifieds()
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Where(x => x.UpdatedDate != null).ToList();
+
         }
 
         public IQueryable<X> Select<X>(Expression<Func<T, X>> selector)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Select(selector);
+
         }
 
         public void SetActive(T item)
         {
-            throw new NotImplementedException();
+            if (item.Status != Status.Active)
+            {
+                item.Status = Status.Active;
+                item.UpdatedDate = DateTime.UtcNow;
+                Update(item);
+            }
+
         }
 
         public void SetPassive(T item)
         {
-            throw new NotImplementedException();
+            if (item.Status != Status.Passive)
+            {
+                item.Status = Status.Passive;
+                item.UpdatedDate = DateTime.UtcNow;
+                Update(item);
+            }
+
         }
 
         public void Update(T item)
         {
-            throw new NotImplementedException();
+            var existingItem = _db.Set<T>().Find(item.Id);
+
+            if (existingItem != null)
+            {
+                // Status değiştiyse güncelleme tarihi ver
+                if (existingItem.Status != item.Status)
+                {
+                    item.UpdatedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    // Diğer alanlarda değişiklik varsa yine UpdatedDate verilebilir
+                    // Bu kısmı senin projene göre kontrol et
+                }
+
+                _db.Entry(existingItem).CurrentValues.SetValues(item);
+                Save();
+            }
         }
 
         public void UpdateRange(List<T> list)
         {
-            throw new NotImplementedException();
+            foreach (var item in list)
+            {
+                item.UpdatedDate = DateTime.UtcNow;
+                _db.Set<T>().Update(item);
+            }
+            Save();
         }
 
         public List<T> Where(Expression<Func<T, bool>> expression)
         {
-            throw new NotImplementedException();
+            return _db.Set<T>().Where(expression).ToList();
         }
     }
 
