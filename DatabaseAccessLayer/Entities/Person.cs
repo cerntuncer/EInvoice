@@ -16,7 +16,6 @@ namespace DatabaseAccessLayer.Entities
         [MaxLength(150)]
         public string TaxOffice { get; set; }
         public PersonType Type { get; set; }
-        public Status Status { get; set; }
         public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }
