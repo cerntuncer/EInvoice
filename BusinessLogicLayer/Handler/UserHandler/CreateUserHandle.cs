@@ -1,44 +1,46 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
-using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
-using BusinessLogicLayer.Handler.PersonHandler;
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BusinessLogicLayer.Handler.UserHandler
 {
     public class CreateUserHandle : IRequestHandler<CreateUserHandleRequest, CreateUserHandleResponse>
     {
-        private readonly UserRepository _userRepository;
-        private readonly PersonRepository _personRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IPersonRepository _personRepository;
 
-        public CreateUserHandle()
+        // DI constructor: concrete sınıf değil interface alıyoruz
+        public CreateUserHandle(IUserRepository userRepository,
+                                IPersonRepository personRepository)
         {
-            _userRepository = new UserRepository();
-            _personRepository = new PersonRepository();
+            _userRepository = userRepository;
+            _personRepository = personRepository;
         }
-        async Task<CreateUserHandleResponse> IRequestHandler<CreateUserHandleRequest, CreateUserHandleResponse>.Handle(CreateUserHandleRequest request, CancellationToken cancellationToken)
+
+        public async Task<CreateUserHandleResponse> Handle(CreateUserHandleRequest request,
+                                                           CancellationToken cancellationToken)
         {
             string message = null;
-            if (request == null)
-                message = "Request Boş Olamaz";
 
-            // UserType kontrolü (enum değerinin geçerli olup olmadığını kontrol edebilirsin)
+            if (request == null)
+                message = "Request boş olamaz.";
+
             else if (!Enum.IsDefined(typeof(UserType), request.Type))
-                message = "Kullanıcı Tipi Uyumlu Değildir.";
-            else if(request.PersonId == null)
+                message = "Kullanıcı tipi geçersiz.";
+
+            else if (request.PersonId <= 0)
+                message = "PersonId geçersiz.";
+
+            else
             {
-                message = "Kişi Id Null Olamaz.";
-            }
-            var data = _personRepository.Find(request.PersonId);
-            if(data == null)
-            {
-                message = "Kişi Id Bulunamadı.";
+                var person = _personRepository.Find(request.PersonId);
+
+                if (person == null)
+                    message = "PersonId bulunamadı.";
+                else if (person.Status != Status.Active)
+                    message = "Pasif kişiye kullanıcı atanamaz.";
             }
 
             if (message != null)
@@ -49,19 +51,19 @@ namespace BusinessLogicLayer.Handler.UserHandler
                     Error = true
                 };
             }
-            // Kişi oluşturma
+
             var user = new User
             {
                 Type = request.Type,
                 PersonId = request.PersonId,
-                Status = request.Status,
+                Status = request.Status
             };
 
             _userRepository.Add(user);
 
             return new CreateUserHandleResponse
             {
-                Message = "Kullanıcı Oluşturuldu",
+                Message = "Kullanıcı oluşturuldu.",
                 Error = false
             };
         }

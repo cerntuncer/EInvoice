@@ -1,13 +1,6 @@
-﻿using BusinessLogicLayer.Handler.UserHandler;
-using DatabaseAccessLayer.Entities;
-using DatabaseAccessLayer.Enumerations;
+﻿using DatabaseAccessLayer.Enumerations;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BusinessLogicLayer.Handler.CustomerSupplierHandler
 {

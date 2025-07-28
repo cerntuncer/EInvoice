@@ -1,21 +1,19 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BusinessLogicLayer.Handler.AddressHandler
 {
     public class CreateAddressHandle : IRequestHandler<CreateAddressHandleRequest, CreateAddressHandleResponse>
     {
-        private readonly AddressRepository _addressRepository;
-        private readonly PersonRepository _personRepository;
+        private readonly IAddressRepository _addressRepository;
+        private readonly IPersonRepository _personRepository;
 
-        public CreateAddressHandle()
+        public CreateAddressHandle(IAddressRepository addressRepository, IPersonRepository personRepository)
         {
-            _addressRepository = new AddressRepository();
-            _personRepository = new PersonRepository();
+            _addressRepository = addressRepository;
+            _personRepository = personRepository;
         }
 
         public async Task<CreateAddressHandleResponse> Handle(CreateAddressHandleRequest request, CancellationToken cancellationToken)
