@@ -16,10 +16,11 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
 {
     public abstract class BaseRepositoriesository<T> : IRepository<T> where T : BaseEntity
     {
-        MyContext _db;
-        public BaseRepositoriesository()
+        protected readonly MyContext _db;
+
+        public BaseRepositoriesository(MyContext db)
         {
-            _db=DbTool.DbInstance;
+            _db = db;
         }
 
         void Save()
@@ -154,22 +155,10 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
         {
             var existingItem = _db.Set<T>().Find(item.Id);
 
-            if (existingItem != null)
-            {
-                // Status değiştiyse güncelleme tarihi ver
-                if (existingItem.Status != item.Status)
-                {
-                    item.UpdatedDate = DateTime.UtcNow;
-                }
-                else
-                {
-                    // Diğer alanlarda değişiklik varsa yine UpdatedDate verilebilir
-                    // Bu kısmı senin projene göre kontrol et
-                }
-
-                _db.Entry(existingItem).CurrentValues.SetValues(item);
-                Save();
-            }
+            item.UpdatedDate = DateTime.UtcNow;       
+            _db.Set<T>().Update(item);                  
+            Save();                                     
+        
         }
 
         public void UpdateRange(List<T> list)

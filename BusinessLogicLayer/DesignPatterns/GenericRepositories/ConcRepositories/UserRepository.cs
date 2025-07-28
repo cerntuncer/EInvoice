@@ -1,13 +1,12 @@
-﻿using DatabaseAccessLayer.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using DatabaseAccessLayer.Contexts;
+using DatabaseAccessLayer.Entities;
 
 namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories
 {
-    public class UserRepository : GenericRepositories.BaseRepositories.BaseRepositoriesository<User>
+    public class UserRepository : BaseRepositoriesository<User>, IUserRepository
     {
+        public UserRepository(MyContext db) : base(db) { }
     }
 }

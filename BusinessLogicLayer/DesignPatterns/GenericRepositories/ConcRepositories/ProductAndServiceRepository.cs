@@ -1,14 +1,9 @@
-﻿
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using DatabaseAccessLayer.Contexts;
 using DatabaseAccessLayer.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories
+public class ProductAndServiceRepository : BaseRepositoriesository<ProductAndService>, IProductAndServiceRepository
 {
-    public class ProductAndServiceRepository : GenericRepositories.BaseRepositories.BaseRepositoriesository<ProductAndService>
-    {
-    }
+    public ProductAndServiceRepository(MyContext db) : base(db) { }
 }

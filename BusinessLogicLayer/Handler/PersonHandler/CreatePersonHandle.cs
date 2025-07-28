@@ -57,6 +57,7 @@ namespace BusinessLogicLayer.Handler.PersonHandler
                 IdentityNumber = request.IdentityNumber,
                 TaxOffice = request.TaxOffice,
                 Type = request.Type,
+                Status = request.Status
             };
 
              _repository.Add(person);

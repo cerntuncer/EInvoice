@@ -28,7 +28,7 @@ namespace BusinessLogicLayer.Handler.UserHandler
             if (request == null)
                 message = "Request Boş Olamaz";
 
-            // PersonType kontrolü (enum değerinin geçerli olup olmadığını kontrol edebilirsin)
+            // UserType kontrolü (enum değerinin geçerli olup olmadığını kontrol edebilirsin)
             else if (!Enum.IsDefined(typeof(UserType), request.Type))
                 message = "Kullanıcı Tipi Uyumlu Değildir.";
             else if(request.PersonId == null)

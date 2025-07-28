@@ -1,13 +1,9 @@
-﻿using DatabaseAccessLayer.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using DatabaseAccessLayer.Contexts;
+using DatabaseAccessLayer.Entities;
 
-namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories
+public class AddressRepository : BaseRepositoriesository<Address>, IAddressRepository
 {
-    public class AddressRepository : GenericRepositories.BaseRepositories.BaseRepositoriesository<Address>
-    {
-    }
+    public AddressRepository(MyContext db) : base(db) { }
 }
