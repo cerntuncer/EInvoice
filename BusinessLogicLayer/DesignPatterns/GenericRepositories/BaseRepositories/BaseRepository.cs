@@ -31,6 +31,7 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
         public void Add(T item)
         {
             _db.Set<T>().Add(item);//generic olduğu için T neyse _db ye set et kendini ve add yap
+            
             Save();
             
         }

@@ -51,7 +51,7 @@ namespace BusinessLogicLayer.Handler.PersonHandler
                 Status = request.Status
             };
 
-            _repository.Add(person); // 🚫 Artık new yok
+            _repository.Add(person);
 
             return new CreatePersonHandleResponse
             {

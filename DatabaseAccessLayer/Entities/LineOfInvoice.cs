@@ -1,11 +1,7 @@
 ﻿using DatabaseAccessLayer.Enumerations;
 using DatabaseAccessLayer.Models;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DatabaseAccessLayer.Entities
 {
@@ -13,13 +9,20 @@ namespace DatabaseAccessLayer.Entities
     public class LineOfInvoice : BaseEntity
     {
         public int Quantity { get; set; }
-        public  long ProductId {  get; set; }
-        [ForeignKey("ProductId")]
-        public ProductAndService ProductAndService { get; set; }
-        public long InvoiceID { get; set; }
 
-        [ForeignKey("InvoiceID")]
+        public long ProductAndServiceId { get; set; }
+        [ForeignKey("ProductAndServiceId")]
+        public ProductAndService ProductAndService { get; set; }
+
+        public long InvoiceId { get; set; }
+        [ForeignKey("InvoiceId")]
         public Invoice Invoice { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal UnitPrice { get; set; }
+
         public Status Status { get; set; }
     }
+
 }
+
