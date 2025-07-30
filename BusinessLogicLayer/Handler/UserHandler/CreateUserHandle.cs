@@ -26,7 +26,10 @@ namespace BusinessLogicLayer.Handler.UserHandler
                 message = "TCKN geçersiz.";
             else if (!Enum.IsDefined(typeof(UserType), request.Type))
                 message = "Kullanıcı tipi geçersiz.";
-          
+            else if (!string.IsNullOrWhiteSpace(request.TaxOffice) && request.TaxOffice.Length > 150)
+                message = "Vergi dairesi adı 150 karakteri geçemez.";
+            else if (!Enum.IsDefined(typeof(Status), request.Status))
+                message = "Durum bilgisi geçersiz.";
 
             if (message != null)
             {
@@ -37,18 +40,18 @@ namespace BusinessLogicLayer.Handler.UserHandler
                 };
             }
 
-            // Person oluştur
+            // 🔄 Person oluştur
             var person = new Person
             {
                 Name = request.Name,
                 IdentityNumber = request.IdentityNumber,
                 TaxOffice = request.TaxOffice,
-                Type = PersonType.User, 
+                Type = PersonType.User,
                 Status = Status.Active
             };
             _personRepository.Add(person);
 
-            // User oluştur
+            // 👤 User oluştur
             var user = new User
             {
                 Type = request.Type,

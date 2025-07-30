@@ -1,10 +1,10 @@
-﻿using MediatR;
+﻿using BusinessLogicLayer.Handler.ProductAndServiceHandler;
+using DatabaseAccessLayer.Enumerations;
+using MediatR;
 
-namespace BusinessLogicLayer.Handler.ProductAndServiceHandler
+public class CreateProductAndServiceHandleRequest : IRequest<CreateProductAndServiceHandleResponse>
 {
-    public class CreateProductAndServiceHandleRequest : IRequest<CreateProductAndServiceHandleResponse>
-    {
-        public string Name { get; set; }
-        public decimal UnitPrice { get; set; }
-    }
+    public string Name { get; set; }
+    public decimal UnitPrice { get; set; }
+    public UnitType UnitType { get; set; }  // ❗ eklendi
 }

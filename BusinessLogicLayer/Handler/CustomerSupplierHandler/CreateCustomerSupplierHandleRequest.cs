@@ -10,5 +10,6 @@ public class CreateCustomerSupplierHandleRequest : IRequest<CreateCustomerSuppli
     public string Name { get; set; }
     public long IdentityNumber { get; set; }
     public string TaxOffice { get; set; }
-  
+
+    public Status Status { get; set; } // ❗ eklendi (isteğe bağlı olarak sabit de atayabiliriz)
 }

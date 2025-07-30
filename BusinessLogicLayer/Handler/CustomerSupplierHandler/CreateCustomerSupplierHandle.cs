@@ -10,7 +10,9 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler
         private readonly ICustomerSupplierRepository _customerSupplierRepository;
         private readonly IPersonRepository _personRepository;
 
-        public CreateCustomerSupplierHandle(ICustomerSupplierRepository customerSupplierRepository, IPersonRepository personRepository)
+        public CreateCustomerSupplierHandle(
+            ICustomerSupplierRepository customerSupplierRepository,
+            IPersonRepository personRepository)
         {
             _customerSupplierRepository = customerSupplierRepository;
             _personRepository = personRepository;
@@ -25,8 +27,11 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler
             else if (request.IdentityNumber <= 0 || request.IdentityNumber.ToString().Length > 11)
                 message = "TCKN geçersiz.";
             else if (!Enum.IsDefined(typeof(CustomerOrSupplierType), request.Type))
-                message = "Müşteri veya Tedarikçi tipi geçersiz.";
-
+                message = "Müşteri/Tedarikçi tipi geçersiz.";
+            else if (!string.IsNullOrWhiteSpace(request.TaxOffice) && request.TaxOffice.Length > 150)
+                message = "Vergi dairesi adı 150 karakteri geçemez.";
+            else if (!Enum.IsDefined(typeof(Status), request.Status))
+                message = "Durum bilgisi geçersiz.";
 
             if (message != null)
             {
@@ -37,30 +42,29 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler
                 };
             }
 
-            // Person oluştur
+            // 🔄 Person oluşturuluyor
             var person = new Person
             {
                 Name = request.Name,
                 IdentityNumber = request.IdentityNumber,
                 TaxOffice = request.TaxOffice,
-                Type = PersonType.CustomerOrSupplier, 
+                Type = PersonType.CustomerOrSupplier,
                 Status = Status.Active
             };
-
             _personRepository.Add(person);
 
-            // Müşteri/Tedarikçi oluştur
+            // 🧾 Müşteri veya Tedarikçi oluşturuluyor
             var customerSupplier = new CustomerSupplier
             {
                 Type = request.Type,
                 PersonId = person.Id,
-                Status = Status.Active
+                Status = request.Status
             };
             _customerSupplierRepository.Add(customerSupplier);
 
             return new CreateCustomerSupplierHandleResponse
             {
-                Message = "Müşteri/Tedarikçi ve kişi oluşturuldu.",
+                Message = "Müşteri/Tedarikçi ve kişi başarıyla oluşturuldu.",
                 Error = false
             };
         }

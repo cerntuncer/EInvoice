@@ -8,10 +8,12 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
     public class CreateCurrentHandle : IRequestHandler<CreateCurrentHandleRequest, CreateCurrentHandleResponse>
     {
         private readonly ICurrentRepository _currentRepository;
+        private readonly IUserRepository _userRepository;
 
-        public CreateCurrentHandle(ICurrentRepository currentRepository)
+        public CreateCurrentHandle(ICurrentRepository currentRepository, IUserRepository userRepository)
         {
             _currentRepository = currentRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<CreateCurrentHandleResponse> Handle(CreateCurrentHandleRequest request, CancellationToken cancellationToken)
@@ -21,11 +23,20 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
             if (string.IsNullOrWhiteSpace(request.Name))
                 message = "İsim boş olamaz.";
 
-            if (request.UserId <= 0)
-                message = "UserId geçerli değil.";
+            else if (request.UserId <= 0)
+                message = "Geçerli bir kullanıcı ID girilmelidir.";
+
+            else if (_userRepository.Find(request.UserId) == null)
+                message = "Kullanıcı bulunamadı.";
 
             if (message != null)
-                return new CreateCurrentHandleResponse { Message = message, Error = true };
+            {
+                return new CreateCurrentHandleResponse
+                {
+                    Message = message,
+                    Error = true
+                };
+            }
 
             var current = new Current
             {
@@ -41,7 +52,7 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
 
             return new CreateCurrentHandleResponse
             {
-                Message = "Current başarıyla oluşturuldu.",
+                Message = "Cari hesap başarıyla oluşturuldu.",
                 Error = false
             };
         }

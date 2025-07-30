@@ -11,5 +11,4 @@ public class CreateUserHandleRequest : IRequest<CreateUserHandleResponse>
     public string Name { get; set; }
     public long IdentityNumber { get; set; }
     public string TaxOffice { get; set; }
-
 }

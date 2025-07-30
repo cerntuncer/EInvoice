@@ -1,12 +1,12 @@
-﻿using DatabaseAccessLayer.Enumerations;
+﻿using BusinessLogicLayer.Handler.CaseHandler;
+using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
-namespace BusinessLogicLayer.Handler.CaseHandler
+public class CreateCaseHandleRequest : IRequest<CreateCaseHandleResponse>
 {
-    public class CreateCaseHandleRequest : IRequest<CreateCaseHandleResponse>
-    {
-        public string Name { get; set; }         // Current için ad
-        public string Address { get; set; }      // Case için adres
-        public Status Status { get; set; }       // Durum (opsiyonel olabilir)
-    }
+    public string Name { get; set; }         // Cari adı (Current)
+    public string Address { get; set; }      // Kasa adresi
+    public Status Status { get; set; }       // Durum bilgisi
+
+    public long UserId { get; set; }         // ❗ EKLENDİ
 }

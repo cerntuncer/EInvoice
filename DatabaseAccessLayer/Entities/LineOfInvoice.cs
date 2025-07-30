@@ -22,6 +22,7 @@ namespace DatabaseAccessLayer.Entities
         public decimal UnitPrice { get; set; }
 
         public Status Status { get; set; }
+    
     }
 
 }

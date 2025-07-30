@@ -25,10 +25,29 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler
                 };
             }
 
+            if (request.UnitPrice < 0)
+            {
+                return new CreateProductAndServiceHandleResponse
+                {
+                    Message = "Birim fiyat negatif olamaz.",
+                    Error = true
+                };
+            }
+
+            if (!Enum.IsDefined(typeof(UnitType), request.UnitType))
+            {
+                return new CreateProductAndServiceHandleResponse
+                {
+                    Message = "Geçersiz birim türü.",
+                    Error = true
+                };
+            }
+
             var entity = new ProductAndService
             {
                 Name = request.Name,
                 price = request.UnitPrice,
+                UnitType = request.UnitType,
                 Status = Status.Active
             };
 
