@@ -1,12 +1,15 @@
-﻿using DatabaseAccessLayer.Enumerations;
+﻿using BusinessLogicLayer.Handler.UserHandler;
+using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
-namespace BusinessLogicLayer.Handler.UserHandler
+public class CreateUserHandleRequest : IRequest<CreateUserHandleResponse>
 {
-    public class CreateUserHandleRequest : IRequest<CreateUserHandleResponse>
-    {
-        public UserType Type { get; set; }
-        public Status Status { get; set; }
-        public long PersonId { get; set; }
-    }
+    public UserType Type { get; set; }
+    public Status Status { get; set; }
+
+    // Person bilgileri
+    public string Name { get; set; }
+    public long IdentityNumber { get; set; }
+    public string TaxOffice { get; set; }
+
 }

@@ -12,3 +12,4 @@ namespace BusinessLogicLayer.Handler.PersonHandler
         public Status Status { get; set; }
     }
 }
+

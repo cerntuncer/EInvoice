@@ -3,7 +3,6 @@ using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
-
 namespace BusinessLogicLayer.Handler.UserHandler
 {
     public class CreateUserHandle : IRequestHandler<CreateUserHandleRequest, CreateUserHandleResponse>
@@ -11,37 +10,23 @@ namespace BusinessLogicLayer.Handler.UserHandler
         private readonly IUserRepository _userRepository;
         private readonly IPersonRepository _personRepository;
 
-        // DI constructor: concrete sınıf değil interface alıyoruz
-        public CreateUserHandle(IUserRepository userRepository,
-                                IPersonRepository personRepository)
+        public CreateUserHandle(IUserRepository userRepository, IPersonRepository personRepository)
         {
             _userRepository = userRepository;
             _personRepository = personRepository;
         }
 
-        public async Task<CreateUserHandleResponse> Handle(CreateUserHandleRequest request,
-                                                           CancellationToken cancellationToken)
+        public async Task<CreateUserHandleResponse> Handle(CreateUserHandleRequest request, CancellationToken cancellationToken)
         {
             string message = null;
 
-            if (request == null)
-                message = "Request boş olamaz.";
-
+            if (string.IsNullOrWhiteSpace(request.Name))
+                message = "İsim zorunludur.";
+            else if (request.IdentityNumber <= 0 || request.IdentityNumber.ToString().Length > 11)
+                message = "TCKN geçersiz.";
             else if (!Enum.IsDefined(typeof(UserType), request.Type))
                 message = "Kullanıcı tipi geçersiz.";
-
-            else if (request.PersonId <= 0)
-                message = "PersonId geçersiz.";
-
-            else
-            {
-                var person = _personRepository.Find(request.PersonId);
-
-                if (person == null)
-                    message = "PersonId bulunamadı.";
-                else if (person.Status != Status.Active)
-                    message = "Pasif kişiye kullanıcı atanamaz.";
-            }
+          
 
             if (message != null)
             {
@@ -52,18 +37,29 @@ namespace BusinessLogicLayer.Handler.UserHandler
                 };
             }
 
+            // Person oluştur
+            var person = new Person
+            {
+                Name = request.Name,
+                IdentityNumber = request.IdentityNumber,
+                TaxOffice = request.TaxOffice,
+                Type = PersonType.User, 
+                Status = Status.Active
+            };
+            _personRepository.Add(person);
+
+            // User oluştur
             var user = new User
             {
                 Type = request.Type,
-                PersonId = request.PersonId,
+                PersonId = person.Id,
                 Status = request.Status
             };
-
             _userRepository.Add(user);
 
             return new CreateUserHandleResponse
             {
-                Message = "Kullanıcı oluşturuldu.",
+                Message = "Kullanıcı ve kişi başarıyla oluşturuldu.",
                 Error = false
             };
         }

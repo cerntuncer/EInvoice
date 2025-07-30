@@ -10,6 +10,6 @@ namespace DatabaseAccessLayer.Enumerations
     public enum PersonType
     {
         User = 0,   // kullanıcı
-        CustomerOrSypplier = 1    // Müşteri veya tedarikçi
+        CustomerOrSupplier = 1    // Müşteri veya tedarikçi
     }
 }
