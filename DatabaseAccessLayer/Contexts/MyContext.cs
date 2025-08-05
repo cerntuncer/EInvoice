@@ -1,6 +1,7 @@
 ﻿using DatabaseAccessLayer.Entities;
-using Microsoft.EntityFrameworkCore;
 using MAP.Options;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 
 
@@ -35,6 +36,10 @@ namespace DatabaseAccessLayer.Contexts
             modelBuilder.ApplyConfiguration(new InvoiceMap());
             modelBuilder.ApplyConfiguration(new LineOfInvoiceMap());
             modelBuilder.ApplyConfiguration(new UserMap());
+        }
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await this.Database.BeginTransactionAsync();
         }
     }
 }

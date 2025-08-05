@@ -56,7 +56,8 @@ namespace BusinessLogicLayer.Handler.PersonHandler
             return new CreatePersonHandleResponse
             {
                 Message = "Kişi oluşturuldu",
-                Error = false
+                Error = false,
+                Id = person.Id,
             };
         }
     }

@@ -1,4 +1,5 @@
 ﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.Handler.BankHandler;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -9,28 +10,57 @@ namespace BusinessLogicLayer.Handler.UserHandler
     {
         private readonly IUserRepository _userRepository;
         private readonly IPersonRepository _personRepository;
+        private readonly ICustomerSupplierRepository _customerSupplierRepository;
+        private readonly IMediator _mediator;
 
-        public CreateUserHandle(IUserRepository userRepository, IPersonRepository personRepository)
+        public CreateUserHandle(IUserRepository userRepository, IPersonRepository personRepository, ICustomerSupplierRepository customerSupplierRepository, IMediator mediator)
         {
             _userRepository = userRepository;
             _personRepository = personRepository;
+            _customerSupplierRepository = customerSupplierRepository;
+            _mediator = mediator;
         }
 
         public async Task<CreateUserHandleResponse> Handle(CreateUserHandleRequest request, CancellationToken cancellationToken)
         {
             string message = null;
-
-            if (string.IsNullOrWhiteSpace(request.Name))
-                message = "İsim zorunludur.";
-            else if (request.IdentityNumber <= 0 || request.IdentityNumber.ToString().Length > 11)
-                message = "TCKN geçersiz.";
-            else if (!Enum.IsDefined(typeof(UserType), request.Type))
-                message = "Kullanıcı tipi geçersiz.";
-            else if (!string.IsNullOrWhiteSpace(request.TaxOffice) && request.TaxOffice.Length > 150)
-                message = "Vergi dairesi adı 150 karakteri geçemez.";
-            else if (!Enum.IsDefined(typeof(Status), request.Status))
+            long? personId = null;
+            bool person = true;
+            if (!Enum.IsDefined(typeof(Status), request.Status))
                 message = "Durum bilgisi geçersiz.";
-
+            else if (!Enum.IsDefined(typeof(Type), request.Type))
+                message = "Kullanıcı tipi geçersiz.";
+            else if (request.PersonId == null)
+            {
+                if (request.Person == null)
+                    message = "PersonId ya da Yeni oluşturalacak Person Bilgileri iletilmelidir";
+                else
+                {
+                    var newPerson = await _mediator.Send(request.Person, cancellationToken);
+                    if (newPerson.Error == false)
+                    {
+                        personId = newPerson.Id.Value;
+                        person = false;
+                    }
+                    else
+                    {
+                        message = newPerson.Message;
+                    }
+                }
+            }
+            else if (_personRepository.Find(request.PersonId.Value) == null)
+            {
+                message = "Gönderilen Id ye uygun Kişi bulunamadı";
+            }
+            if (person) {
+                var existingUser = _userRepository.FirstOrDefault(b => b.PersonId == request.PersonId);
+                var existingCustomerSupplier = _customerSupplierRepository.FirstOrDefault(b => b.PersonId == request.PersonId);
+                if (existingUser != null || existingCustomerSupplier != null)
+                {
+                    message = "Belirtilen Kullanıcı Başka Bir Kullanıcı, Tedarikçi ya da Müşteriye Bağlı";
+                }
+            }
+          
             if (message != null)
             {
                 return new CreateUserHandleResponse
@@ -40,29 +70,30 @@ namespace BusinessLogicLayer.Handler.UserHandler
                 };
             }
 
-            // 🔄 Person oluştur
-            var person = new Person
+            if (personId == null)
             {
-                Name = request.Name,
-                IdentityNumber = request.IdentityNumber,
-                TaxOffice = request.TaxOffice,
-                Type = PersonType.User,
-                Status = Status.Active
-            };
-            _personRepository.Add(person);
-
+                personId = request.PersonId.Value;
+            }
             // 👤 User oluştur
             var user = new User
             {
                 Type = request.Type,
-                PersonId = person.Id,
+                PersonId = personId.Value,
                 Status = request.Status
             };
             _userRepository.Add(user);
 
+            if (person)
+            {
+                message = "Kullanıcı başarıyla oluşturuldu.";
+            }
+            else
+            {
+                message = "Kullanıcı ve kişi başarıyla oluşturuldu.";
+            }
             return new CreateUserHandleResponse
             {
-                Message = "Kullanıcı ve kişi başarıyla oluşturuldu.",
+                Message = message,
                 Error = false
             };
         }
