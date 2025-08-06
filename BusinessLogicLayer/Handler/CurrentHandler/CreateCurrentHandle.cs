@@ -20,6 +20,7 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
         {
             string message = null;
 
+            // Validasyonlar
             if (string.IsNullOrWhiteSpace(request.Name))
                 message = "İsim boş olamaz.";
 
@@ -28,6 +29,12 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
 
             else if (_userRepository.Find(request.UserId) == null)
                 message = "Kullanıcı bulunamadı.";
+
+            else if (!Enum.IsDefined(typeof(CurrencyType), request.CurrencyType))
+                message = "Geçersiz para birimi tipi.";
+
+            else if (!Enum.IsDefined(typeof(CurrentType), request.CurrentType))
+                message = "Geçersiz cari tipi.";
 
             if (message != null)
             {
@@ -38,6 +45,7 @@ namespace BusinessLogicLayer.Handler.CurrentHandler
                 };
             }
 
+            // Nesne oluşturma
             var current = new Current
             {
                 Name = request.Name,

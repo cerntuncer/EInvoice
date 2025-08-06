@@ -41,5 +41,28 @@ public class CurrentController : ControllerBase
 
         return Ok(result);
     }
+    //PUT: /Current
+    [HttpPut(Name = "UpdateCurrent")]
+    public async Task<IActionResult> Update(UpdateCurrentHandleRequest request)
+    {
+        var result = await _mediator.Send(request);
+        if (result.Error) return BadRequest(result);
+        return Ok(result);
+    }
+    //DELETE: /Current/{id}?userId=...
+    [HttpDelete("{id}", Name = "DeleteCurrent")]
+    public async Task<IActionResult> Delete(long id, [FromQuery] long userId)
+    {
+        var result = await _mediator.Send(new DeleteCurrentHandleRequest
+        {
+            Id = id,
+            UserId = userId
+        });
+
+        if (result.Error) return BadRequest(result);
+        return Ok(result);
+    }
+
+
 
 }
