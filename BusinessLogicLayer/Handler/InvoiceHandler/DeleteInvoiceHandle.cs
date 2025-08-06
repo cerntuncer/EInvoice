@@ -28,7 +28,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler
                 };
             }
 
-            // 🧾 Faturaya ait satırları pasife al
+            //Faturaya ait satırları pasife al
             var relatedLines = _lineRepository.Where(x => x.InvoiceId == request.Id).ToList();
             foreach (var line in relatedLines)
             {
@@ -36,7 +36,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler
                 _lineRepository.Update(line);
             }
 
-            // 🧾 Fatura da pasife alınır
+            //Fatura da pasife alınır
             invoice.Status = Status.Passive;
             _invoiceRepository.Update(invoice);
 
