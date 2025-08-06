@@ -42,6 +42,29 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        // PUT: api/Invoice
+        [HttpPut(Name = "UpdateInvoice")]
+        public async Task<IActionResult> Update(UpdateInvoiceHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
 
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        // DELETE: api/Invoice/{id}
+        [HttpDelete("{id}", Name = "DeleteInvoice")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var request = new DeleteInvoiceHandleRequest { Id = id };
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }
