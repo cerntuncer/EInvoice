@@ -32,6 +32,32 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        [HttpPut(Name = "UpdateCase")]
+        public async Task<IActionResult> Update(UpdateCaseHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+        [HttpDelete("{id}", Name = "DeleteCase")]
+        public async Task<IActionResult> Delete(long id, [FromQuery] long currentId)
+        {
+            var result = await _mediator.Send(new DeleteCaseHandleRequest
+            {
+                Id = id,
+                CurrentId = currentId
+            });
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
 
     }
 }

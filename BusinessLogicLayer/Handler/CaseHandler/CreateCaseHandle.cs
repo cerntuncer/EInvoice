@@ -1,7 +1,5 @@
 ﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
-using BusinessLogicLayer.Handler.BankHandler;
 using DatabaseAccessLayer.Entities;
-using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
 namespace BusinessLogicLayer.Handler.CaseHandler
