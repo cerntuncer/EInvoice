@@ -39,6 +39,7 @@ namespace DatabaseAccessLayer.Contexts
         }
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
+            //birden fazla veri gönderildiğin herhangi biri hata alırsa bu istekle oluşanları kaydetmiyor 
             return await this.Database.BeginTransactionAsync();
         }
     }

@@ -31,5 +31,17 @@ namespace ApiLayer.Controllers
             _logger.LogInformation("Fatura başarıyla oluşturuldu.");
             return Ok(result);
         }
+        // GET: /Invoice/{id}
+        [HttpGet("{id}", Name = "GetInvoiceById")]
+        public async Task<IActionResult> GetById(long id)
+        {
+            var result = await _mediator.Send(new GetInvoiceByIdHandleRequest { Id = id });
+
+            if (result.Error)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
     }
 }

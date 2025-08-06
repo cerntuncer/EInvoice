@@ -1,6 +1,5 @@
 ﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.BankHandler;
-using BusinessLogicLayer.Handler.CurrentHandler;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;

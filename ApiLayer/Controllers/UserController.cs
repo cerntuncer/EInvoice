@@ -22,5 +22,16 @@ namespace ApiLayer.Controllers
             var data = await _mediator.Send(request);
             return Ok(data);
         }
+        // GET: /User/{id}
+        [HttpGet("{id}", Name = "GetUserById")]
+        public async Task<IActionResult> GetById(long id)
+        {
+            var result = await _mediator.Send(new GetUserByIdHandleRequest { Id = id });
+
+            if (result.Error)
+                return NotFound(result);
+
+            return Ok(result);
+        }
     }
 }

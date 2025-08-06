@@ -32,5 +32,46 @@ namespace ApiLayer.Controllers
 
                 return Ok(result);
             }
+            // GET: /Address/{id}
+            [HttpGet("{id}", Name = "GetAddressById")]
+            public async Task<IActionResult> GetById(long id)
+            {
+                var request = new GetAddressByIdHandleRequest { Id = id };
+
+                var result = await _mediator.Send(request);
+
+                if (result.Error)
+                    return NotFound(result); // 404 - bulunamadı veya hata varsa
+
+                return Ok(result); // 200 - başarılı
+            }
+            // GET: /Address/ByPerson/{personId}
+            [HttpGet("ByPerson/{personId}", Name = "GetAddressesByPersonId")]
+            public async Task<IActionResult> GetByPersonId(long personId)
+            {
+                var request = new GetAddressesByPersonIdRequest
+                {
+                    PersonId = personId
+                };
+
+                var result = await _mediator.Send(request);
+
+                if (result.Error)
+                    return NotFound(result); // 404 - Adres bulunamadı
+
+                return Ok(result); // 200 - Başarılı
+            }
+        // UPDATE:
+        [HttpPut(Name = "UpdateAddress")]
+        public async Task<IActionResult> Update(UpdateAddressHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
         }
+
+    }
 }
