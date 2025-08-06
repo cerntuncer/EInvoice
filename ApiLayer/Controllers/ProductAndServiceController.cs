@@ -16,7 +16,7 @@ namespace ApiLayer.Controllers
             _logger = logger;
             _mediator = mediator;
         }
-
+        // POST: /ProductAndService
         [HttpPost(Name = "CreateProductAndService")]
         public async Task<IActionResult> Create(CreateProductAndServiceHandleRequest request)
         {

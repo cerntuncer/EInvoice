@@ -72,7 +72,7 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
-        // DELETE: /Address/{id}?personId=5
+        // DELETE: /Address/{id}?personId=...
         [HttpDelete("{id}", Name = "DeleteAddress")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long personId)
         {

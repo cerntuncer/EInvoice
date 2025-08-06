@@ -15,6 +15,7 @@ namespace ApiLayer.Controllers
             _mediator = mediator;
             _logger = logger;
         }
+        // POST: /User
 
         [HttpPost(Name = "CreateUser")]
         public async Task<IActionResult> Create(CreateUserHandleRequest request)
@@ -32,6 +33,20 @@ namespace ApiLayer.Controllers
                 return NotFound(result);
 
             return Ok(result);
+        }
+        // PUT: /User
+        [HttpPut("update")]
+        public async Task<IActionResult> Update(UpdateUserHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
+            return result.Error ? BadRequest(result.Message) : Ok(result.Message);
+        }
+        // DELETE: /User/{id}?personId=5
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var result = await _mediator.Send(new DeleteUserHandleRequest { Id = id });
+            return result.Error ? BadRequest(result.Message) : Ok(result.Message);
         }
     }
 }
