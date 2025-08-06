@@ -33,6 +33,35 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+       // PUT :/Person/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(long id, UpdatePersonHandleRequest request)
+        {
+            if (id != request.Id)
+                return BadRequest("Parametre ID ile body ID uyuþmuyor.");
+
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+       // DELETE :/Person/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var request = new DeletePersonHandleRequest { Id = id };
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+
 
     }
 }
