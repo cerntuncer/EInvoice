@@ -36,6 +36,27 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        // PUT: /CustomerSupplier/Update
+        [HttpPut("Update")]
+        public async Task<IActionResult> Update(UpdateCustomerSupplierHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        // DELETE: /CustomerSupplier/Delete/{id}
+        [HttpDelete("Delete/{id}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var request = new DeleteCustomerSupplierHandleRequest { Id = id };
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
 
     }
 }
