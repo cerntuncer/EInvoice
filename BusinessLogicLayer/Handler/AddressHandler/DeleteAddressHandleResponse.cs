@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MediatR;
 
 namespace BusinessLogicLayer.Handler.AddressHandler
 {
-    internal class DeleteAddressHandleResponse
+    public class DeleteAddressHandleResponse 
     {
+        public string Message { get; set; }
+        public bool Error { get; set; }
     }
 }

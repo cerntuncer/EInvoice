@@ -61,7 +61,7 @@ namespace ApiLayer.Controllers
 
                 return Ok(result); // 200 - Başarılı
             }
-        // UPDATE:
+        // PUT: /Address
         [HttpPut(Name = "UpdateAddress")]
         public async Task<IActionResult> Update(UpdateAddressHandleRequest request)
         {
@@ -72,6 +72,22 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        // DELETE: /Address/{id}?personId=5
+        [HttpDelete("{id}", Name = "DeleteAddress")]
+        public async Task<IActionResult> Delete(long id, [FromQuery] long personId)
+        {
+            var result = await _mediator.Send(new DeleteAddressHandleRequest
+            {
+                Id = id,
+                PersonId = personId
+            });
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
 
     }
 }
