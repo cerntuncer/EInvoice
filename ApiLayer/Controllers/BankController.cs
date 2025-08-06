@@ -32,5 +32,33 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        // PUT: /Bank
+        [HttpPut(Name = "UpdateBank")]
+        public async Task<IActionResult> Update(UpdateBankHandleRequest request)
+        {
+            var result = await _mediator.Send(request);
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+        // DELETE: /Bank/{id}?currentId=5
+        [HttpDelete("{id}", Name = "DeleteBank")]
+        public async Task<IActionResult> Delete(long id, [FromQuery] long currentId)
+        {
+            var result = await _mediator.Send(new DeleteBankHandleRequest
+            {
+                Id = id,
+                CurrentId = currentId
+            });
+
+            if (result.Error)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
     }
 }
