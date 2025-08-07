@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.AddressHandler;
+﻿using BusinessLogicLayer.Handler.AddressHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

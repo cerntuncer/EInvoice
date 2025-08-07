@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
+﻿using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

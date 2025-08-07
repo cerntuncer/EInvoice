@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.BankHandler;
+﻿using BusinessLogicLayer.Handler.BankHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

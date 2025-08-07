@@ -1,4 +1,5 @@
-﻿using BusinessLogicLayer.Handler.UserHandler;
+﻿using BusinessLogicLayer.Handler.UserHandler.Commands;
+using BusinessLogicLayer.Handler.UserHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -48,5 +49,6 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new DeleteUserHandleRequest { Id = id });
             return result.Error ? BadRequest(result.Message) : Ok(result.Message);
         }
+       
     }
 }

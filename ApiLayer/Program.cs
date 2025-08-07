@@ -1,16 +1,39 @@
-using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
 using DatabaseAccessLayer.Contexts;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using BusinessLogicLayer.Handler.PersonHandler.Commands;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 
-// DI Kay�tlar�
+// 🔐 JWT AUTHENTICATION EKLENDİ
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "http://localhost", // veya appsettings.json'dan oku
+            ValidAudience = "http://localhost",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("jfhdfdfdfgjdfdsdsdffddsfsdfsdfsdfsdfsfsdfsf")),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// DI Kayıtları
 builder.Services.AddDbContext<MyContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -27,10 +50,9 @@ builder.Services.AddScoped<IProductAndServiceRepository, ProductAndServiceReposi
 
 // MediatR
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(BusinessLogicLayer.Handler.PersonHandler.CreatePersonHandle).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(CreatePersonHandle).Assembly));
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BusinessLogicLayer.Handler.PersonHandler.CreatePersonHandle).Assembly));
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -45,7 +67,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// 🔐 Auth Middleware
+app.UseAuthentication(); // JWT token'ı doğrulamak için
+app.UseAuthorization();  // Rol ve erişim denetimi için
 
 app.MapControllers();
 

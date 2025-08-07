@@ -1,4 +1,5 @@
 ﻿using BusinessLogicLayer.Handler.CaseHandler;
+using BusinessLogicLayer.Handler.CaseHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
