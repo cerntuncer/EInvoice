@@ -1,4 +1,5 @@
 ﻿using DatabaseAccessLayer.Entities;
+using DatabaseAccessLayer.Options;
 using MAP.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -22,9 +23,10 @@ namespace DatabaseAccessLayer.Contexts
         public DbSet<Person> People { get; set; }
         public DbSet<ProductAndService> ProductsAndServices { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserCredential> UserCredentials { get; set; }
 
-    
-     protected override void OnModelCreating(ModelBuilder modelBuilder)
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -36,6 +38,7 @@ namespace DatabaseAccessLayer.Contexts
             modelBuilder.ApplyConfiguration(new InvoiceMap());
             modelBuilder.ApplyConfiguration(new LineOfInvoiceMap());
             modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new UserCredentialMap());
         }
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {

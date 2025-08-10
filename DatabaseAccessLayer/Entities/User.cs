@@ -15,7 +15,8 @@ namespace DatabaseAccessLayer.Entities
         [ForeignKey("PersonId")]
         public Person Person { get; set; }
         public ICollection<Current> Current { get; set; } = new List<Current>();
-    
+        public UserCredential UserCredential { get; set; }
+
 
 
 

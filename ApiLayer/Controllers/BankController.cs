@@ -1,5 +1,6 @@
 ﻿using BusinessLogicLayer.Handler.BankHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -15,6 +16,7 @@ namespace ApiLayer.Controllers
             _mediator = mediator;
         }
         // POST: /Bank
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateBank(CreateBankHandleRequest request)
         {
@@ -33,6 +35,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // PUT: /Bank
+        [Authorize]
         [HttpPut(Name = "UpdateBank")]
         public async Task<IActionResult> Update(UpdateBankHandleRequest request)
         {
@@ -44,6 +47,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // DELETE: /Bank/{id}?currentId=5
+        [Authorize]
         [HttpDelete("{id}", Name = "DeleteBank")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long currentId)
         {
