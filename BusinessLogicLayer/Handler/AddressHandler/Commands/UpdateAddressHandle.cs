@@ -16,47 +16,45 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Commands
 
         public async Task<UpdateAddressHandleResponse> Handle(UpdateAddressHandleRequest request, CancellationToken cancellationToken)
         {
+            string? message = null;
+
+            // --- Varlık kontrolü ---
             var address = _addressRepository.Find(request.Id);
             if (address == null)
             {
-                return new UpdateAddressHandleResponse
+                message = "Adres bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (address.PersonId != request.PersonId)
+                    message = "Bu adres belirtilen kişiye ait değil. Güncellenemez.";
+
+                // --- Metin kontrolü ---
+                if (message == null)
                 {
-                    Error = true,
-                    Message = "Adres bulunamadı."
-                };
+                    var text = request.Text?.Trim();
+                    if (string.IsNullOrWhiteSpace(text) || text!.Length > 500)
+                        message = "Adres metni boş olamaz ve 500 karakteri geçemez.";
+                }
+
+                // --- Enum kontrolü ---
+                if (message == null && !Enum.IsDefined(typeof(AddressType), request.AddressType))
+                    message = "Adres tipi geçersiz.";
             }
 
-            // ✅ Kişi bu adresin sahibi mi kontrolü
-            if (address.PersonId != request.PersonId)
+            if (message != null)
             {
                 return new UpdateAddressHandleResponse
                 {
                     Error = true,
-                    Message = "Bu adres belirtilen kişiye ait değil. Güncellenemez."
+                    Message = message
                 };
             }
 
-            if (string.IsNullOrWhiteSpace(request.Text) || request.Text.Length > 500)
-            {
-                return new UpdateAddressHandleResponse
-                {
-                    Error = true,
-                    Message = "Adres metni boş olamaz ve 500 karakteri geçemez."
-                };
-            }
-
-            if (!Enum.IsDefined(typeof(AddressType), request.AddressType))
-            {
-                return new UpdateAddressHandleResponse
-                {
-                    Error = true,
-                    Message = "Adres tipi geçersiz."
-                };
-            }
-
-            address.Text = request.Text;
+            // --- Güncelleme ---
+            address!.Text = request.Text!.Trim();
             address.AddressType = request.AddressType;
-          
 
             _addressRepository.Update(address);
 

@@ -14,35 +14,32 @@ public class UpdateCustomerSupplierHandle : IRequestHandler<UpdateCustomerSuppli
 
     public async Task<UpdateCustomerSupplierHandleResponse> Handle(UpdateCustomerSupplierHandleRequest request, CancellationToken cancellationToken)
     {
+        string? message = null;
+
         var entity = _repository.Find(request.Id);
         if (entity == null)
         {
-            return new UpdateCustomerSupplierHandleResponse
-            {
-                Error = true,
-                Message = "Müşteri/Tedarikçi bulunamadı."
-            };
+            message = "Müşteri/Tedarikçi bulunamadı.";
+        }
+        else
+        {
+            if (!Enum.IsDefined(typeof(CustomerOrSupplierType), request.Type))
+                message = "Geçersiz müşteri/tedarikçi tipi.";
+
+            if (message == null && !Enum.IsDefined(typeof(Status), request.Status))
+                message = "Geçersiz durum tipi.";
         }
 
-        if (!Enum.IsDefined(typeof(CustomerOrSupplierType), request.Type))
+        if (message != null)
         {
             return new UpdateCustomerSupplierHandleResponse
             {
                 Error = true,
-                Message = "Geçersiz müşteri/tedarikçi tipi."
+                Message = message
             };
         }
 
-        if (!Enum.IsDefined(typeof(Status), request.Status))
-        {
-            return new UpdateCustomerSupplierHandleResponse
-            {
-                Error = true,
-                Message = "Geçersiz durum tipi."
-            };
-        }
-
-        entity.Type = request.Type;
+        entity!.Type = request.Type;
         entity.Status = request.Status;
 
         _repository.Update(entity);

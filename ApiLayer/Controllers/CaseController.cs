@@ -20,6 +20,8 @@ namespace ApiLayer.Controllers
         public async Task<IActionResult> CreateCase(CreateCaseHandleRequest request)
         {
             var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
             return Ok(result);
         }
         // GET: /Case/{id}
@@ -29,7 +31,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new GetCaseByIdHandleRequest { Id = id });
 
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -39,7 +41,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -53,7 +55,7 @@ namespace ApiLayer.Controllers
             });
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }

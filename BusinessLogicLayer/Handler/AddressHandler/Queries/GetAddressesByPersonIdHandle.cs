@@ -16,23 +16,43 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Queries
 
         public async Task<GetAddressesByPersonIdResponse> Handle(GetAddressesByPersonIdRequest request, CancellationToken cancellationToken)
         {
+            string? message = null;
+            List<AddressDto>? dtos = null;
+
+            // --- Validasyon ---
             if (request.PersonId <= 0)
             {
-                return new GetAddressesByPersonIdResponse
+                message = "Geçersiz PersonId";
+            }
+            else
+            {
+                // --- Sorgu ---
+                var addresses = _addressRepository
+                    .Where(x => x.PersonId == request.PersonId && x.Status != Status.Passive)
+                    .ToList();
+
+                if (addresses.Count == 0)
                 {
-                    Error = true,
-                    Message = "Geçersiz PersonId"
-                };
+                    message = "Bu kişiye ait adres bulunamadı.";
+                }
+                else
+                {
+                    dtos = addresses.Select(a => new AddressDto
+                    {
+                        Id = a.Id,
+                        Text = a.Text,
+                        AddressType = a.AddressType,
+                        Status = a.Status
+                    }).ToList();
+                }
             }
 
-            var addresses = _addressRepository.Where(x => x.PersonId == request.PersonId && x.Status != Status.Passive).ToList();
-
-            if (addresses == null || !addresses.Any())
+            if (message != null)
             {
                 return new GetAddressesByPersonIdResponse
                 {
                     Error = true,
-                    Message = "Bu kişiye ait adres bulunamadı."
+                    Message = message
                 };
             }
 
@@ -40,15 +60,8 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Queries
             {
                 Error = false,
                 Message = "Adresler getirildi.",
-                Addresses = addresses.Select(a => new AddressDto
-                {
-                    Id = a.Id,
-                    Text = a.Text,
-                    AddressType = a.AddressType,
-                    Status = a.Status
-                }).ToList()
+                Addresses = dtos
             };
         }
     }
-
 }

@@ -18,13 +18,12 @@ namespace ApiLayer.Controllers
         // POST: /Auth/Login
         [HttpPost("Login", Name = "AuthLogin")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
+        public async Task<IActionResult> Login(LoginRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try
             {
-                var result = await _auth.LoginAsync(dto.Email, dto.Password);
+                var result = await _auth.LoginAsync(request.Email, request.Password);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)

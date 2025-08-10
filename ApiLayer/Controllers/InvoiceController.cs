@@ -23,12 +23,8 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-            {
-                _logger.LogWarning("Fatura oluşturulamadı: {Message}", result.Message);
-                return BadRequest(result);
-            }
+                return UnprocessableEntity(result);
 
-            _logger.LogInformation("Fatura başarıyla oluşturuldu.");
             return Ok(result);
         }
         // GET: /Invoice/{id}
@@ -38,7 +34,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new GetInvoiceByIdHandleRequest { Id = id });
 
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -49,7 +45,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -62,7 +58,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }

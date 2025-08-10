@@ -16,28 +16,37 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Commands
 
         public async Task<DeleteAddressHandleResponse> Handle(DeleteAddressHandleRequest request, CancellationToken cancellationToken)
         {
-            var address = _addressRepository.Find(request.Id);
+            string? message = null;
 
+            // --- Varlık kontrolü ---
+            var address = _addressRepository.Find(request.Id);
             if (address == null)
             {
-                return new DeleteAddressHandleResponse
-                {
-                    Error = true,
-                    Message = "Adres bulunamadı."
-                };
+                message = "Adres bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (address.PersonId != request.PersonId)
+                    message = "Bu adres belirtilen kişiye ait değil. Silinemez.";
+
+                // (opsiyonel) Zaten pasif mi?
+                if (message == null && address.Status == Status.Passive)
+                    message = "Adres zaten pasif durumda.";
             }
 
-            if (address.PersonId != request.PersonId)
+            if (message != null)
             {
                 return new DeleteAddressHandleResponse
                 {
                     Error = true,
-                    Message = "Bu adres belirtilen kişiye ait değil. Silinemez."
+                    Message = message
                 };
             }
 
-            address.Status = Status.Passive;
-            _addressRepository.Update(address); // Soft delete
+            // --- Soft delete ---
+            address!.Status = Status.Passive;
+            _addressRepository.Update(address);
 
             return new DeleteAddressHandleResponse
             {

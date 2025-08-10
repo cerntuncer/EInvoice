@@ -23,8 +23,10 @@ namespace ApiLayer.Controllers
         [HttpPost(Name = "CreateCustomerSupplier")]
         public async Task<IActionResult> Create(CreateCustomerSupplierHandleRequest request)
         {
-            var data = await _mediator.Send(request);
-            return Ok(data);
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
         // GET: /CustomerSupplier/{id}
         [HttpGet("{id}", Name = "GetCustomerSupplierById")]
@@ -33,7 +35,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new GetCustomerSupplierByIdHandleRequest { Id = id });
 
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -43,7 +45,7 @@ namespace ApiLayer.Controllers
         {
             var result = await _mediator.Send(request);
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
             return Ok(result);
         }
 
@@ -54,7 +56,7 @@ namespace ApiLayer.Controllers
             var request = new DeleteCustomerSupplierHandleRequest { Id = id };
             var result = await _mediator.Send(request);
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
             return Ok(result);
         }
 

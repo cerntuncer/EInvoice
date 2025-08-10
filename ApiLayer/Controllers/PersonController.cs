@@ -20,8 +20,10 @@ namespace ApiLayer.Controllers
         [HttpPost(Name = "CreatePerson")]
         public async Task<IActionResult> Create(CreatePersonHandleRequest request)
         {
-            var data = await _mediator.Send(request);
-            return Ok(data);
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
         // GET: /Person/{id}
         [HttpGet("{id}", Name = "GetPersonById")]
@@ -30,21 +32,19 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new GetPersonByIdHandleRequest { Id = id });
 
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
        // PUT :/Person/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, UpdatePersonHandleRequest request)
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdatePersonHandleRequest request)
         {
-            if (id != request.Id)
-                return BadRequest("Parametre ID ile body ID uyuþmuyor.");
 
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -56,7 +56,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }

@@ -16,28 +16,37 @@ namespace BusinessLogicLayer.Handler.BankHandler.Commands
 
         public async Task<DeleteBankHandleResponse> Handle(DeleteBankHandleRequest request, CancellationToken cancellationToken)
         {
-            var bank = _bankRepository.Find(request.Id);
+            string? message = null;
 
+            // --- Varlık kontrolü ---
+            var bank = _bankRepository.Find(request.Id);
             if (bank == null)
             {
-                return new DeleteBankHandleResponse
-                {
-                    Error = true,
-                    Message = "Banka bulunamadı."
-                };
+                message = "Banka bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (bank.CurrentId != request.CurrentId)
+                    message = "Bu banka belirtilen cari hesaba ait değil. Silinemez.";
+
+                // (opsiyonel) Zaten pasif mi?
+                if (message == null && bank.Status == Status.Passive)
+                    message = "Banka zaten pasif durumda.";
             }
 
-            if (bank.CurrentId != request.CurrentId)
+            if (message != null)
             {
                 return new DeleteBankHandleResponse
                 {
                     Error = true,
-                    Message = "Bu banka belirtilen cari hesaba ait değil. Silinemez."
+                    Message = message
                 };
             }
 
-            bank.Status = Status.Passive;
-            _bankRepository.Update(bank); // Soft delete işlemi
+            // --- Soft delete ---
+            bank!.Status = Status.Passive;
+            _bankRepository.Update(bank);
 
             return new DeleteBankHandleResponse
             {

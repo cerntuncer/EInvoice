@@ -12,25 +12,20 @@ namespace ApiLayer.Controllers
     public class CredentialController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public CredentialController(IMediator mediator) => _mediator = mediator;
+        public CredentialController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
 
         // POST: /Credential
         [HttpPost(Name = "CreateCredential")]
         [ProducesResponseType(typeof(CreateUserCredentialHandleResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Create([FromBody] CreateUserCredentialHandleRequest req)
+        public async Task<IActionResult> Create(CreateUserCredentialHandleRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            try
-            {
-                var result = await _mediator.Send(req);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // ör: user yok, email zaten var, aynı kullanıcıya ikinci credential vb.
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
     }
 }

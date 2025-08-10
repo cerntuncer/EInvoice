@@ -16,36 +16,44 @@ namespace BusinessLogicLayer.Handler.CaseHandler.Commands
 
         public async Task<UpdateCaseHandleResponse> Handle(UpdateCaseHandleRequest request, CancellationToken cancellationToken)
         {
-            var kasa = _caseRepository.Find(request.Id);
+            string? message = null;
 
+            // --- Varlık kontrolü ---
+            var kasa = _caseRepository.Find(request.Id);
             if (kasa == null)
             {
-                return new UpdateCaseHandleResponse
+                message = "Kasa bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (kasa.CurrentId != request.CurrentId)
+                    message = "Bu kasa belirtilen cari hesaba ait değil.";
+
+                // --- Adres kontrolü ---
+                if (message == null)
                 {
-                    Error = true,
-                    Message = "Kasa bulunamadı."
-                };
+                    var addr = request.Address?.Trim();
+                    if (string.IsNullOrWhiteSpace(addr) || addr!.Length > 100)
+                        message = "Adres boş olamaz ve 100 karakteri geçemez.";
+                }
+
+                // --- Status enum kontrolü ---
+                if (message == null && !Enum.IsDefined(typeof(Status), request.Status))
+                    message = "Geçersiz durum bilgisi.";
             }
 
-            if (kasa.CurrentId != request.CurrentId)
+            if (message != null)
             {
                 return new UpdateCaseHandleResponse
                 {
                     Error = true,
-                    Message = "Bu kasa belirtilen cari hesaba ait değil."
+                    Message = message
                 };
             }
 
-            if (string.IsNullOrWhiteSpace(request.Address) || request.Address.Length > 100)
-            {
-                return new UpdateCaseHandleResponse
-                {
-                    Error = true,
-                    Message = "Adres boş olamaz ve 100 karakteri geçemez."
-                };
-            }
-
-            kasa.Address = request.Address;
+            // --- Güncelleme ---
+            kasa!.Address = request.Address!.Trim();
             kasa.Status = request.Status;
 
             _caseRepository.Update(kasa);

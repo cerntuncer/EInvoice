@@ -28,7 +28,7 @@ namespace ApiLayer.Controllers
 
                 // Sonuca göre HTTP yanıtı döndür
                 if (result.Error)
-                    return BadRequest(result);
+                    return UnprocessableEntity(result);
 
                 return Ok(result);
             }
@@ -41,7 +41,7 @@ namespace ApiLayer.Controllers
                 var result = await _mediator.Send(request);
 
                 if (result.Error)
-                    return NotFound(result); // 404 - bulunamadı veya hata varsa
+                    return UnprocessableEntity(result); // 404 - bulunamadı veya hata varsa
 
                 return Ok(result); // 200 - başarılı
             }
@@ -57,7 +57,7 @@ namespace ApiLayer.Controllers
                 var result = await _mediator.Send(request);
 
                 if (result.Error)
-                    return NotFound(result); // 404 - Adres bulunamadı
+                    return UnprocessableEntity(result); // 404 - Adres bulunamadı
 
                 return Ok(result); // 200 - Başarılı
             }
@@ -68,7 +68,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -83,7 +83,7 @@ namespace ApiLayer.Controllers
             });
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }

@@ -21,8 +21,10 @@ namespace ApiLayer.Controllers
         [HttpPost(Name = "CreateProductAndService")]
         public async Task<IActionResult> Create(CreateProductAndServiceHandleRequest request)
         {
-            var response = await _mediator.Send(request);
-            return Ok(response);
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
         // GET: /ProductAndService/{id}
         [HttpGet("{id}", Name = "GetProductAndServiceById")]
@@ -31,21 +33,19 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new GetProductAndServiceByIdHandleRequest { Id = id });
 
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
         //PUT :/ProductAndService/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, UpdateProductAndServiceHandleRequest request)
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdateProductAndServiceHandleRequest request)
         {
-            if (id != request.Id)
-                return BadRequest("ID uyuşmuyor.");
 
             var result = await _mediator.Send(request);
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -56,7 +56,7 @@ namespace ApiLayer.Controllers
             var result = await _mediator.Send(new DeleteProductAndServiceHandleRequest { Id = id });
 
             if (result.Error)
-                return BadRequest(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }

@@ -17,8 +17,11 @@ public class CurrentController : ControllerBase
     [HttpPost(Name = "CreateCurrent")]
     public async Task<IActionResult> Create(CreateCurrentHandleRequest request)
     {
-        var response = await _mediator.Send(request);
-        return Ok(response);
+        var result = await _mediator.Send(request);
+
+        if (result.Error)
+            return UnprocessableEntity(result);
+        return Ok(result);
     }
     // GET: /Current/{id}
     [HttpGet("{id}", Name = "GetCurrentById")]
@@ -27,7 +30,7 @@ public class CurrentController : ControllerBase
         var result = await _mediator.Send(new GetCurrentByIdHandleRequest { Id = id });
 
         if (result.Error)
-            return NotFound(result);
+            return UnprocessableEntity(result);
 
         return Ok(result);
     }
@@ -38,7 +41,7 @@ public class CurrentController : ControllerBase
         var result = await _mediator.Send(new GetCurrentsByUserIdHandleRequest { UserId = userId });
 
         if (result.Error)
-            return NotFound(result);
+            return UnprocessableEntity(result);
 
         return Ok(result);
     }
@@ -47,7 +50,8 @@ public class CurrentController : ControllerBase
     public async Task<IActionResult> Update(UpdateCurrentHandleRequest request)
     {
         var result = await _mediator.Send(request);
-        if (result.Error) return BadRequest(result);
+        if (result.Error)
+            return UnprocessableEntity(result);
         return Ok(result);
     }
     //DELETE: /Current/{id}?userId=...
@@ -60,7 +64,8 @@ public class CurrentController : ControllerBase
             UserId = userId
         });
 
-        if (result.Error) return BadRequest(result);
+        if (result.Error)
+            return UnprocessableEntity(result);
         return Ok(result);
     }
 

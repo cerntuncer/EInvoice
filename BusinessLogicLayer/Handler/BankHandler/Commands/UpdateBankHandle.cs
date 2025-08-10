@@ -1,5 +1,6 @@
 ﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.BankHandler.DTOs;
+using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
 namespace BusinessLogicLayer.Handler.BankHandler.Commands
@@ -15,57 +16,58 @@ namespace BusinessLogicLayer.Handler.BankHandler.Commands
 
         public async Task<UpdateBankHandleResponse> Handle(UpdateBankHandleRequest request, CancellationToken cancellationToken)
         {
-            var bank = _bankRepository.Find(request.Id);
+            string? message = null;
 
+            // --- Varlık kontrolü ---
+            var bank = _bankRepository.Find(request.Id);
             if (bank == null)
             {
-                return new UpdateBankHandleResponse
+                message = "Banka bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (bank.CurrentId != request.CurrentId)
+                    message = "Bu banka belirtilen Current kaydına ait değil.";
+
+                // --- Alan validasyonları ---
+                // Name
+                if (message == null)
                 {
-                    Error = true,
-                    Message = "Banka bulunamadı."
-                };
+                    var name = request.Name?.Trim();
+                    if (string.IsNullOrWhiteSpace(name) || name!.Length > 50)
+                        message = "Banka adı boş olamaz ve 50 karakteri geçemez.";
+                }
+
+                // IBAN (boşlukları temizleyip uzunluk kontrolü)
+                if (message == null)
+                {
+                    var iban = request.Iban?.Trim().Replace(" ", "");
+                    if (string.IsNullOrWhiteSpace(iban) || iban!.Length > 26)
+                        message = "IBAN boş olamaz ve 26 karakteri geçemez.";
+                }
+
+                // Sayısal alanlar
+                if (message == null && (request.BranchCode <= 0 || request.AccountNo <= 0))
+                    message = "Şube kodu ve hesap numarası sıfırdan büyük olmalıdır.";
+
+                // Status enum kontrolü (varsa)
+                if (message == null && !Enum.IsDefined(typeof(Status), request.Status))
+                    message = "Geçersiz durum bilgisi.";
             }
 
-            //Bu banka gerçekten CurrentId'ye bağlı mı?
-            if (bank.CurrentId != request.CurrentId)
+            if (message != null)
             {
                 return new UpdateBankHandleResponse
                 {
                     Error = true,
-                    Message = "Bu banka belirtilen Current kaydına ait değil."
+                    Message = message
                 };
             }
 
-            
-            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 50)
-            {
-                return new UpdateBankHandleResponse
-                {
-                    Error = true,
-                    Message = "Banka adı boş olamaz ve 50 karakteri geçemez."
-                };
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Iban) || request.Iban.Length > 26)
-            {
-                return new UpdateBankHandleResponse
-                {
-                    Error = true,
-                    Message = "IBAN boş olamaz ve 26 karakteri geçemez."
-                };
-            }
-
-            if (request.BranchCode <= 0 || request.AccountNo <= 0)
-            {
-                return new UpdateBankHandleResponse
-                {
-                    Error = true,
-                    Message = "Şube kodu ve hesap numarası sıfırdan büyük olmalıdır."
-                };
-            }
-
-            bank.Name = request.Name;
-            bank.Iban = request.Iban;
+            // --- Güncelleme ---
+            bank!.Name = request.Name!.Trim();
+            bank.Iban = request.Iban!.Trim().Replace(" ", "");
             bank.BranchCode = request.BranchCode;
             bank.AccountNo = request.AccountNo;
             bank.Status = request.Status;

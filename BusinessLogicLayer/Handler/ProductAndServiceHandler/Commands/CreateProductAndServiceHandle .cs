@@ -17,37 +17,31 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Commands
 
         public async Task<CreateProductAndServiceHandleResponse> Handle(CreateProductAndServiceHandleRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Length > 100)
+            string? message = null;
+
+            // --- Validasyonlar ---
+            var name = request.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || name!.Length > 100)
+                message = "Ürün/hizmet adı boş olamaz ve 100 karakteri geçemez.";
+            else if (request.UnitPrice < 0)
+                message = "Birim fiyat negatif olamaz.";
+            else if (!Enum.IsDefined(typeof(UnitType), request.UnitType))
+                message = "Geçersiz birim türü.";
+
+            if (message != null)
             {
                 return new CreateProductAndServiceHandleResponse
                 {
-                    Message = "Ürün/hizmet adı boş olamaz ve 100 karakteri geçemez.",
-                    Error = true
+                    Error = true,
+                    Message = message
                 };
             }
 
-            if (request.UnitPrice < 0)
-            {
-                return new CreateProductAndServiceHandleResponse
-                {
-                    Message = "Birim fiyat negatif olamaz.",
-                    Error = true
-                };
-            }
-
-            if (!Enum.IsDefined(typeof(UnitType), request.UnitType))
-            {
-                return new CreateProductAndServiceHandleResponse
-                {
-                    Message = "Geçersiz birim türü.",
-                    Error = true
-                };
-            }
-
+            // --- Oluşturma ---
             var entity = new ProductAndService
             {
-                Name = request.Name,
-                price = request.UnitPrice,
+                Name = name!,
+                price = request.UnitPrice,    // not: alan adı 'price' ise doğru
                 UnitType = request.UnitType,
                 Status = Status.Active
             };
@@ -56,8 +50,8 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Commands
 
             return new CreateProductAndServiceHandleResponse
             {
-                Message = "Ürün/hizmet başarıyla oluşturuldu.",
-                Error = false
+                Error = false,
+                Message = "Ürün/hizmet başarıyla oluşturuldu."
             };
         }
     }

@@ -24,30 +24,45 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.Commands
 
         public async Task<CreateLineOfInvoiceHandleResponse> Handle(CreateLineOfInvoiceHandleRequest request, CancellationToken cancellationToken)
         {
+            string? message = null;
+
+            // --- Temel validasyonlar ---
             if (request == null)
-                return new CreateLineOfInvoiceHandleResponse { Message = "İstek boş olamaz.", Error = true };
-
+                message = "İstek boş olamaz.";
             else if (request.InvoiceId <= 0)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Geçersiz fatura ID.", Error = true };
-
+                message = "Geçersiz fatura ID.";
             else if (request.ProductAndServiceId <= 0)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Geçersiz ürün/hizmet ID.", Error = true };
-
+                message = "Geçersiz ürün/hizmet ID.";
             else if (request.Quantity <= 0)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Miktar sıfırdan büyük olmalı.", Error = true };
-
+                message = "Miktar sıfırdan büyük olmalı.";
             else if (request.UnitPrice < 0)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Birim fiyat negatif olamaz.", Error = true };
+                message = "Birim fiyat negatif olamaz.";
 
-            // 🔍 Aktiflik kontrolleri
-            var fatura = _invoiceRepository.Find(request.InvoiceId);
-            if (fatura == null)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Fatura bulunamadı veya pasif.", Error = true };
+            // --- Varlık ve durum kontrolleri ---
+            if (message == null)
+            {
+                var invoice = _invoiceRepository.Find(request.InvoiceId);
+                if (invoice == null || invoice.Status == Status.Passive)
+                    message = "Fatura bulunamadı veya pasif.";
 
-            else if (_productRepository.Find(request.ProductAndServiceId) == null || _productRepository.Find(request.ProductAndServiceId).Status != Status.Active)
-                return new CreateLineOfInvoiceHandleResponse { Message = "Ürün/Hizmet bulunamadı veya pasif.", Error = true };
+                if (message == null)
+                {
+                    var product = _productRepository.Find(request.ProductAndServiceId);
+                    if (product == null || product.Status != Status.Active)
+                        message = "Ürün/Hizmet bulunamadı veya pasif.";
+                }
+            }
 
-            // 🧾 Satır oluştur
+            if (message != null)
+            {
+                return new CreateLineOfInvoiceHandleResponse
+                {
+                    Error = true,
+                    Message = message
+                };
+            }
+
+            // --- Satır oluştur ---
             var line = new LineOfInvoice
             {
                 InvoiceId = request.InvoiceId,
@@ -61,8 +76,8 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.Commands
 
             return new CreateLineOfInvoiceHandleResponse
             {
-                Message = "Fatura satırı başarıyla oluşturuldu.",
-                Error = false
+                Error = false,
+                Message = "Fatura satırı başarıyla oluşturuldu."
             };
         }
     }

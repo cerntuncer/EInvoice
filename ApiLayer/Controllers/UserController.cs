@@ -21,17 +21,18 @@ namespace ApiLayer.Controllers
         [HttpPost(Name = "CreateUser")]
         public async Task<IActionResult> Create(CreateUserHandleRequest request)
         {
-            var data = await _mediator.Send(request);
-            return Ok(data);
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
         // GET: /User/{id}
         [HttpGet("{id}", Name = "GetUserById")]
         public async Task<IActionResult> GetById(long id)
         {
             var result = await _mediator.Send(new GetUserByIdHandleRequest { Id = id });
-
             if (result.Error)
-                return NotFound(result);
+                return UnprocessableEntity(result);
 
             return Ok(result);
         }
@@ -40,14 +41,18 @@ namespace ApiLayer.Controllers
         public async Task<IActionResult> Update(UpdateUserHandleRequest request)
         {
             var result = await _mediator.Send(request);
-            return result.Error ? BadRequest(result.Message) : Ok(result.Message);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result.Message);
         }
         // DELETE: /User/{id}?personId=5
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(long id)
         {
             var result = await _mediator.Send(new DeleteUserHandleRequest { Id = id });
-            return result.Error ? BadRequest(result.Message) : Ok(result.Message);
+            if (result.Error)
+                return UnprocessableEntity(result); 
+            return Ok(result.Message);
         }
        
     }

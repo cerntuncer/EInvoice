@@ -16,27 +16,36 @@ namespace BusinessLogicLayer.Handler.CaseHandler.Commands
 
         public async Task<DeleteCaseHandleResponse> Handle(DeleteCaseHandleRequest request, CancellationToken cancellationToken)
         {
-            var kasa = _caseRepository.Find(request.Id);
+            string? message = null;
 
+            // --- Varlık kontrolü ---
+            var kasa = _caseRepository.Find(request.Id);
             if (kasa == null)
             {
-                return new DeleteCaseHandleResponse
-                {
-                    Error = true,
-                    Message = "Kasa bulunamadı."
-                };
+                message = "Kasa bulunamadı.";
+            }
+            else
+            {
+                // --- Sahiplik kontrolü ---
+                if (kasa.CurrentId != request.CurrentId)
+                    message = "Bu kasa belirtilen cari hesaba ait değil.";
+
+                // (opsiyonel) Zaten pasif mi?
+                if (message == null && kasa.Status == Status.Passive)
+                    message = "Kasa zaten pasif durumda.";
             }
 
-            if (kasa.CurrentId != request.CurrentId)
+            if (message != null)
             {
                 return new DeleteCaseHandleResponse
                 {
                     Error = true,
-                    Message = "Bu kasa belirtilen cari hesaba ait değil."
+                    Message = message
                 };
             }
 
-            kasa.Status = Status.Passive;
+            // --- Soft delete ---
+            kasa!.Status = Status.Passive;
             _caseRepository.Update(kasa);
 
             return new DeleteCaseHandleResponse

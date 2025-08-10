@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -30,25 +31,65 @@ namespace BusinessLogicLayer.Handler.UserCredentialHandler.Commands
             CreateUserCredentialHandleRequest request,
             CancellationToken cancellationToken)
         {
-            var user =  _userRepo.GetById(request.UserId);
-            if (user is null)
-                throw new InvalidOperationException("User bulunamadı.");
+            string? message = null;
 
-            // 2) E‑posta kullanımda mı?
-            var existingByEmail = await _credRepo.GetByEmailAsync(request.Email);
-            if (existingByEmail is not null)
-                throw new InvalidOperationException("Bu e‑posta zaten kullanılmakta.");
-
-            // 3) Bu user için credential var mı? (1-1 ilişki)
-            // Eğer arayüzünde varsa kullan; yoksa DB unique zaten engeller.
-            if (_credRepo is IHasUserIdLookup hasUserIdLookup)
+            // --- Girdi kontrolleri ---
+            if (request == null)
             {
-                var existingByUser = await hasUserIdLookup.GetByUserIdAsync(request.UserId);
-                if (existingByUser is not null)
-                    throw new InvalidOperationException("Bu kullanıcı için zaten kimlik oluşturulmuş.");
+                message = "İstek boş olamaz.";
+            }
+            else
+            {
+                // Kullanıcı var mı?
+                var user = _userRepo.GetById(request.UserId);
+                if (user is null)
+                {
+                    message = "Kullanıcı bulunamadı.";
+                }
+
+                // E-posta formatı
+                if (message == null)
+                {
+                    if (string.IsNullOrWhiteSpace(request.Email))
+                        message = "E-posta zorunludur.";
+                    else
+                    {
+                        try { _ = new MailAddress(request.Email); }
+                        catch { message = "E-posta formatı geçersiz."; }
+                    }
+                }
+
+                // Parola politikası (minimum 6 karakter)
+                if (message == null && (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6))
+                    message = "Parola en az 6 karakter olmalıdır.";
+
+                // E‑posta kullanımda mı?
+                if (message == null)
+                {
+                    var existingByEmail = await _credRepo.GetByEmailAsync(request.Email);
+                    if (existingByEmail is not null)
+                        message = "Bu e‑posta zaten kullanılmakta.";
+                }
+
+                // Bu user için credential var mı? (1-1 ilişki)
+                if (message == null && _credRepo is IHasUserIdLookup hasUserIdLookup)
+                {
+                    var existingByUser = await hasUserIdLookup.GetByUserIdAsync(request.UserId);
+                    if (existingByUser is not null)
+                        message = "Bu kullanıcı için zaten kimlik oluşturulmuş.";
+                }
             }
 
-            // 4) Oluştur
+            if (message != null)
+            {
+                return new CreateUserCredentialHandleResponse
+                {
+                    Error = true,
+                    Message = message
+                };
+            }
+
+            // --- Oluşturma ---
             var cred = new UserCredential
             {
                 UserId = request.UserId,
@@ -57,18 +98,19 @@ namespace BusinessLogicLayer.Handler.UserCredentialHandler.Commands
                 LockoutEnabled = request.LockoutEnabled,
                 EmailConfirmed = false,
                 SecurityStamp = Guid.NewGuid().ToString("N"),
+                CreatedDate = DateTime.UtcNow
             };
-
             cred.PasswordHash = _hasher.HashPassword(cred, request.Password);
 
             await _credRepo.AddAsync(cred);
-
 
             if (_credRepo is IUnitOfWorkLike uow)
                 await uow.SaveChangesAsync();
 
             return new CreateUserCredentialHandleResponse
             {
+                Error = false,
+                Message = "Kullanıcı kimliği başarıyla oluşturuldu.",
                 CredentialId = cred.Id,
                 UserId = cred.UserId,
                 Email = cred.Email,
@@ -78,18 +120,13 @@ namespace BusinessLogicLayer.Handler.UserCredentialHandler.Commands
         }
     }
 
-    /// <summary>
-    /// (Opsiyonel) Repo implementasyonunda varsa UserId ile lookup.
-    /// </summary>
+    // (Opsiyonel) Repo implementasyonunda varsa UserId ile lookup.
     public interface IHasUserIdLookup
     {
         Task<UserCredential?> GetByUserIdAsync(long userId);
     }
 
-    /// <summary>
-    /// (Opsiyonel) SaveChanges mantığını repository üzerinden tetiklemek istersen.
-    /// Projende UoW varsa bu interface'e gerek yok.
-    /// </summary>
+    // (Opsiyonel) SaveChanges mantığını repository üzerinden tetiklemek istersen.
     public interface IUnitOfWorkLike
     {
         Task<int> SaveChangesAsync();

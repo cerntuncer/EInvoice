@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
       <PrivateAssets>all</PrivateAssets>
@@ -22,6 +23,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DatabaseAccessLayer\DatabaseAccessLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\startbootstrap-sb-admin-gh-pages\css\" />
+    <Folder Include="wwwroot\startbootstrap-sb-admin-gh-pages\js\" />
   </ItemGroup>
 
 </Project>

@@ -19,20 +19,17 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Commands
 
         public async Task<CreateAddressHandleResponse> Handle(CreateAddressHandleRequest request, CancellationToken cancellationToken)
         {
-            string message = null;
+            string? message = null;
 
+            // --- Validasyon / İş kuralı kontrolleri ---
             if (request == null)
                 message = "Request boş olamaz.";
-
             else if (string.IsNullOrWhiteSpace(request.Text))
                 message = "Adres metni boş olamaz.";
-
             else if (request.PersonId <= 0)
                 message = "PersonId geçersiz.";
-
             else if (!Enum.IsDefined(typeof(AddressType), request.AddressType))
                 message = "Geçersiz adres tipi.";
-
             else
             {
                 var person = _personRepository.Find(request.PersonId);
@@ -46,25 +43,28 @@ namespace BusinessLogicLayer.Handler.AddressHandler.Commands
             {
                 return new CreateAddressHandleResponse
                 {
-                    Message = message,
-                    Error = true
+                    Error = true,
+                    Message = message
                 };
             }
 
+            // --- Kayıt ---
             var address = new Address
             {
                 AddressType = request.AddressType,
-                Text = request.Text,
+                Text = request.Text.Trim(),
                 PersonId = request.PersonId,
                 Status = Status.Active
             };
 
             _addressRepository.Add(address);
+            // repo SaveChanges'i içeride yapıyorsa burada tamam; değilse async/save çağrın vardır.
 
             return new CreateAddressHandleResponse
             {
-                Message = "Adres başarıyla oluşturuldu.",
-                Error = false
+                Error = false,
+                Message = "Adres başarıyla oluşturuldu."
+                // DTO'nda alan varsa: Id = address.Id, PersonId = address.PersonId
             };
         }
     }
