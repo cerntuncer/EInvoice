@@ -20,6 +20,6 @@ namespace DatabaseAccessLayer.Entities
 
         [ForeignKey("CurrentId")]
         public Current Current { get; set; }
-        public Status Status { get; set; }
+      
     }
 }

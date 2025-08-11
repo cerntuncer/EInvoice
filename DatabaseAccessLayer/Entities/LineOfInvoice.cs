@@ -21,7 +21,7 @@ namespace DatabaseAccessLayer.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; }
 
-        public Status Status { get; set; }
+    
     
     }
 
