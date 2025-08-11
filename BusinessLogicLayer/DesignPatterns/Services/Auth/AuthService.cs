@@ -9,35 +9,32 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
 {
     public class AuthService : IAuthService
     {
-        private readonly IUserCredentialRepository _credRepo;
-        private readonly IUserRepository _userRepo; // sende zaten var
-        private readonly IPasswordHasher<UserCredential> _hasher;
-        private readonly IJwtTokenService _jwt;
-        private readonly IConfiguration _cfg;
+        private readonly IUserCredentialRepository _credRepo;//kimlik bilgileri tablosu
+        private readonly IPasswordHasher<UserCredential> _hasher;//düz şifreyi veritabanındaki hash ile karşılaştırır
+        private readonly IJwtTokenService _jwt;//token üretir/yeniler
+        private readonly IConfiguration _cfg;//konfigürasyonlardan değer okur 
 
         public AuthService(
             IUserCredentialRepository credRepo,
-            IUserRepository userRepo,
             IPasswordHasher<UserCredential> hasher,
             IJwtTokenService jwt,
             IConfiguration cfg)
         {
             _credRepo = credRepo;
-            _userRepo = userRepo;
             _hasher = hasher;
             _jwt = jwt;
             _cfg = cfg;
         }
 
-        public async Task<LoginResponse> LoginAsync(string email, string password)
+        public async Task<LoginResponse> LoginAsync(string email, string password)//giriş isteği
         {
             var cred = await _credRepo.GetByEmailAsync(email);
-            if (cred is null) throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");
+            if (cred is null) throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");//email yoksa 401 
 
             if (cred.LockoutEnabled && cred.LockoutEnd.HasValue && cred.LockoutEnd > DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Hesap kilitli.");
 
-            var verify = _hasher.VerifyHashedPassword(cred, cred.PasswordHash, password);
+            var verify = _hasher.VerifyHashedPassword(cred, cred.PasswordHash, password);//şifre doğrulama
             if (verify == PasswordVerificationResult.Failed)
             {
                 cred.AccessFailedCount += 1;
@@ -59,7 +56,7 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
             var access = _jwt.GenerateAccessToken(user, roles, cred.Email);
             var (refresh, refreshExp) = _jwt.GenerateRefreshToken();
 
-            cred.RefreshToken = refresh;
+            cred.RefreshToken = refresh;//refresh token ı kaydeder.tokenı dbde sakladım çünkü daha sonra doğrulama olacak
             cred.RefreshTokenExpiresAt = refreshExp;
             await _credRepo.UpdateAsync(cred);
 
@@ -72,17 +69,17 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
             };
         }
 
-        public async Task<LoginResponse> RefreshAsync(string refreshToken)
+        public async Task<LoginResponse> RefreshAsync(string refreshToken)//müşteri sadece refresh token gönderir,sunucu yeni access ve yeni refresh üretir
         {
-            var cred = await _credRepo.GetByRefreshTokenAsync(refreshToken);
+            var cred = await _credRepo.GetByRefreshTokenAsync(refreshToken);//refresh token doğrulama
             if (cred is null || cred.RefreshTokenExpiresAt <= DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Geçersiz/expired refresh token.");
 
-            var roles = Enumerable.Empty<string>();
+            var roles = Enumerable.Empty<string>();//yeni access ve refresh üretimi 
             var access = _jwt.GenerateAccessToken(cred.User, roles, cred.Email);
             var (newRef, newExp) = _jwt.GenerateRefreshToken();
 
-            cred.RefreshToken = newRef;
+            cred.RefreshToken = newRef;//refresh güncellenir
             cred.RefreshTokenExpiresAt = newExp;
             await _credRepo.UpdateAsync(cred);
 

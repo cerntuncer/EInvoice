@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BusinessLogicLayer.DesignPatterns.Services.Auth;
-using BusinessLogicLayer.Handler.AuthHandler.Login; // LoginRequest, LoginResponse
+using BusinessLogicLayer.Handler.AuthHandler.Login;
+using BusinessLogicLayer.Handler.AuthHandler.Refresh;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ApiLayer.Controllers
 {
     [ApiController]
-    [Route("[controller]")] // -> /Auth
+    [Route("[controller]")] // /Auth
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _auth;
@@ -18,9 +20,10 @@ namespace ApiLayer.Controllers
         // POST: /Auth/Login
         [HttpPost("Login", Name = "AuthLogin")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login(LoginRequest request)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-
             try
             {
                 var result = await _auth.LoginAsync(request.Email, request.Password);
@@ -39,11 +42,13 @@ namespace ApiLayer.Controllers
         // POST: /Auth/Refresh
         [HttpPost("Refresh", Name = "AuthRefresh")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
         {
             try
             {
-                var result = await _auth.RefreshAsync(refreshToken);
+                var result = await _auth.RefreshAsync(request.RefreshToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)

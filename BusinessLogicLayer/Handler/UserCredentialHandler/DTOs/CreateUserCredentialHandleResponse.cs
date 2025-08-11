@@ -2,9 +2,9 @@
 
 namespace BusinessLogicLayer.Handler.UserCredentialHandler.DTOs
 {
-    public sealed class CreateUserCredentialHandleResponse
+    public class CreateUserCredentialHandleResponse
     {
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public bool Error { get; set; }
         public long CredentialId { get; set; }
         public long UserId { get; set; }

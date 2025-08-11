@@ -1,13 +1,12 @@
-﻿using System;
-using MediatR;
+﻿using MediatR;
 
 namespace BusinessLogicLayer.Handler.UserCredentialHandler.DTOs
 {
-    public sealed class CreateUserCredentialHandleRequest : IRequest<CreateUserCredentialHandleResponse>
+    public class CreateUserCredentialHandleRequest : IRequest<CreateUserCredentialHandleResponse>
     {
-        public long UserId { get; set; }                 // Hangi User için kimlik oluşturuluyor
-        public string Email { get; set; } = null!;       // Login email
-        public string Password { get; set; } = null!;    // Düz şifre (hashlenecek)
-        public bool LockoutEnabled { get; set; } = false;// Opsiyonel
+        public long UserId { get; set; }   // Kimlik hangi User'a açılıyor
+        public string Email { get; set; } = null!;
+        public string Password { get; set; } = null!;
+        public bool LockoutEnabled { get; set; } = false;
     }
 }

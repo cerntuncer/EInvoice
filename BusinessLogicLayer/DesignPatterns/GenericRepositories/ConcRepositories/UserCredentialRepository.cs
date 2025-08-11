@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseAccessLayer.Repositories
 {
+    //usercredential tablosuyla konuşuyor.EFcore repom
     public class UserCredentialRepository : BaseRepositoriesository<UserCredential>, IUserCredentialRepository
     {
         public UserCredentialRepository(MyContext db) : base(db){}
@@ -13,6 +14,7 @@ namespace DatabaseAccessLayer.Repositories
         public Task<UserCredential?> GetByEmailAsync(string email)
         {
             var norm = email.Trim().ToUpperInvariant();
+            //Trim() + ToUpperInvariant(): basit normalizasyon (boşlukları at, büyük harfe çevir).
 
             return _db.UserCredentials
                       .Include(c => c.User)
@@ -37,12 +39,13 @@ namespace DatabaseAccessLayer.Repositories
             await _db.SaveChangesAsync();
         }
 
-        public Task UpdateAsync(UserCredential credential)
+        public async Task UpdateAsync(UserCredential credential)
         {
             credential.UpdatedDate = DateTime.UtcNow;
             _db.UserCredentials.Update(credential);
-            return Task.CompletedTask;
+            await _db.SaveChangesAsync();
         }
+
 
         public Task<UserCredential?> GetByUserIdAsync(long userId)
         {

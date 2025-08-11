@@ -23,7 +23,7 @@ namespace DatabaseAccessLayer.Options
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(x => x.UserId).IsUnique();
-            builder.HasIndex(x => x.Email).IsUnique(false);
+            builder.HasIndex(x => x.Email).IsUnique();
         }
     }
 
