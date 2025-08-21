@@ -2,30 +2,46 @@ using System.Diagnostics;
 using EInvoice.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using DatabaseAccessLayer.Contexts;
+using Microsoft.EntityFrameworkCore;
+using PresentationLayer.Models;
+using DatabaseAccessLayer.Enumerations;
 
 namespace EInvoice.Controllers
 {
     public class DashboardController : Controller
     {
         private readonly ILogger<DashboardController> _logger;
+        private readonly MyContext _context;
 
-        public DashboardController(ILogger<DashboardController> logger)
+        public DashboardController(ILogger<DashboardController> logger, MyContext context)
         {
             _logger = logger;
+            _context = context;
         }
         [Authorize]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 var username = User.Identity.Name;
 
-                var userId = User.FindFirst("sub")?.Value;        // JWT'deki "sub" alan˝
+                var userId = User.FindFirst("sub")?.Value;        // JWT'deki "sub" alanÔøΩ
                 var email = User.FindFirst("email")?.Value;       // JWT'deki "email" claim'i
-                var role = User.FindFirst("role")?.Value;         // Kullan˝c˝n˝n rol¸
+                var role = User.FindFirst("role")?.Value;         // KullanÔøΩcÔøΩnÔøΩn rolÔøΩ
             }
 
-            return View();
+            var users = await _context.Users
+                .Include(u => u.Person)
+                .Select(u => new DashboardUserListItemViewModel
+                {
+                    UserId = u.Id,
+                    Name = u.Person.Name,
+                    UserType = u.Type == UserType.NaturalPerson ? "Ger√ßek Ki≈üi" : "T√ºzel Ki≈üi"
+                })
+                .ToListAsync();
+
+            return View(users);
         }
 
         public IActionResult Privacy()
