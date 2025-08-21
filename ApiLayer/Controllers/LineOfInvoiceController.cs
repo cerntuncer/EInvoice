@@ -18,7 +18,7 @@ namespace ApiLayer.Controllers
         }
 
         [HttpPost(Name = "CreateLineOfInvoice")]
-        public async Task<IActionResult> Create([FromBody] CreateLineOfInvoiceHandleRequest request)
+        public async Task<IActionResult> Create(CreateLineOfInvoiceHandleRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.Error)
@@ -38,7 +38,7 @@ namespace ApiLayer.Controllers
         }
         // 🔄 UPDATE
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateLineOfInvoiceHandleRequest request)
+        public async Task<IActionResult> Update(UpdateLineOfInvoiceHandleRequest request)
         {
 
             var result = await _mediator.Send(request);

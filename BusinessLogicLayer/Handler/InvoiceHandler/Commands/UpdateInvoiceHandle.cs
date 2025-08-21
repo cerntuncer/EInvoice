@@ -61,22 +61,19 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                 }
 
                 // Yeni satırları ekle
-                if (request.lineOfInovices != null && request.lineOfInovices.Count > 0)
+                foreach (var line in request.lineOfInovices)
                 {
-                    foreach (var line in request.lineOfInovices)
+                    var createLineRequest = new CreateLineOfInvoiceHandleRequest
                     {
-                        var createLineRequest = new CreateLineOfInvoiceHandleRequest
-                        {
-                            InvoiceId = invoice.Id,
-                            ProductAndServiceId = line.ProductAndServiceId,
-                            Quantity = line.Quantity,
-                            UnitPrice = line.UnitPrice
-                        };
+                        InvoiceId = invoice.Id,
+                        ProductAndServiceId = line.ProductAndServiceId,
+                        Quantity = line.Quantity,
+                        UnitPrice = line.UnitPrice
+                    };
 
-                        var result = await _mediator.Send(createLineRequest);
-                        if (result.Error)
-                            throw new Exception(result.Message);
-                    }
+                    var result = await _mediator.Send(createLineRequest);
+                    if (result.Error)
+                        throw new Exception(result.Message);
                 }
 
                 await transaction.CommitAsync();
