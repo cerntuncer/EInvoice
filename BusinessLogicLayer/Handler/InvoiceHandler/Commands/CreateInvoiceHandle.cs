@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
@@ -86,6 +86,17 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                         throw new Exception(newLine.Message);
                     }
                 }
+            }
+            // Cari bakiye güncelle
+            var total = (request.lineOfInovices ?? new List<lineOfInvoices>()).Sum(x => x.UnitPrice * x.Quantity);
+            var current = _currentRepository.Find(invoice.CurrentId);
+            if (current != null)
+            {
+                if (request.Type == InvoiceType.Purchase)
+                    current.Balance -= total; // alış: düş
+                else if (request.Type == InvoiceType.Sales)
+                    current.Balance += total; // satış: ekle
+                _currentRepository.Update(current);
             }
             await transaction.CommitAsync();
             return new CreateInvoiceHandleResponse

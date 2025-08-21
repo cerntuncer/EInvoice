@@ -12,17 +12,20 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
     {
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly ILineOfInvoiceRepository _lineRepository;
+        private readonly ICurrentRepository _currentRepository;
         private readonly MyContext _context;
         private readonly IMediator _mediator;
 
         public UpdateInvoiceHandle(
             IInvoiceRepository invoiceRepository,
             ILineOfInvoiceRepository lineRepository,
+            ICurrentRepository currentRepository,
             MyContext context,
             IMediator mediator)
         {
             _invoiceRepository = invoiceRepository;
             _lineRepository = lineRepository;
+            _currentRepository = currentRepository;
             _context = context;
             _mediator = mediator;
         }
@@ -43,6 +46,9 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
             try
             {
+                // Önce eski değerleri tut
+                var previousType = invoice.Type;
+                var previousCurrentId = invoice.CurrentId;
                 // Fatura bilgilerini güncelle
                 invoice.Type = request.Type;
                 invoice.Senario = request.Senario;
@@ -55,6 +61,8 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
                 // Mevcut satırları getir
                 var existingLines = _lineRepository.Where(x => x.InvoiceId == invoice.Id).ToList();
+                var oldTotal = existingLines.Sum(l => l.UnitPrice * l.Quantity);
+                var newTotal = request.lineOfInovices?.Sum(l => l.UnitPrice * l.Quantity) ?? 0m;
 
                 // Güncellenecek veya eklenecek satırlar
                 foreach (var reqLine in request.lineOfInovices)
@@ -107,6 +115,27 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                     {
                         _lineRepository.Delete(ex);
                     }
+                }
+
+                // Cari bakiye güncelle: önce önceki etkileri geri al, sonra yenisini uygula
+                var prevCurrent = _currentRepository.Find(previousCurrentId);
+                if (prevCurrent != null)
+                {
+                    if (previousType == InvoiceType.Purchase)
+                        prevCurrent.Balance += oldTotal; // alış etkisini geri al
+                    else if (previousType == InvoiceType.Sales)
+                        prevCurrent.Balance -= oldTotal; // satış etkisini geri al
+                    _currentRepository.Update(prevCurrent);
+                }
+
+                var newCurrent = _currentRepository.Find(invoice.CurrentId);
+                if (newCurrent != null)
+                {
+                    if (request.Type == InvoiceType.Purchase)
+                        newCurrent.Balance -= newTotal; // alışta para düşer
+                    else if (request.Type == InvoiceType.Sales)
+                        newCurrent.Balance += newTotal; // satışta para artar
+                    _currentRepository.Update(newCurrent);
                 }
 
                 await transaction.CommitAsync();
