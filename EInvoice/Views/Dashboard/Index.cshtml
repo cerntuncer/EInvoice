@@ -84,7 +84,8 @@
         }
         @if (Model != null)
         {
-            <form asp-action="Update" method="post">
+            <form id="profileForm" asp-action="Update" method="post">
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="UserId" value="@Model.UserId" />
                 <input type="hidden" name="PersonId" value="@Model.PersonId" />
 
@@ -95,7 +96,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">TCKN/VKN</label>
-                        <input class="form-control" name="IdentityNumber" value="@Model.IdentityNumber" />
+                        <input class="form-control" value="@Model.IdentityNumber" readonly />
                     </div>
                 </div>
 
@@ -105,40 +106,8 @@
                         <input class="form-control" name="TaxOffice" value="@Model.TaxOffice" />
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Kişi Tipi</label>
-                        <select class="form-select" asp-for="PersonType">
-                            <option value="0">Bilinmiyor</option>
-                            <option value="1">Gerçek Kişi</option>
-                            <option value="2">Tüzel Kişi</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Kişi Durumu</label>
-                        <select class="form-select" asp-for="PersonStatus">
-                            <option value="0">Pasif</option>
-                            <option value="1">Aktif</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label">Kullanıcı Tipi</label>
-                        <select class="form-select" asp-for="UserType">
-                            <option value="0">Bilinmiyor</option>
-                            <option value="1">Gerçek Kişi</option>
-                            <option value="2">Tüzel Kişi</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label">Kullanıcı Durumu</label>
-                        <select class="form-select" asp-for="UserStatus">
-                            <option value="0">Pasif</option>
-                            <option value="1">Aktif</option>
-                        </select>
+                        <input class="form-control" value="@(Model.UserType == 1 ? "Gerçek Kişi" : (Model.UserType == 2 ? "Tüzel Kişi" : "Bilinmiyor"))" readonly />
                     </div>
                 </div>
 
@@ -154,4 +123,40 @@
 
 @section Styles { }
 
-@section Scripts { }
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('profileForm');
+            if (!form) return;
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const fd = new FormData(form);
+                const tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
+                const antiForgeryToken = tokenEl ? tokenEl.value : '';
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'RequestVerificationToken': antiForgeryToken },
+                        body: fd
+                    });
+                    const data = await response.json();
+                    const existing = form.parentElement.querySelector('.alert');
+                    if (existing) existing.remove();
+                    const alert = document.createElement('div');
+                    alert.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+                    alert.innerText = data.message || (data.success ? 'Güncellendi' : 'Güncelleme başarısız');
+                    form.parentElement.insertBefore(alert, form);
+                } catch (err) {
+                    const existing = form.parentElement.querySelector('.alert');
+                    if (existing) existing.remove();
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-danger';
+                    alert.innerText = 'Beklenmeyen bir hata oluştu.';
+                    form.parentElement.insertBefore(alert, form);
+                }
+            });
+        });
+    </script>
+}

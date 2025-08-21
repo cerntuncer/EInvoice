@@ -82,51 +82,60 @@ namespace EInvoice.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Index", model);
+                return BadRequest(new { success = false, message = "Geçersiz form verisi." });
             }
 
             var client = _httpClientFactory.CreateClient("Api");
             var accessToken = HttpContext.Session.GetString("AccessToken");
-            if (!string.IsNullOrEmpty(accessToken))
+            if (string.IsNullOrEmpty(accessToken))
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                return Unauthorized(new { success = false, message = "Oturum süresi doldu." });
+            }
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            // Güncel değerleri al (kimlik no, tip, durumlar değiştirilmesin)
+            var meResponse = await client.GetAsync("/Credential/Me");
+            if (!meResponse.IsSuccessStatusCode)
+            {
+                return Unauthorized(new { success = false, message = "Kullanıcı doğrulanamadı." });
+            }
+            var me = await meResponse.Content.ReadFromJsonAsync<GetMyCredentialResponse>();
+            if (me == null || me.Error)
+            {
+                return Unauthorized(new { success = false, message = me?.Message ?? "Kullanıcı doğrulanamadı." });
             }
 
-            // Kişi güncelle
+            var userResponse = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+            if (!userResponse.IsSuccessStatusCode)
+            {
+                return StatusCode(500, new { success = false, message = "Mevcut profil getirilemedi." });
+            }
+            var current = await userResponse.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+            if (current == null || current.Error)
+            {
+                return StatusCode(500, new { success = false, message = current?.Message ?? "Mevcut profil getirilemedi." });
+            }
+
+            // Sadece ad ve vergi dairesi güncellenecek; kimlik no, tip ve durumlar korunur
             var personUpdateRequest = new UpdatePersonRequest
             {
-                Id = model.PersonId,
+                Id = current.PersonId,
                 Name = model.Name,
-                IdentityNumber = model.IdentityNumber,
+                IdentityNumber = current.IdentityNumber,
                 TaxOffice = model.TaxOffice ?? string.Empty,
-                Type = model.PersonType,
-                Status = model.PersonStatus
+                Type = current.PersonType,
+                Status = current.PersonStatus
             };
 
             var personResponse = await client.PutAsJsonAsync("/Person", personUpdateRequest);
             if (!personResponse.IsSuccessStatusCode)
             {
-                TempData["ErrorMessage"] = "Kişi bilgileri güncellenemedi.";
-                return View("Index", model);
+                return BadRequest(new { success = false, message = "Kişi bilgileri güncellenemedi." });
             }
 
-            // Kullanıcı güncelle (tip/durum)
-            var userUpdateRequest = new UpdateUserRequest
-            {
-                Id = model.UserId,
-                Type = model.UserType,
-                Status = model.UserStatus
-            };
+            // Kullanıcı tipi/durumu güncellenmez
 
-            var userResponse = await client.PutAsJsonAsync("/User/update", userUpdateRequest);
-            if (!userResponse.IsSuccessStatusCode)
-            {
-                TempData["ErrorMessage"] = "Kullanıcı bilgileri güncellenemedi.";
-                return View("Index", model);
-            }
-
-            TempData["SuccessMessage"] = "Profil başarıyla güncellendi.";
-            return RedirectToAction(nameof(Index));
+            return Ok(new { success = true, message = "Profil başarıyla güncellendi." });
         }
 
         public IActionResult Privacy()
