@@ -1,4 +1,4 @@
-﻿// UpdateProductAndServiceHandle.cs
+// UpdateProductAndServiceHandle.cs
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
@@ -22,6 +22,15 @@ public class UpdateProductAndServiceHandle : IRequestHandler<UpdateProductAndSer
             {
                 Error = true,
                 Message = "Ürün/Hizmet bulunamadı veya pasif durumda."
+            };
+        }
+
+        if (entity.UserId != request.UserId)
+        {
+            return new UpdateProductAndServiceHandleResponse
+            {
+                Error = true,
+                Message = "Bu kaydı güncelleme yetkiniz yok."
             };
         }
 

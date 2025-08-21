@@ -1,4 +1,4 @@
-﻿// DeleteProductAndServiceHandle.cs
+// DeleteProductAndServiceHandle.cs
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
@@ -22,6 +22,15 @@ public class DeleteProductAndServiceHandle : IRequestHandler<DeleteProductAndSer
             {
                 Error = true,
                 Message = "Ürün/Hizmet bulunamadı veya zaten pasif durumda."
+            };
+        }
+
+        if (entity.UserId != request.UserId)
+        {
+            return new DeleteProductAndServiceHandleResponse
+            {
+                Error = true,
+                Message = "Bu kaydı silme yetkiniz yok."
             };
         }
 

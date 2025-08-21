@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs;
 using MediatR;
 
@@ -23,6 +23,15 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Queries
                 {
                     Error = true,
                     Message = "Ürün veya hizmet bulunamadı."
+                };
+            }
+
+            if (entity.UserId != request.UserId)
+            {
+                return new GetProductAndServiceByIdHandleResponse
+                {
+                    Error = true,
+                    Message = "Bu kaydı görüntüleme yetkiniz yok."
                 };
             }
 

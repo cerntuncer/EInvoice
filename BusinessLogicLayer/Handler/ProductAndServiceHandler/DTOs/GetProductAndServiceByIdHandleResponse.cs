@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Enumerations;
 
 namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs
 {
