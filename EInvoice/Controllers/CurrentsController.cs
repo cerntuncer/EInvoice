@@ -41,8 +41,12 @@ namespace EInvoice.Controllers
                 return Unauthorized(new { message = me?.Message ?? "Kullanıcı doğrulanamadı." });
 
             var resp = await client.GetAsync($"/Current/ByUser/{me.UserId}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                return Ok(new { Currents = Array.Empty<object>() });
+            }
             var json = await resp.Content.ReadAsStringAsync();
-            return StatusCode((int)resp.StatusCode, json);
+            return new ContentResult { Content = json, ContentType = "application/json", StatusCode = 200 };
         }
 
         [HttpPost]
@@ -72,7 +76,7 @@ namespace EInvoice.Controllers
 
             var apiRes = await client.PostAsJsonAsync("/Bank", model);
             var body = await apiRes.Content.ReadAsStringAsync();
-            return StatusCode((int)apiRes.StatusCode, body);
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
 
         [HttpPost]
@@ -101,7 +105,7 @@ namespace EInvoice.Controllers
 
             var apiRes = await client.PostAsJsonAsync("/Case", model);
             var body = await apiRes.Content.ReadAsStringAsync();
-            return StatusCode((int)apiRes.StatusCode, body);
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
 
         [HttpPut]
@@ -116,7 +120,7 @@ namespace EInvoice.Controllers
 
             var apiRes = await client.PutAsJsonAsync("/Bank", model);
             var body = await apiRes.Content.ReadAsStringAsync();
-            return StatusCode((int)apiRes.StatusCode, body);
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
 
         [HttpPut]
@@ -131,7 +135,7 @@ namespace EInvoice.Controllers
 
             var apiRes = await client.PutAsJsonAsync("/Case", model);
             var body = await apiRes.Content.ReadAsStringAsync();
-            return StatusCode((int)apiRes.StatusCode, body);
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
 
         [HttpDelete]
@@ -153,7 +157,7 @@ namespace EInvoice.Controllers
 
             var apiRes = await client.DeleteAsync($"/Current/{id}?userId={me.UserId}");
             var body = await apiRes.Content.ReadAsStringAsync();
-            return StatusCode((int)apiRes.StatusCode, body);
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
     }
 }

@@ -14,7 +14,7 @@
         <button id="filterBanks" class="btn btn-outline-success btn-sm me-2">Bankalar</button>
         <button id="btnCreate" class="btn btn-primary btn-sm">Oluştur</button>
     </div>
-}
+</div>
 
 <div class="card">
     <div class="card-body">
@@ -32,7 +32,7 @@
             <tbody></tbody>
         </table>
     </div>
-}
+</div>
 
 <div class="modal fade" id="currentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -186,10 +186,18 @@
         async function loadData() {
             const res = await fetch('/Currents/List');
             if (!res.ok) {
-                alert('Liste alınamadı');
+                renderTable([]);
+                console.warn('Currents/List failed');
                 return;
             }
-            const data = await res.json();
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                renderTable([]);
+                console.warn('Invalid JSON for Currents/List');
+                return;
+            }
             cachedRows = (data.currents || data.Currents || []).map(x => ({
                 currentId: x.currentId ?? x.CurrentId,
                 currentName: x.currentName ?? x.CurrentName,
@@ -216,12 +224,13 @@
                     <td>${currencyMap[r.currencyType]}</td>
                     <td>${renderDetails(r)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.currentId}">Güncelle</button>
-                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.currentId}">Sil</button>
+                        <button class=\"btn btn-sm btn-outline-secondary me-1\" data-action=\"edit\" data-id=\"${r.currentId}\">Güncelle</button>
+                        <button class=\"btn btn-sm btn-outline-danger\" data-action=\"delete\" data-id=\"${r.currentId}\">Sil</button>
                     </td>`;
                 body.appendChild(tr);
             });
 
+            if (table) { table.destroy(); }
             table = new simpleDatatables.DataTable('#currentsTable');
 
             body.querySelectorAll('button[data-action="edit"]').forEach(btn => btn.addEventListener('click', () => onEdit(btn.dataset.id)));
