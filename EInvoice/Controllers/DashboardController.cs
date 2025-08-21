@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models.ApiResponses;
 using System.Net.Http.Headers;
 using PresentationLayer.Models;
+using PresentationLayer.Models.ApiRequests;
 
 namespace EInvoice.Controllers
 {
@@ -21,43 +22,119 @@ namespace EInvoice.Controllers
         [Authorize]
         public async Task<IActionResult> Index()
         {
-            if (User.Identity != null && User.Identity.IsAuthenticated)
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
             {
-                var username = User.Identity.Name;
+                return RedirectToAction("Index", "Login");
+            }
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-                var userId = User.FindFirst("sub")?.Value;        // JWT'deki "sub" alan�
-                var email = User.FindFirst("email")?.Value;       // JWT'deki "email" claim'i
-                var role = User.FindFirst("role")?.Value;         // Kullan�c�n�n rol�
+            // 1) Me: email'den UserId al
+            var meResponse = await client.GetAsync("/Credential/Me");
+            if (!meResponse.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Kullanıcı bilgileri alınamadı. Lütfen tekrar giriş yapın.";
+                return View(model: null);
+            }
+            var me = await meResponse.Content.ReadFromJsonAsync<GetMyCredentialResponse>();
+            if (me == null || me.Error)
+            {
+                TempData["ErrorMessage"] = me?.Message ?? "Kullanıcı bilgileri alınamadı.";
+                return View(model: null);
+            }
+
+            // 2) User detayını çek
+            var userResponse = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+            if (!userResponse.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Profil bilgileri getirilemedi.";
+                return View(model: null);
+            }
+            var user = await userResponse.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+            if (user == null || user.Error)
+            {
+                TempData["ErrorMessage"] = user?.Message ?? "Profil bilgileri getirilemedi.";
+                return View(model: null);
+            }
+
+            var model = new DashboardProfileViewModel
+            {
+                UserId = user.UserId,
+                UserType = user.UserType,
+                UserStatus = user.UserStatus,
+                PersonId = user.PersonId,
+                Name = user.PersonName,
+                IdentityNumber = user.IdentityNumber,
+                TaxOffice = user.TaxOffice ?? string.Empty,
+                PersonType = user.PersonType,
+                PersonStatus = user.PersonStatus
+            };
+
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(DashboardProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, message = "Geçersiz form verisi." });
             }
 
             var client = _httpClientFactory.CreateClient("Api");
             var accessToken = HttpContext.Session.GetString("AccessToken");
-            if (!string.IsNullOrEmpty(accessToken))
+            if (string.IsNullOrEmpty(accessToken))
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                return Unauthorized(new { success = false, message = "Oturum süresi doldu." });
+            }
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            // Güncel değerleri al (kimlik no, tip, durumlar değiştirilmesin)
+            var meResponse = await client.GetAsync("/Credential/Me");
+            if (!meResponse.IsSuccessStatusCode)
+            {
+                return Unauthorized(new { success = false, message = "Kullanıcı doğrulanamadı." });
+            }
+            var me = await meResponse.Content.ReadFromJsonAsync<GetMyCredentialResponse>();
+            if (me == null || me.Error)
+            {
+                return Unauthorized(new { success = false, message = me?.Message ?? "Kullanıcı doğrulanamadı." });
             }
 
-            var apiResponse = await client.GetAsync("/User/WithPerson");
-            var users = new List<DashboardUserListItemViewModel>();
-            if (apiResponse.IsSuccessStatusCode)
+            var userResponse = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+            if (!userResponse.IsSuccessStatusCode)
             {
-                var data = await apiResponse.Content.ReadFromJsonAsync<GetUsersWithPersonListResponse>();
-                if (data != null && !data.Error)
-                {
-                    users = data.Users
-                        .Select(u => new DashboardUserListItemViewModel
-                        {
-                            UserId = u.UserId,
-                            Name = u.PersonName,
-                            UserType = u.UserType == 1 ? "Gerçek Kişi" : "Tüzel Kişi",
-                            IdentityNumber = u.PersonIdentityNumber,
-                            TaxOffice = u.PersonTaxOffice
-                        })
-                        .ToList();
-                }
+                return StatusCode(500, new { success = false, message = "Mevcut profil getirilemedi." });
+            }
+            var current = await userResponse.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+            if (current == null || current.Error)
+            {
+                return StatusCode(500, new { success = false, message = current?.Message ?? "Mevcut profil getirilemedi." });
             }
 
-            return View(users);
+            // Sadece ad ve vergi dairesi güncellenecek; kimlik no, tip ve durumlar korunur
+            var personUpdateRequest = new UpdatePersonRequest
+            {
+                Id = current.PersonId,
+                Name = model.Name,
+                IdentityNumber = current.IdentityNumber,
+                TaxOffice = model.TaxOffice ?? string.Empty,
+                Type = current.PersonType,
+                Status = current.PersonStatus
+            };
+
+            var personResponse = await client.PutAsJsonAsync("/Person", personUpdateRequest);
+            if (!personResponse.IsSuccessStatusCode)
+            {
+                return BadRequest(new { success = false, message = "Kişi bilgileri güncellenemedi." });
+            }
+
+            // Kullanıcı tipi/durumu güncellenmez
+
+            return Ok(new { success = true, message = "Profil başarıyla güncellendi." });
         }
 
         public IActionResult Privacy()
