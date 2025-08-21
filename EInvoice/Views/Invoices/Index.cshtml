@@ -217,7 +217,7 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: true });
+            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: true, perPageSelect: false, labels: { placeholder: 'Ara...', perPage: '{select} kayıt', noRows: 'Kayıt yok', info: 'Toplam {rows} kayıttan {start}-{end} arası' } });
         }
 
         function onCreateClick() {
