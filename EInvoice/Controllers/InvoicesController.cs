@@ -61,7 +61,6 @@ namespace EInvoice.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromBody] object model)
         {
             var client = _httpClientFactory.CreateClient("Api");
@@ -76,7 +75,6 @@ namespace EInvoice.Controllers
         }
 
         [HttpPut]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update([FromBody] object model)
         {
             var client = _httpClientFactory.CreateClient("Api");
@@ -91,7 +89,6 @@ namespace EInvoice.Controllers
         }
 
         [HttpDelete]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(long id)
         {
             var client = _httpClientFactory.CreateClient("Api");
