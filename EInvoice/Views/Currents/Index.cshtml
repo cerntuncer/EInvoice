@@ -55,15 +55,15 @@
 					<div class="tab-pane fade show active" id="tabCase" role="tabpanel">
 						<form id="formCase">
 							<div class="row g-3">
-								<div class="col-md-6">
+								<div class="col-md-6 current-fields">
 									<label class="form-label">Cari Adı</label>
 									<input type="text" class="form-control" name="currentName" />
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-3 current-fields">
 									<label class="form-label">Bakiye</label>
 									<input type="number" step="0.01" class="form-control" name="balance" value="0" />
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-3 current-fields">
 									<label class="form-label">Para Birimi</label>
 									<select class="form-select" name="currencyType">
 										<option value="1">TL</option>
@@ -75,13 +75,13 @@
 									<label class="form-label">Adres</label>
 									<input type="text" class="form-control" name="address" />
 								</div>
-								<div class="col-md-6">
+								<div class="col-md-6 link-existing">
 									<div class="form-check">
 										<input class="form-check-input" type="checkbox" id="caseUseExistingCurrent">
 										<label class="form-check-label" for="caseUseExistingCurrent">Mevcut Cariden Bağla</label>
 									</div>
 								</div>
-								<div class="col-md-6" id="caseExistingCurrentWrapper" style="display:none;">
+								<div class="col-md-6 link-existing" id="caseExistingCurrentWrapper" style="display:none;">
 									<label class="form-label">Current Id</label>
 									<input type="number" class="form-control" name="existingCurrentId" />
 								</div>
@@ -91,15 +91,15 @@
 					<div class="tab-pane fade" id="tabBank" role="tabpanel">
 						<form id="formBank">
 							<div class="row g-3">
-								<div class="col-md-6">
+								<div class="col-md-6 current-fields">
 									<label class="form-label">Cari Adı</label>
 									<input type="text" class="form-control" name="currentName" />
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-3 current-fields">
 									<label class="form-label">Bakiye</label>
 									<input type="number" step="0.01" class="form-control" name="balance" value="0" />
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-3 current-fields">
 									<label class="form-label">Para Birimi</label>
 									<select class="form-select" name="currencyType">
 										<option value="1">TL</option>
@@ -123,13 +123,13 @@
 									<label class="form-label">Hesap No</label>
 									<input type="number" class="form-control" name="accountNo" />
 								</div>
-								<div class="col-md-6">
+								<div class="col-md-6 link-existing">
 									<div class="form-check">
 										<input class="form-check-input" type="checkbox" id="bankUseExistingCurrent">
 										<label class="form-check-label" for="bankUseExistingCurrent">Mevcut Cariden Bağla</label>
 									</div>
 								</div>
-								<div class="col-md-6" id="bankExistingCurrentWrapper" style="display:none;">
+								<div class="col-md-6 link-existing" id="bankExistingCurrentWrapper" style="display:none;">
 									<label class="form-label">Current Id</label>
 									<input type="number" class="form-control" name="existingCurrentId" />
 								</div>
@@ -147,11 +147,31 @@
 </div>
 
 @section Scripts {
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
 	<script>
 		const currencyMap = { 1: 'TL', 2: 'EUR', 3: 'USD' };
 		const currentTypeMap = { 0: 'Kasa', 1: 'Banka' };
 		let table, modal, isEdit = false, editRow = null, editPayload = null, cachedRows = [], currentFilter = null;
+
+		function getCsrf() {
+			const token = document.querySelector('input[name="__RequestVerificationToken"]');
+			return token ? token.value : '';
+		}
+
+		async function getErrorMessage(res) {
+			try {
+				const ct = res.headers.get('content-type') || '';
+				if (ct.includes('application/json')) {
+					const j = await res.json();
+					return j.message || j.Message || JSON.stringify(j);
+				}
+				const t = await res.text();
+				return t || `${res.status} ${res.statusText}`;
+			} catch (e) {
+				return `${res.status} ${res.statusText}`;
+			}
+		}
 
 		document.addEventListener('DOMContentLoaded', () => {
 			modal = new bootstrap.Modal(document.getElementById('currentModal'));
@@ -165,6 +185,7 @@
 				document.querySelector('.modal-title').innerText = 'Cari Oluştur';
 				clearForms();
 				setTabsEnabled(true);
+				document.querySelectorAll('#currentModal .current-fields, #currentModal .link-existing').forEach(el => el.style.display = '');
 				modal.show();
 			});
 
@@ -177,7 +198,6 @@
 
 			document.getElementById('btnSave').addEventListener('click', onSave);
 
-			// Delegated events for edit/delete inside table
 			document.getElementById('currentsTable').addEventListener('click', (e) => {
 				const btn = e.target.closest('button[data-action]');
 				if (!btn) return;
@@ -222,7 +242,6 @@
 		}
 
 		function renderTable(rows) {
-			// Destroy existing DataTable before DOM changes
 			if (table) { table.destroy(); table = null; }
 			const body = document.querySelector('#currentsTable tbody');
 			body.innerHTML = '';
@@ -243,7 +262,6 @@
 				body.appendChild(tr);
 			});
 
-			// Rebuild DataTable
 			table = new simpleDatatables.DataTable('#currentsTable');
 		}
 
@@ -260,7 +278,6 @@
 		function applyFilter(type) {
 			currentFilter = (type === null || type === undefined) ? null : Number(type);
 			renderTable();
-			// Toggle button styles
 			document.getElementById('filterAll').classList.toggle('btn-secondary', currentFilter === null);
 			document.getElementById('filterAll').classList.toggle('btn-outline-secondary', currentFilter !== null);
 			document.getElementById('filterCases').classList.toggle('btn-primary', currentFilter === 0);
@@ -347,7 +364,7 @@
 						status: 1
 					};
 					const res = await fetch('/Currents/UpdateCase', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-					if (res.ok) { modal.hide(); await reloadTable(); } else { alert('Güncelleme başarısız'); }
+					if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
 				} else {
 					const form = document.getElementById('formBank');
 					const payload = {
@@ -360,7 +377,7 @@
 						status: 1
 					};
 					const res = await fetch('/Currents/UpdateBank', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-					if (res.ok) { modal.hide(); await reloadTable(); } else { alert('Güncelleme başarısız'); }
+					if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
 				}
 				return;
 			}
@@ -368,11 +385,11 @@
 			if (activeTab === 'tab-case') {
 				const payload = getCasePayload();
 				const res = await fetch('/Currents/CreateCase', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-				if (res.ok) { modal.hide(); await reloadTable(); } else { const t = await res.text(); alert('Kasa oluşturulamadı: ' + t); }
+				if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Kasa oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
 			} else {
 				const payload = getBankPayload();
 				const res = await fetch('/Currents/CreateBank', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-				if (res.ok) { modal.hide(); await reloadTable(); } else { const t = await res.text(); alert('Banka oluşturulamadı: ' + t); }
+				if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Banka oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
 			}
 		}
 
@@ -385,6 +402,7 @@
 			document.querySelector('.modal-title').innerText = 'Cari Güncelle';
 			clearForms();
 			setTabsEnabled(false);
+			document.querySelectorAll('#currentModal .current-fields, #currentModal .link-existing').forEach(el => el.style.display = 'none');
 			if (type === 0) {
 				document.querySelector('#tab-case').classList.add('active');
 				document.querySelector('#tab-bank').classList.remove('active');
@@ -408,20 +426,23 @@
 		}
 
 		async function onDelete(id) {
-			if (!confirm('Silmek istediğinize emin misiniz?')) return;
+			const result = await Swal.fire({
+				title: 'Silmek istiyor musunuz?',
+				text: 'Bu işlem geri alınamaz',
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonText: 'Evet, sil',
+				cancelButtonText: 'Vazgeç'
+			});
+			if (!result.isConfirmed) return;
 			const res = await fetch(`/Currents/DeleteCurrent?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
-			if (res.ok) { await reloadTable(); } else { alert('Silme başarısız'); }
+			if (res.ok) { await reloadTable(); Swal.fire('Silindi', 'Kayıt başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
 		}
 
 		async function reloadTable() {
 			if (table) { table.destroy(); table = null; }
 			await loadData();
 			applyFilter(currentFilter);
-		}
-
-		function getCsrf() {
-			const token = document.querySelector('input[name="__RequestVerificationToken"]');
-			return token ? token.value : '';
 		}
 	</script>
 }
