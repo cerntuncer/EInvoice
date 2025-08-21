@@ -221,7 +221,10 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: true, perPageSelect: false, labels: { placeholder: 'Ara...', perPage: '{select} kayıt', noRows: 'Kayıt yok', info: 'Toplam {rows} kayıttan {start}-{end} arası' } });
+            const perPageAll = Math.max(cachedInvoices.length, 1000);
+            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: false, perPage: perPageAll, perPageSelect: [], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok', info: '' } });
+            const bottom = document.querySelector('#invTable').closest('.dataTable-wrapper')?.querySelector('.dataTable-bottom');
+            if (bottom) bottom.remove();
         }
 
         function onCreateClick() {
@@ -354,7 +357,9 @@
                 const form = document.getElementById('invForm');
                 form.type.value = inv.type ?? inv.Type;
                 form.senario.value = inv.senario ?? inv.Senario;
-                await preloadLookups();
+                if (currents.length === 0 || csList.length === 0 || products.length === 0) {
+                    await preloadLookups();
+                }
                 fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
                 fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
                 const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice }));
