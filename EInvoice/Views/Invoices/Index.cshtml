@@ -187,7 +187,14 @@
             if (prodRes.ok) {
                 const j = await prodRes.json();
                 const arr = j.items || j.Items || [];
-                products = arr.filter(x => (x.status ?? x.Status) === 1).map(x => ({ id: x.id ?? x.Id, name: x.name ?? x.Name }));
+                products = arr
+                    .filter(x => (x.status ?? x.Status) === 1)
+                    .map(x => ({
+                        id: x.id ?? x.Id,
+                        name: x.name ?? x.Name,
+                        unitPrice: Number(x.unitPrice ?? x.UnitPrice) || 0,
+                        unitType: x.unitType ?? x.UnitType
+                    }));
             }
         }
 
@@ -243,7 +250,7 @@
             document.querySelector('#invForm').reset();
             fillLookup(document.querySelector('select[name="currentId"]'), currents);
             fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
-            renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: 0 }]);
+            renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: products[0]?.unitPrice || 0 }]);
             document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
             modal.show();
         }
@@ -259,7 +266,7 @@
         }
 
         function addEmptyLine() {
-            currentLines.push({ id: null, productAndServiceId: (products[0]?.id ?? ''), quantity: 1, unitPrice: 0 });
+            currentLines.push({ id: null, productAndServiceId: (products[0]?.id ?? ''), quantity: 1, unitPrice: products[0]?.unitPrice || 0 });
             renderLines(currentLines);
         }
 
@@ -270,6 +277,11 @@
             const inputName = e.target.name;
             if (inputName === 'product') {
                 currentLines[idx].productAndServiceId = Number(e.target.value);
+                const p = products.find(p => Number(p.id) === Number(e.target.value));
+                const price = p ? Number(p.unitPrice) || 0 : 0;
+                currentLines[idx].unitPrice = price;
+                const priceInput = tr.querySelector('input[name="price"]');
+                if (priceInput) priceInput.value = String(price);
             } else if (inputName === 'qty') {
                 currentLines[idx].quantity = Number(e.target.value) || 0;
             } else if (inputName === 'price') {
@@ -277,10 +289,8 @@
             }
             // Sadece ilgili satırın tutarını ve toplamı güncelle
             const amount = (Number(currentLines[idx].quantity) || 0) * (Number(currentLines[idx].unitPrice) || 0);
-            const amountCell = tr.querySelector('[data-amount]');
-            if (amountCell) {
-                amountCell.innerText = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
+            const amountInput = tr.querySelector('input[name="amount"]');
+            if (amountInput) amountInput.value = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             updateTotal();
         }
         function onLineRemove(e) {
@@ -310,7 +320,7 @@
                     </td>
                     <td><input name="qty" type="number" min="1" step="1" class="form-control" value="${ln.quantity ?? 1}" /></td>
                     <td><input name="price" type="number" min="0" step="0.01" class="form-control" value="${ln.unitPrice ?? 0}" /></td>
-                    <td data-amount>${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td><input name="amount" class="form-control" value="${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
                     <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
                 body.appendChild(tr);
             });
