@@ -54,4 +54,22 @@ public class LoginController : Controller
         return Ok(new { success = true });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        HttpContext.Session.Remove("AccessToken");
+        HttpContext.Session.Remove("RefreshToken");
+        await HttpContext.SignOutAsync("Cookies");
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LogoutPost()
+    {
+        HttpContext.Session.Remove("AccessToken");
+        HttpContext.Session.Remove("RefreshToken");
+        await HttpContext.SignOutAsync("Cookies");
+        return RedirectToAction("Index");
+    }
 }
