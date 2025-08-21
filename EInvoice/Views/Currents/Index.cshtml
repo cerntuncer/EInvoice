@@ -1,0 +1,427 @@
+@{
+	ViewData["Title"] = "Cariler";
+}
+
+@section Styles {
+	<link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h2 class="mb-0">Cariler</h2>
+	<div>
+		<button id="filterAll" class="btn btn-secondary btn-sm me-2">Tümü</button>
+		<button id="filterCases" class="btn btn-outline-primary btn-sm me-2">Kasalar</button>
+		<button id="filterBanks" class="btn btn-outline-success btn-sm me-2">Bankalar</button>
+		<button id="btnCreate" class="btn btn-primary btn-sm">Oluştur</button>
+	</div>
+</div>
+
+<div class="card">
+	<div class="card-body">
+		<table id="currentsTable" class="table table-bordered table-striped" style="width:100%">
+			<thead>
+				<tr>
+					<th>Ad</th>
+					<th>Tür</th>
+					<th>Bakiye</th>
+					<th>Para Birimi</th>
+					<th>Detay</th>
+					<th style="width: 140px;">İşlemler</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+</div>
+
+<div class="modal fade" id="currentModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Cari Oluştur</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				@Html.AntiForgeryToken()
+				<ul class="nav nav-tabs" id="typeTabs" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="tab-case" data-bs-toggle="tab" data-bs-target="#tabCase" type="button" role="tab">Kasa</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="tab-bank" data-bs-toggle="tab" data-bs-target="#tabBank" type="button" role="tab">Banka</button>
+					</li>
+				</ul>
+				<div class="tab-content pt-3">
+					<div class="tab-pane fade show active" id="tabCase" role="tabpanel">
+						<form id="formCase">
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label class="form-label">Cari Adı</label>
+									<input type="text" class="form-control" name="currentName" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Bakiye</label>
+									<input type="number" step="0.01" class="form-control" name="balance" value="0" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Para Birimi</label>
+									<select class="form-select" name="currencyType">
+										<option value="1">TL</option>
+										<option value="2">EUR</option>
+										<option value="3">USD</option>
+									</select>
+								</div>
+								<div class="col-md-12">
+									<label class="form-label">Adres</label>
+									<input type="text" class="form-control" name="address" />
+								</div>
+								<div class="col-md-6">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="caseUseExistingCurrent">
+										<label class="form-check-label" for="caseUseExistingCurrent">Mevcut Cariden Bağla</label>
+									</div>
+								</div>
+								<div class="col-md-6" id="caseExistingCurrentWrapper" style="display:none;">
+									<label class="form-label">Current Id</label>
+									<input type="number" class="form-control" name="existingCurrentId" />
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="tab-pane fade" id="tabBank" role="tabpanel">
+						<form id="formBank">
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label class="form-label">Cari Adı</label>
+									<input type="text" class="form-control" name="currentName" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Bakiye</label>
+									<input type="number" step="0.01" class="form-control" name="balance" value="0" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Para Birimi</label>
+									<select class="form-select" name="currencyType">
+										<option value="1">TL</option>
+										<option value="2">EUR</option>
+										<option value="3">USD</option>
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Banka Adı</label>
+									<input type="text" class="form-control" name="bankName" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">IBAN</label>
+									<input type="text" class="form-control" name="iban" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Şube Kodu</label>
+									<input type="number" class="form-control" name="branchCode" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Hesap No</label>
+									<input type="number" class="form-control" name="accountNo" />
+								</div>
+								<div class="col-md-6">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="bankUseExistingCurrent">
+										<label class="form-check-label" for="bankUseExistingCurrent">Mevcut Cariden Bağla</label>
+									</div>
+								</div>
+								<div class="col-md-6" id="bankExistingCurrentWrapper" style="display:none;">
+									<label class="form-label">Current Id</label>
+									<input type="number" class="form-control" name="existingCurrentId" />
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+				<button id="btnSave" class="btn btn-primary">Kaydet</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
+	<script>
+		const currencyMap = { 1: 'TL', 2: 'EUR', 3: 'USD' };
+		const currentTypeMap = { 0: 'Kasa', 1: 'Banka' };
+		let table, modal, isEdit = false, editRow = null, editPayload = null, cachedRows = [], currentFilter = null;
+
+		document.addEventListener('DOMContentLoaded', () => {
+			modal = new bootstrap.Modal(document.getElementById('currentModal'));
+			hookUI();
+			loadData();
+		});
+
+		function hookUI() {
+			document.getElementById('btnCreate').addEventListener('click', () => {
+				isEdit = false; editRow = null; editPayload = null;
+				document.querySelector('.modal-title').innerText = 'Cari Oluştur';
+				clearForms();
+				setTabsEnabled(true);
+				modal.show();
+			});
+
+			document.getElementById('caseUseExistingCurrent').addEventListener('change', (e) => {
+				document.getElementById('caseExistingCurrentWrapper').style.display = e.target.checked ? '' : 'none';
+			});
+			document.getElementById('bankUseExistingCurrent').addEventListener('change', (e) => {
+				document.getElementById('bankExistingCurrentWrapper').style.display = e.target.checked ? '' : 'none';
+			});
+
+			document.getElementById('btnSave').addEventListener('click', onSave);
+
+			// Delegated events for edit/delete inside table
+			document.getElementById('currentsTable').addEventListener('click', (e) => {
+				const btn = e.target.closest('button[data-action]');
+				if (!btn) return;
+				const id = btn.dataset.id;
+				if (btn.dataset.action === 'edit') onEdit(id);
+				else if (btn.dataset.action === 'delete') onDelete(id);
+			});
+
+			document.getElementById('filterAll').addEventListener('click', () => applyFilter(null));
+			document.getElementById('filterCases').addEventListener('click', () => applyFilter(0));
+			document.getElementById('filterBanks').addEventListener('click', () => applyFilter(1));
+		}
+
+		async function loadData() {
+			const res = await fetch(`/Currents/List?ts=${Date.now()}`, { cache: 'no-store' });
+			if (!res.ok) {
+				cachedRows = [];
+				renderTable();
+				console.warn('Currents/List failed');
+				return;
+			}
+			let data;
+			try {
+				data = await res.json();
+			} catch (e) {
+				cachedRows = [];
+				renderTable();
+				console.warn('Invalid JSON for Currents/List');
+				return;
+			}
+			cachedRows = (data.currents || data.Currents || []).map(x => ({
+				currentId: x.currentId ?? x.CurrentId,
+				currentName: x.currentName ?? x.CurrentName,
+				balance: x.balance ?? x.Balance,
+				currencyType: x.currencyType ?? x.CurrencyType,
+				currentType: x.currentType ?? x.CurrentType,
+				caseInfo: x.caseInfo ?? x.CaseInfo,
+				bankInfo: x.bankInfo ?? x.BankInfo
+			}));
+
+			renderTable();
+		}
+
+		function renderTable(rows) {
+			// Destroy existing DataTable before DOM changes
+			if (table) { table.destroy(); table = null; }
+			const body = document.querySelector('#currentsTable tbody');
+			body.innerHTML = '';
+			const rowsToRender = rows || (currentFilter === null ? cachedRows : cachedRows.filter(r => r.currentType === Number(currentFilter)));
+			rowsToRender.forEach(r => {
+				const tr = document.createElement('tr');
+				tr.dataset.currentType = r.currentType;
+				tr.innerHTML = `
+					<td>${r.currentName}</td>
+					<td>${currentTypeMap[r.currentType]}</td>
+					<td>${Number(r.balance).toFixed(2)}</td>
+					<td>${currencyMap[r.currencyType]}</td>
+					<td>${renderDetails(r)}</td>
+					<td>
+						<button class=\"btn btn-sm btn-outline-secondary me-1\" data-action=\"edit\" data-id=\"${r.currentId}\">Güncelle</button>
+						<button class=\"btn btn-sm btn-outline-danger\" data-action=\"delete\" data-id=\"${r.currentId}\">Sil</button>
+					</td>`;
+				body.appendChild(tr);
+			});
+
+			// Rebuild DataTable
+			table = new simpleDatatables.DataTable('#currentsTable');
+		}
+
+		function renderDetails(r) {
+			if (r.currentType === 0 && r.caseInfo) {
+				return `Adres: ${r.caseInfo.address ?? r.caseInfo.Address}`;
+			} else if (r.currentType === 1 && r.bankInfo) {
+				const b = r.bankInfo; 
+				return `Banka: ${b.name ?? b.Name} / IBAN: ${(b.iban ?? b.Iban) || ''}`;
+			}
+			return '-';
+		}
+
+		function applyFilter(type) {
+			currentFilter = (type === null || type === undefined) ? null : Number(type);
+			renderTable();
+			// Toggle button styles
+			document.getElementById('filterAll').classList.toggle('btn-secondary', currentFilter === null);
+			document.getElementById('filterAll').classList.toggle('btn-outline-secondary', currentFilter !== null);
+			document.getElementById('filterCases').classList.toggle('btn-primary', currentFilter === 0);
+			document.getElementById('filterCases').classList.toggle('btn-outline-primary', currentFilter !== 0);
+			document.getElementById('filterBanks').classList.toggle('btn-success', currentFilter === 1);
+			document.getElementById('filterBanks').classList.toggle('btn-outline-success', currentFilter !== 1);
+		}
+
+		function clearForms() {
+			document.getElementById('formCase').reset();
+			document.getElementById('formBank').reset();
+			document.getElementById('caseExistingCurrentWrapper').style.display = 'none';
+			document.getElementById('bankExistingCurrentWrapper').style.display = 'none';
+			document.getElementById('caseUseExistingCurrent').checked = false;
+			document.getElementById('bankUseExistingCurrent').checked = false;
+		}
+
+		function setTabsEnabled(enabled) {
+			document.getElementById('tab-case').disabled = !enabled;
+			document.getElementById('tab-bank').disabled = !enabled;
+		}
+
+		function getCasePayload() {
+			const form = document.getElementById('formCase');
+			const useExisting = document.getElementById('caseUseExistingCurrent').checked;
+			if (useExisting) {
+				return {
+					name: form.currentName.value,
+					address: form.address.value,
+					status: 1,
+					currentId: Number(form.existingCurrentId.value) || null
+				};
+			}
+			return {
+				name: form.currentName.value,
+				address: form.address.value,
+				status: 1,
+				current: {
+					name: form.currentName.value,
+					balance: Number(form.balance.value) || 0,
+					currencyType: Number(form.currencyType.value),
+					currentType: 0,
+					userId: 0
+				}
+			};
+		}
+
+		function getBankPayload() {
+			const form = document.getElementById('formBank');
+			const useExisting = document.getElementById('bankUseExistingCurrent').checked;
+			if (useExisting) {
+				return {
+					name: form.bankName.value,
+					iban: form.iban.value,
+					branchCode: Number(form.branchCode.value),
+					accountNo: Number(form.accountNo.value),
+					currentId: Number(form.existingCurrentId.value) || null
+				};
+			}
+			return {
+				name: form.bankName.value,
+				iban: form.iban.value,
+				branchCode: Number(form.branchCode.value),
+				accountNo: Number(form.accountNo.value),
+				current: {
+					name: form.currentName.value,
+					balance: Number(form.balance.value) || 0,
+					currencyType: Number(form.currencyType.value),
+					currentType: 1,
+					userId: 0
+				}
+			};
+		}
+
+		async function onSave() {
+			const activeTab = document.querySelector('#typeTabs .nav-link.active').id;
+			if (isEdit) {
+				if (editPayload.type === 0) {
+					const form = document.getElementById('formCase');
+					const payload = {
+						id: editPayload.detailId,
+						currentId: editPayload.currentId,
+						address: form.address.value,
+						status: 1
+					};
+					const res = await fetch('/Currents/UpdateCase', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+					if (res.ok) { modal.hide(); await reloadTable(); } else { alert('Güncelleme başarısız'); }
+				} else {
+					const form = document.getElementById('formBank');
+					const payload = {
+						id: editPayload.detailId,
+						currentId: editPayload.currentId,
+						name: form.bankName.value,
+						iban: form.iban.value,
+						branchCode: Number(form.branchCode.value),
+						accountNo: Number(form.accountNo.value),
+						status: 1
+					};
+					const res = await fetch('/Currents/UpdateBank', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+					if (res.ok) { modal.hide(); await reloadTable(); } else { alert('Güncelleme başarısız'); }
+				}
+				return;
+			}
+
+			if (activeTab === 'tab-case') {
+				const payload = getCasePayload();
+				const res = await fetch('/Currents/CreateCase', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+				if (res.ok) { modal.hide(); await reloadTable(); } else { const t = await res.text(); alert('Kasa oluşturulamadı: ' + t); }
+			} else {
+				const payload = getBankPayload();
+				const res = await fetch('/Currents/CreateBank', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+				if (res.ok) { modal.hide(); await reloadTable(); } else { const t = await res.text(); alert('Banka oluşturulamadı: ' + t); }
+			}
+		}
+
+		async function onEdit(currentId) {
+			let row = cachedRows.find(r => r.currentId === Number(currentId));
+			if (!row) { await loadData(); row = cachedRows.find(r => r.currentId === Number(currentId)); if (!row) return; }
+			const type = row.currentType;
+
+			isEdit = true; editRow = null; editPayload = { currentId: Number(currentId), type, detailId: null };
+			document.querySelector('.modal-title').innerText = 'Cari Güncelle';
+			clearForms();
+			setTabsEnabled(false);
+			if (type === 0) {
+				document.querySelector('#tab-case').classList.add('active');
+				document.querySelector('#tab-bank').classList.remove('active');
+				document.getElementById('tabCase').classList.add('show', 'active');
+				document.getElementById('tabBank').classList.remove('show', 'active');
+				document.querySelector('#formCase [name="address"]').value = (row.caseInfo?.address ?? row.caseInfo?.Address) || '';
+				editPayload.detailId = (row.caseInfo?.id ?? row.caseInfo?.Id) || null;
+			} else {
+				document.querySelector('#tab-bank').classList.add('active');
+				document.querySelector('#tab-case').classList.remove('active');
+				document.getElementById('tabBank').classList.add('show', 'active');
+				document.getElementById('tabCase').classList.remove('show', 'active');
+				editPayload.detailId = (row.bankInfo?.id ?? row.bankInfo?.Id) || null;
+				const b = row.bankInfo || {};
+				document.querySelector('#formBank [name="bankName"]').value = b.name ?? b.Name ?? '';
+				document.querySelector('#formBank [name="iban"]').value = b.iban ?? b.Iban ?? '';
+				document.querySelector('#formBank [name="branchCode"]').value = b.branchCode ?? b.BranchCode ?? '';
+				document.querySelector('#formBank [name="accountNo"]').value = b.accountNo ?? b.AccountNo ?? '';
+			}
+			modal.show();
+		}
+
+		async function onDelete(id) {
+			if (!confirm('Silmek istediğinize emin misiniz?')) return;
+			const res = await fetch(`/Currents/DeleteCurrent?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
+			if (res.ok) { await reloadTable(); } else { alert('Silme başarısız'); }
+		}
+
+		async function reloadTable() {
+			if (table) { table.destroy(); table = null; }
+			await loadData();
+			applyFilter(currentFilter);
+		}
+
+		function getCsrf() {
+			const token = document.querySelector('input[name="__RequestVerificationToken"]');
+			return token ? token.value : '';
+		}
+	</script>
+}
