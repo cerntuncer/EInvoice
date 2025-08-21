@@ -19,7 +19,6 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Commands
         {
             string? message = null;
 
-            // --- Validasyonlar ---
             var name = request.Name?.Trim();
             if (string.IsNullOrWhiteSpace(name) || name!.Length > 100)
                 message = "Ürün/hizmet adı boş olamaz ve 100 karakteri geçemez.";
@@ -27,6 +26,8 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Commands
                 message = "Birim fiyat negatif olamaz.";
             else if (!Enum.IsDefined(typeof(UnitType), request.UnitType))
                 message = "Geçersiz birim türü.";
+            else if (request.UserId <= 0)
+                message = "Geçersiz kullanıcı bilgisi.";
 
             if (message != null)
             {
@@ -37,13 +38,13 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Commands
                 };
             }
 
-            // --- Oluşturma ---
             var entity = new ProductAndService
             {
                 Name = name!,
-                price = request.UnitPrice,    // not: alan adı 'price' ise doğru
+                price = request.UnitPrice,
                 UnitType = request.UnitType,
-                Status = Status.Active
+                Status = Status.Active,
+                UserId = request.UserId
             };
 
             _repository.Add(entity);

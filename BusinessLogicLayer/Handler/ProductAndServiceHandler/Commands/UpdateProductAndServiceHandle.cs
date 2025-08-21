@@ -25,6 +25,15 @@ public class UpdateProductAndServiceHandle : IRequestHandler<UpdateProductAndSer
             };
         }
 
+        if (entity.UserId != request.UserId)
+        {
+            return new UpdateProductAndServiceHandleResponse
+            {
+                Error = true,
+                Message = "Bu kaydı güncelleme yetkiniz yok."
+            };
+        }
+
         entity.Name = request.Name;
         entity.price = request.UnitPrice;
         entity.UnitType = request.UnitType;

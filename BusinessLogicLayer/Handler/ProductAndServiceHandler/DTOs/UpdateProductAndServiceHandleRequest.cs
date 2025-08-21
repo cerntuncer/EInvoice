@@ -8,4 +8,5 @@ public class UpdateProductAndServiceHandleRequest : IRequest<UpdateProductAndSer
     public string Name { get; set; }
     public decimal UnitPrice { get; set; }
     public UnitType UnitType { get; set; }
+    public long UserId { get; set; }
 }

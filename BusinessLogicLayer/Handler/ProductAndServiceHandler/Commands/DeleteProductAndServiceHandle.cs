@@ -25,6 +25,15 @@ public class DeleteProductAndServiceHandle : IRequestHandler<DeleteProductAndSer
             };
         }
 
+        if (entity.UserId != request.UserId)
+        {
+            return new DeleteProductAndServiceHandleResponse
+            {
+                Error = true,
+                Message = "Bu kaydı silme yetkiniz yok."
+            };
+        }
+
         entity.Status = Status.Passive;
         _repository.Update(entity);
 

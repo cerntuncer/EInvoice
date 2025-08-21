@@ -26,6 +26,15 @@ namespace BusinessLogicLayer.Handler.ProductAndServiceHandler.Queries
                 };
             }
 
+            if (entity.UserId != request.UserId)
+            {
+                return new GetProductAndServiceByIdHandleResponse
+                {
+                    Error = true,
+                    Message = "Bu kaydı görüntüleme yetkiniz yok."
+                };
+            }
+
             return new GetProductAndServiceByIdHandleResponse
             {
                 Error = false,

@@ -39,6 +39,7 @@ namespace DatabaseAccessLayer.Contexts
             modelBuilder.ApplyConfiguration(new LineOfInvoiceMap());
             modelBuilder.ApplyConfiguration(new UserMap());
             modelBuilder.ApplyConfiguration(new UserCredentialMap());
+            modelBuilder.ApplyConfiguration(new ProductAndServiceMap());
         }
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {

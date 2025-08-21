@@ -18,7 +18,9 @@ namespace DatabaseAccessLayer.Entities
         public  UnitType UnitType {  get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal price { get; set; }
-     
+        public long UserId { get; set; }
+        [ForeignKey("UserId")]
+        public User User { get; set; }
 
 
     }
