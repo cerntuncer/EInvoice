@@ -35,9 +35,6 @@
     </div>
 </div>
 
-<form id="formInvoice">
-    @Html.AntiForgeryToken()
-</form>
 
 <div class="modal fade" id="invModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
@@ -152,6 +149,13 @@
             document.getElementById('linesTable').addEventListener('input', onLineChanged);
             document.getElementById('linesTable').addEventListener('click', onLineRemove);
             document.getElementById('invForm').addEventListener('submit', (e) => e.preventDefault());
+            // CSRF token for modal form
+            if (!document.querySelector('#invForm input[name="__RequestVerificationToken"]')) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden'; hidden.name = '__RequestVerificationToken';
+                hidden.value = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                document.getElementById('invForm').appendChild(hidden);
+            }
         }
 
         async function preloadLookups() {
