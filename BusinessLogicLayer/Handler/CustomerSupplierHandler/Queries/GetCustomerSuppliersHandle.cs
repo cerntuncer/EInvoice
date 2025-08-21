@@ -2,6 +2,7 @@ using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositorie
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
+using System.Linq;
 
 namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Queries
 {

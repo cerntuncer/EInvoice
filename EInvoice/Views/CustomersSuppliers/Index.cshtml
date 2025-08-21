@@ -60,12 +60,6 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Kişi Tipi</label>
-                            <select class="form-select" name="personType">
-                                <option value="1">Müşteri/Tedarikçi</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label class="form-label">Durum</label>
                             <select class="form-select" name="status">
                                 <option value="1">Aktif</option>
@@ -181,7 +175,6 @@
             const personNameVal = form.personName.value?.trim();
             const identityNumberVal = form.identityNumber.value?.trim();
             const taxOfficeVal = form.taxOffice.value?.trim();
-            const personTypeVal = Number(form.personType.value);
             const statusVal = Number(form.status.value);
             const typeVal = Number(form.type.value);
 
@@ -197,7 +190,7 @@
                         name: personNameVal,
                         identityNumber: identityNumberVal ? Number(identityNumberVal) : 0,
                         taxOffice: taxOfficeVal || '',
-                        type: personTypeVal,
+                        type: 1,
                         status: statusVal
                     };
                 } else {
@@ -222,6 +215,10 @@
             form.personName.value = row.personName;
             form.type.value = row.type;
             form.status.value = row.status;
+            form.personId.disabled = true;
+            form.personName.disabled = true;
+            form.identityNumber.disabled = true;
+            form.taxOffice.disabled = true;
             modal.show();
         }
 
@@ -231,5 +228,14 @@
             const res = await fetch(`/CustomersSuppliers/Delete?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
             if (res.ok) { await loadData(); Swal.fire('Silindi', 'Kayıt başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
         }
+
+        // Yeni kayıt için form açıldığında alanları etkinleştir
+        document.getElementById('btnCreate').addEventListener('click', () => {
+            const form = document.getElementById('formCs');
+            form.personId.disabled = false;
+            form.personName.disabled = false;
+            form.identityNumber.disabled = false;
+            form.taxOffice.disabled = false;
+        });
     </script>
 }
