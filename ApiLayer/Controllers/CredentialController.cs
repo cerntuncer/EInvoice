@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
+using System.Threading.Tasks;
 
 namespace ApiLayer.Controllers
 {
@@ -14,11 +15,27 @@ namespace ApiLayer.Controllers
         public CredentialController(IMediator mediator) => _mediator = mediator;
 
         [HttpPost(Name = "CreateCredential")]
-        [ProducesResponseType(typeof(CreateUserCredentialHandleResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> Create([FromBody] CreateUserCredentialHandleRequest request)
         {
             var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+
+            return Ok(result);
+        }
+        [HttpGet("Me")]
+        [Authorize]
+        public async Task<IActionResult> GetMyCredential()
+        {
+            var email = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
+                        ?? User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(email))
+                return Unauthorized(new { error = true, message = "Email bulunamadı, tekrar giriş yapın." });
+
+            var result = await _mediator.Send(
+                new GetUserCredentialByEmailHandleRequest { Email = email }
+            );
+
             if (result.Error)
                 return UnprocessableEntity(result);
 

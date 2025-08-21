@@ -1,4 +1,5 @@
 ﻿using DatabaseAccessLayer.Entities;
+using MAP.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -9,21 +10,18 @@ using System.Threading.Tasks;
 
 namespace DatabaseAccessLayer.Options
 {
-    public class UserCredentialMap : IEntityTypeConfiguration<UserCredential>
+    public class UserCredentialMap : BaseMap<UserCredential>
     {
-        public void Configure(EntityTypeBuilder<UserCredential> builder)
+        public override void Configure(EntityTypeBuilder<UserCredential> builder)
         {
-            builder.ToTable("UserCredentials");
 
-            builder.HasKey(x => x.Id);
+            base.Configure(builder);
 
             builder.HasOne(x => x.User)
                    .WithOne(u => u.UserCredential)
                    .HasForeignKey<UserCredential>(x => x.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasIndex(x => x.UserId).IsUnique();
-            builder.HasIndex(x => x.Email).IsUnique();
         }
     }
 

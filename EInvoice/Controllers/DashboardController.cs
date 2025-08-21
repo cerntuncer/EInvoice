@@ -16,6 +16,15 @@ namespace EInvoice.Controllers
         [Authorize]
         public IActionResult Index()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var username = User.Identity.Name;
+
+                var userId = User.FindFirst("sub")?.Value;        // JWT'deki "sub" alaný
+                var email = User.FindFirst("email")?.Value;       // JWT'deki "email" claim'i
+                var role = User.FindFirst("role")?.Value;         // Kullanýcýnýn rolü
+            }
+
             return View();
         }
 

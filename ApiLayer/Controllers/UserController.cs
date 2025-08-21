@@ -36,6 +36,16 @@ namespace ApiLayer.Controllers
 
             return Ok(result);
         }
+        // GET: /User/WithPerson/{id}
+        [HttpGet("WithPerson/{id}", Name = "GetUserWithPersonById")]
+        public async Task<IActionResult> GetWithPersonById(long id)
+        {
+            var result = await _mediator.Send(new GetUserWithPersonByIdHandleRequest { Id = id });
+            if (result.Error)
+                return UnprocessableEntity(result);
+
+            return Ok(result);
+        }
         // PUT: /User
         [HttpPut("update")]
         public async Task<IActionResult> Update(UpdateUserHandleRequest request)

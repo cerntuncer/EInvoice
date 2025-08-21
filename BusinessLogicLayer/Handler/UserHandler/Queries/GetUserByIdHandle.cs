@@ -25,7 +25,6 @@ namespace BusinessLogicLayer.Handler.UserHandler.Queries
                     Message = "Kullanıcı bulunamadı."
                 };
             }
-
             return new GetUserByIdHandleResponse
             {
                 Error = false,

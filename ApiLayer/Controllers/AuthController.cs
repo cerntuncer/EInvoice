@@ -60,18 +60,5 @@ namespace ApiLayer.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
-        // GET: /Auth/Me
-        [HttpGet("Me", Name = "AuthMe")]
-        [Authorize]
-        public IActionResult Me()
-        {
-            var sub = User.FindFirst("sub")?.Value;
-            var name = User.Identity?.Name;
-            var roles = User.Claims
-                            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-                            .Select(c => c.Value);
-            return Ok(new { sub, name, roles });
-        }
     }
 }

@@ -3,7 +3,7 @@ using DatabaseAccessLayer.Entities;
 
 namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories
 {
-    public interface IUserCredentialRepository
+    public interface IUserCredentialRepository : IRepository<UserCredential>
     {
         Task<UserCredential?> GetByEmailAsync(string email);
         Task<UserCredential?> GetByRefreshTokenAsync(string token);
