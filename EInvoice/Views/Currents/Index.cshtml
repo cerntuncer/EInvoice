@@ -152,7 +152,7 @@
     <script>
         const currencyMap = { 1: 'TL', 2: 'EUR', 3: 'USD' };
         const currentTypeMap = { 0: 'Kasa', 1: 'Banka' };
-        let table, modal, isEdit = false, editRow = null, editPayload = null, cachedRows = [];
+        let table, modal, isEdit = false, editRow = null, editPayload = null, cachedRows = [], currentFilter = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             modal = new bootstrap.Modal(document.getElementById('currentModal'));
@@ -177,6 +177,15 @@
             });
 
             document.getElementById('btnSave').addEventListener('click', onSave);
+
+            // Delegated click handling for edit/delete buttons inside table
+            document.getElementById('currentsTable').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                if (btn.dataset.action === 'edit') onEdit(id);
+                else if (btn.dataset.action === 'delete') onDelete(id);
+            });
 
             document.getElementById('filterAll').addEventListener('click', () => applyFilter(null));
             document.getElementById('filterCases').addEventListener('click', () => applyFilter(0));
@@ -208,13 +217,14 @@
                 bankInfo: x.bankInfo ?? x.BankInfo
             }));
 
-            renderTable(cachedRows);
+            renderTable();
         }
 
         function renderTable(rows) {
             const body = document.querySelector('#currentsTable tbody');
             body.innerHTML = '';
-            rows.forEach(r => {
+            const rowsToRender = rows || (currentFilter === null ? cachedRows : cachedRows.filter(r => r.currentType === Number(currentFilter)));
+            rowsToRender.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.dataset.currentType = r.currentType;
                 tr.innerHTML = `
@@ -232,9 +242,6 @@
 
             if (table) { table.destroy(); }
             table = new simpleDatatables.DataTable('#currentsTable');
-
-            body.querySelectorAll('button[data-action="edit"]').forEach(btn => btn.addEventListener('click', () => onEdit(btn.dataset.id)));
-            body.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', () => onDelete(btn.dataset.id)));
         }
 
         function renderDetails(r) {
@@ -248,11 +255,8 @@
         }
 
         function applyFilter(type) {
-            const rows = document.querySelectorAll('#currentsTable tbody tr');
-            rows.forEach(row => {
-                const t = Number(row.dataset.currentType);
-                row.style.display = (type === null || type === undefined) ? '' : (t === Number(type) ? '' : 'none');
-            });
+            currentFilter = (type === null || type === undefined) ? null : Number(type);
+            renderTable();
         }
 
         function clearForms() {
