@@ -146,6 +146,7 @@
             document.getElementById('invTable').addEventListener('click', onTableAction);
             document.getElementById('linesTable').addEventListener('input', onLineChanged);
             document.getElementById('linesTable').addEventListener('click', onLineRemove);
+            document.getElementById('invForm').addEventListener('submit', (e) => e.preventDefault());
         }
 
         async function preloadLookups() {
@@ -159,19 +160,19 @@
             if (currRes.ok) {
                 const j = await currRes.json();
                 const arr = j.currents || j.Currents || j.items || j.Items || [];
-                currents = arr.map(x => ({ id: x.id ?? x.Id, name: x.name ?? x.Name }));
+                currents = arr.map(x => ({ id: x.currentId ?? x.CurrentId ?? x.id ?? x.Id, name: x.currentName ?? x.CurrentName ?? x.name ?? x.Name }));
             }
             // customers/suppliers
             if (csRes.ok) {
                 const j = await csRes.json();
                 const arr = j.items || j.Items || [];
-                csList = arr.map(x => ({ id: x.id ?? x.Id, name: x.personName ?? x.PersonName }));
+                csList = arr.filter(x => (x.status ?? x.Status) === 1).map(x => ({ id: x.id ?? x.Id, name: x.personName ?? x.PersonName }));
             }
             // products
             if (prodRes.ok) {
                 const j = await prodRes.json();
                 const arr = j.items || j.Items || [];
-                products = arr.map(x => ({ id: x.id ?? x.Id, name: x.name ?? x.Name }));
+                products = arr.filter(x => (x.status ?? x.Status) === 1).map(x => ({ id: x.id ?? x.Id, name: x.name ?? x.Name }));
             }
         }
 
@@ -190,7 +191,7 @@
                 lineCount: x.lineCount ?? x.LineCount,
                 totalAmount: x.totalAmount ?? x.TotalAmount,
                 status: x.status ?? x.Status
-            }));
+            })).filter(x => x.status === 1);
             renderTable();
         }
 
@@ -318,6 +319,7 @@
             if (!isEdit) {
                 const res = await fetch('/Invoices/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                return;
             } else {
                 payload.id = editingId;
                 const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
