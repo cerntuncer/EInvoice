@@ -259,7 +259,7 @@
         }
 
         function addEmptyLine() {
-            currentLines.push({ id: null, productAndServiceId: '', quantity: 1, unitPrice: 0 });
+            currentLines.push({ id: null, productAndServiceId: (products[0]?.id ?? ''), quantity: 1, unitPrice: 0 });
             renderLines(currentLines);
         }
 
@@ -318,7 +318,11 @@
         }
 
         function collectLines() {
-            return currentLines.map(l => ({ id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId), quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 }));
+            return currentLines.map(l => {
+                const item = { id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId), quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 };
+                if (!item.id || item.id <= 0) delete item.id;
+                return item;
+            });
         }
 
         function updateTotal() {
