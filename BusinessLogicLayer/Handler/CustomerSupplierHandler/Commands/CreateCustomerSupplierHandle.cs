@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.UserHandler;
@@ -56,7 +56,7 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Commands
             if (person)
             {
                 var existingUser = _userRepository.FirstOrDefault(b => b.PersonId == request.PersonId);
-                var existingCustomerSupplier = _customerSupplierRepository.FirstOrDefault(b => b.PersonId == request.PersonId);
+                var existingCustomerSupplier = _customerSupplierRepository.FirstOrDefault(b => b.PersonId == request.PersonId && b.UserId == request.UserId);
                 if (existingUser != null || existingCustomerSupplier != null)
                 {
                     message = "Belirtilen Kullanıcı Başka Bir Kullanıcı, Tedarikçi ya da Müşteriye Bağlı";
@@ -79,7 +79,8 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Commands
             {
                 Type = request.Type,
                 PersonId = personId.Value,
-                Status = request.Status
+                Status = request.Status,
+                UserId = request.UserId
             };
             _customerSupplierRepository.Add(customerSupplier);
             if (person)

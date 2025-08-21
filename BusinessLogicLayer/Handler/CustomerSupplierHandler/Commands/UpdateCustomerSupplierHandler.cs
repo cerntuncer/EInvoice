@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -16,7 +16,7 @@ public class UpdateCustomerSupplierHandle : IRequestHandler<UpdateCustomerSuppli
     {
         string? message = null;
 
-        var entity = _repository.Find(request.Id);
+        var entity = _repository.FirstOrDefault(x => x.Id == request.Id && x.UserId == request.UserId);
         if (entity == null)
         {
             message = "Müşteri/Tedarikçi bulunamadı.";

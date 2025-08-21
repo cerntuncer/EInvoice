@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Enumerations;
 using DatabaseAccessLayer.Models;
 using System;
 using System.Collections.Generic;
@@ -16,6 +16,9 @@ namespace DatabaseAccessLayer.Entities
         public long PersonId {  get; set; } 
         [ForeignKey("PersonId")]
         public Person Person { get; set; }
+        public long UserId { get; set; }
+        [ForeignKey("UserId")]
+        public User User { get; set; }
 
     }
 }

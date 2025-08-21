@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
+using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.PersonHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -10,4 +10,5 @@ public class CreateCustomerSupplierHandleRequest : IRequest<CreateCustomerSuppli
 
     public long? PersonId { get; set; }
     public CreatePersonHandleRequest? Person { get; set; }
+    public long UserId { get; set; }
 }
