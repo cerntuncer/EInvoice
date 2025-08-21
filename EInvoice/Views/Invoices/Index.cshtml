@@ -12,7 +12,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Faturalar</h2>
-    <button id="btnCreate" class="btn btn-primary">Yeni Fatura</button>
+    <div class="ms-auto d-flex align-items-center gap-2">
+        @Html.AntiForgeryToken()
+        <button id="btnCreate" class="btn btn-primary">Yeni Fatura</button>
+    </div>
 </div>
 
 <div class="card">
@@ -336,12 +339,12 @@
             const oldText = btn.innerText; btn.disabled = true; btn.innerText = btn.getAttribute('data-loading-text') || 'Kaydediliyor...';
             try {
                 if (!isEdit) {
-                    const res = await fetch('/Invoices/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                    const res = await fetch('/Invoices/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() || document.querySelector('#invForm input[name="__RequestVerificationToken"]').value }, body: JSON.stringify(payload) });
                     if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
                     return;
                 } else {
                 payload.id = editingId;
-                const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() || document.querySelector('#invForm input[name="__RequestVerificationToken"]').value }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
                 }
             } finally {
