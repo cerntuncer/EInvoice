@@ -1,6 +1,7 @@
-﻿using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
+using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
 {
@@ -12,7 +13,15 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
         public long CurrentId { get; set; }
         public long CustomerSupplierId { get; set; }
         public Status Status { get; set; }
-        public ICollection<lineOfInvoices> lineOfInovices { get; set; }
+        public ICollection<lineOfInvoices>? lineOfInovices { get; set; }
+
+        // Accept well-spelled JSON property name as an alias
+        [JsonPropertyName("lineOfInvoices")]
+        public ICollection<lineOfInvoices>? LineOfInvoices
+        {
+            get => lineOfInovices;
+            set => lineOfInovices = value;
+        }
     }
 
    

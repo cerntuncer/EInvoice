@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
@@ -61,19 +61,22 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                 }
 
                 // Yeni satırları ekle
-                foreach (var line in request.lineOfInovices)
+                if (request.lineOfInovices != null && request.lineOfInovices.Count > 0)
                 {
-                    var createLineRequest = new CreateLineOfInvoiceHandleRequest
+                    foreach (var line in request.lineOfInovices)
                     {
-                        InvoiceId = invoice.Id,
-                        ProductAndServiceId = line.ProductAndServiceId,
-                        Quantity = line.Quantity,
-                        UnitPrice = line.UnitPrice
-                    };
+                        var createLineRequest = new CreateLineOfInvoiceHandleRequest
+                        {
+                            InvoiceId = invoice.Id,
+                            ProductAndServiceId = line.ProductAndServiceId,
+                            Quantity = line.Quantity,
+                            UnitPrice = line.UnitPrice
+                        };
 
-                    var result = await _mediator.Send(createLineRequest);
-                    if (result.Error)
-                        throw new Exception(result.Message);
+                        var result = await _mediator.Send(createLineRequest);
+                        if (result.Error)
+                            throw new Exception(result.Message);
+                    }
                 }
 
                 await transaction.CommitAsync();

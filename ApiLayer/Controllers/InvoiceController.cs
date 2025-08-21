@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
+using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ namespace ApiLayer.Controllers
         }
 
         [HttpPost(Name = "CreateInvoice")]
-        public async Task<IActionResult> Create(CreateInvoiceHandleRequest request)
+        public async Task<IActionResult> Create([FromBody] CreateInvoiceHandleRequest request)
         {
             var result = await _mediator.Send(request);
 
@@ -51,7 +51,7 @@ namespace ApiLayer.Controllers
         }
         // PUT: api/Invoice
         [HttpPut(Name = "UpdateInvoice")]
-        public async Task<IActionResult> Update(UpdateInvoiceHandleRequest request)
+        public async Task<IActionResult> Update([FromBody] UpdateInvoiceHandleRequest request)
         {
             var result = await _mediator.Send(request);
 
