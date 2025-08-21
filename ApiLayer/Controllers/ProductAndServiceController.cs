@@ -1,8 +1,10 @@
 using BusinessLogicLayer.Handler.ProductAndServiceHandler;
 using BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs;
+using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ApiLayer.Controllers
 {
@@ -18,14 +20,30 @@ namespace ApiLayer.Controllers
             _logger = logger;
             _mediator = mediator;
         }
+
+        private async Task<long?> GetCurrentUserIdAsync()
+        {
+            var sub = User.FindFirst("sub")?.Value;
+            if (long.TryParse(sub, out var subUserId))
+                return subUserId;
+
+            var email = User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(email))
+                return null;
+
+            var cred = await _mediator.Send(new GetUserCredentialByEmailHandleRequest { Email = email });
+            if (cred.Error)
+                return null;
+            return cred.UserId;
+        }
         // POST: /ProductAndService
         [Authorize]
         [HttpPost(Name = "CreateProductAndService")]
         public async Task<IActionResult> Create(CreateProductAndServiceHandleRequest request)
         {
-            var sub = User.FindFirst("sub")?.Value;
-            if (!long.TryParse(sub, out var userId)) return Unauthorized();
-            request.UserId = userId;
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+            request.UserId = userId.Value;
 
             var result = await _mediator.Send(request);
             if (result.Error)
@@ -37,10 +55,10 @@ namespace ApiLayer.Controllers
         [HttpGet("{id}", Name = "GetProductAndServiceById")]
         public async Task<IActionResult> GetById(long id)
         {
-            var sub = User.FindFirst("sub")?.Value;
-            if (!long.TryParse(sub, out var userId)) return Unauthorized();
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
 
-            var result = await _mediator.Send(new GetProductAndServiceByIdHandleRequest { Id = id, UserId = userId });
+            var result = await _mediator.Send(new GetProductAndServiceByIdHandleRequest { Id = id, UserId = userId.Value });
 
             if (result.Error)
                 return UnprocessableEntity(result);
@@ -52,12 +70,12 @@ namespace ApiLayer.Controllers
         [HttpGet("Mine", Name = "GetMyProductsAndServices")]
         public async Task<IActionResult> GetMine()
         {
-            var sub = User.FindFirst("sub")?.Value;
-            if (!long.TryParse(sub, out var userId)) return Unauthorized();
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
 
             var result = await _mediator.Send(new BusinessLogicLayer.Handler.ProductAndServiceHandler.Queries.GetMyProductsAndServicesHandleRequest
             {
-                UserId = userId
+                UserId = userId.Value
             });
 
             if (result.Error)
@@ -70,9 +88,9 @@ namespace ApiLayer.Controllers
         [HttpPut]
         public async Task<IActionResult> Update(UpdateProductAndServiceHandleRequest request)
         {
-            var sub = User.FindFirst("sub")?.Value;
-            if (!long.TryParse(sub, out var userId)) return Unauthorized();
-            request.UserId = userId;
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+            request.UserId = userId.Value;
 
             var result = await _mediator.Send(request);
 
@@ -86,10 +104,10 @@ namespace ApiLayer.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            var sub = User.FindFirst("sub")?.Value;
-            if (!long.TryParse(sub, out var userId)) return Unauthorized();
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
 
-            var result = await _mediator.Send(new DeleteProductAndServiceHandleRequest { Id = id, UserId = userId });
+            var result = await _mediator.Send(new DeleteProductAndServiceHandleRequest { Id = id, UserId = userId.Value });
 
             if (result.Error)
                 return UnprocessableEntity(result);
