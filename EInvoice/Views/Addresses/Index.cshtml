@@ -1,6 +1,215 @@
-﻿@{
+@{
     ViewData["Title"] = "Adresler";
 }
 
-<h1>Adresler</h1>
-<p>Kullanıcıya ait adresler burada yönetilecek.</p>
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Adresler</h2>
+    <div>
+        <button id="btnCreate" class="btn btn-primary btn-sm">Oluştur</button>
+    </div>
+
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table id="addressesTable" class="table table-bordered table-striped" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tür</th>
+                    <th>Adres</th>
+                    <th>Durum</th>
+                    <th style="width: 140px;">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adres Oluştur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+                <form id="formAddress">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tür</label>
+                            <select class="form-select" name="addressType">
+                                <option value="1">E-posta</option>
+                                <option value="2">Şube</option>
+                                <option value="3">Faks</option>
+                                <option value="4">Telefon</option>
+                                <option value="5">Web Sitesi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Adres Metni</label>
+                            <input type="text" class="form-control" name="text" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button id="btnSave" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
+    <script>
+        const addressTypeMap = { 1: 'E-posta', 2: 'Şube', 3: 'Faks', 4: 'Telefon', 5: 'Web Sitesi' };
+        const statusMap = { 0: 'Pasif', 1: 'Aktif' };
+        let table, modal, isEdit = false, editId = null, cachedRows = [];
+
+        function getCsrf() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            return token ? token.value : '';
+        }
+
+        async function getErrorMessage(res) {
+            try {
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const j = await res.json();
+                    return j.message || j.Message || JSON.stringify(j);
+                }
+                const t = await res.text();
+                return t || `${res.status} ${res.statusText}`;
+            } catch (e) {
+                return `${res.status} ${res.statusText}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('addressModal'));
+            hookUI();
+            loadData();
+        });
+
+        function hookUI() {
+            document.getElementById('btnCreate').addEventListener('click', () => {
+                isEdit = false; editId = null;
+                document.querySelector('.modal-title').innerText = 'Adres Oluştur';
+                document.getElementById('formAddress').reset();
+                modal.show();
+            });
+
+            document.getElementById('btnSave').addEventListener('click', onSave);
+
+            document.getElementById('addressesTable').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = Number(btn.dataset.id);
+                if (btn.dataset.action === 'edit') onEdit(id);
+                else if (btn.dataset.action === 'delete') onDelete(id);
+            });
+        }
+
+        async function loadData() {
+            const res = await fetch(`/Addresses/List?ts=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) {
+                cachedRows = [];
+                renderTable();
+                return;
+            }
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                cachedRows = [];
+                renderTable();
+                return;
+            }
+            cachedRows = (data.addresses || data.Addresses || []).map(x => ({
+                id: x.id ?? x.Id,
+                text: x.text ?? x.Text,
+                addressType: x.addressType ?? x.AddressType,
+                status: x.status ?? x.Status
+            }));
+            renderTable();
+        }
+
+        function renderTable(rows) {
+            if (table) { table.destroy(); table = null; }
+            const body = document.querySelector('#addressesTable tbody');
+            body.innerHTML = '';
+            const rowsToRender = rows || cachedRows;
+            rowsToRender.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${addressTypeMap[r.addressType] || r.addressType}</td>
+                    <td>${r.text}</td>
+                    <td>${statusMap[r.status] ?? (r.status ?? '-')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
+                    </td>`;
+                body.appendChild(tr);
+            });
+
+            table = new simpleDatatables.DataTable('#addressesTable');
+        }
+
+        async function onSave() {
+            const form = document.getElementById('formAddress');
+            const payload = {
+                addressType: Number(form.addressType.value),
+                text: form.text.value
+            };
+
+            if (isEdit) {
+                const body = { id: editId, ...payload };
+                const res = await fetch('/Addresses/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
+                if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                return;
+            }
+
+            const res = await fetch('/Addresses/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+            if (res.ok) { modal.hide(); await reloadTable(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+
+        async function onEdit(id) {
+            const row = cachedRows.find(r => r.id === id);
+            if (!row) return;
+            isEdit = true; editId = id;
+            document.querySelector('.modal-title').innerText = 'Adres Güncelle';
+            document.getElementById('formAddress').reset();
+            document.querySelector('#formAddress [name="addressType"]').value = row.addressType;
+            document.querySelector('#formAddress [name="text"]').value = row.text;
+            modal.show();
+        }
+
+        async function onDelete(id) {
+            const result = await Swal.fire({
+                title: 'Silmek istiyor musunuz?',
+                text: 'Bu işlem geri alınamaz',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, sil',
+                cancelButtonText: 'Vazgeç'
+            });
+            if (!result.isConfirmed) return;
+            const res = await fetch(`/Addresses/Delete?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
+            if (res.ok) { await reloadTable(); Swal.fire('Silindi', 'Kayıt başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+
+        async function reloadTable() {
+            if (table) { table.destroy(); table = null; }
+            await loadData();
+        }
+    </script>
+}
