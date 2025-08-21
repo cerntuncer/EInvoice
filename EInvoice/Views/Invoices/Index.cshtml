@@ -227,7 +227,7 @@
                 body.appendChild(tr);
             });
             const perPageAll = Math.max(cachedInvoices.length, 1000);
-            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: false, perPage: perPageAll, perPageSelect: [], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok', info: '' } });
+            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: false, perPage: perPageAll, perPageSelect: [], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok', info: '' }, columns: [ { select: 0, sortable: false } ] });
             const bottom = document.querySelector('#invTable').closest('.dataTable-wrapper')?.querySelector('.dataTable-bottom');
             if (bottom) bottom.remove();
         }

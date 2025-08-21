@@ -20,7 +20,7 @@ namespace EInvoice.Controllers
             return View();
         }
 
-        [HttpGet]
+        [HttpGet("Print")]
         public IActionResult Print()
         {
             return View();
