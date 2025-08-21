@@ -1,5 +1,6 @@
-﻿using BusinessLogicLayer.Handler.UserHandler.Commands;
+using BusinessLogicLayer.Handler.UserHandler.Commands;
 using BusinessLogicLayer.Handler.UserHandler.DTOs;
+using BusinessLogicLayer.Handler.UserHandler.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,6 +32,16 @@ namespace ApiLayer.Controllers
         public async Task<IActionResult> GetById(long id)
         {
             var result = await _mediator.Send(new GetUserByIdHandleRequest { Id = id });
+            if (result.Error)
+                return UnprocessableEntity(result);
+
+            return Ok(result);
+        }
+        // GET: /User/with-person/{id}
+        [HttpGet("with-person/{id}", Name = "GetUserWithPersonById")]
+        public async Task<IActionResult> GetWithPersonById(long id)
+        {
+            var result = await _mediator.Send(new GetUserWithPersonByIdHandleRequest { Id = id });
             if (result.Error)
                 return UnprocessableEntity(result);
 
