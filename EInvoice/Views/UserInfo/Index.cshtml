@@ -1,6 +1,97 @@
-﻿@{
-    ViewData["Title"] = "Kullanıcı Bilgileri";
+﻿@model PresentationLayer.Models.DashboardProfileViewModel
+@{
+    ViewData["Title"] = "Kullanıcı Bilgilerim";
 }
 
-<h1>Kullanıcı Bilgileri</h1>
-<p>Giriş yapan kullanıcının bilgileri burada görüntülenecek ve güncellenebilecek.</p>
+<h1 class="mt-4">Kullanıcı Bilgilerim</h1>
+<ol class="breadcrumb mb-4">
+    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+    <li class="breadcrumb-item active">Kullanıcı Bilgilerim</li>
+</ol>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-user me-1"></i>
+        Bilgilerimi Güncelle
+    </div>
+    <div class="card-body">
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+        @if (Model != null)
+        {
+            <form id="userInfoForm" asp-action="Update" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="UserId" value="@Model.UserId" />
+                <input type="hidden" name="PersonId" value="@Model.PersonId" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Ad Soyad</label>
+                        <input class="form-control" name="Name" value="@Model.Name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">TCKN/VKN</label>
+                        <input class="form-control" name="IdentityNumber" value="@Model.IdentityNumber" readonly/>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Vergi Dairesi</label>
+                        <input class="form-control" name="TaxOffice" value="@Model.TaxOffice" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Kullanıcı Tipi</label>
+                        <input class="form-control" value="@(Model.UserType == 1 ? "Gerçek Kişi" : (Model.UserType == 2 ? "Tüzel Kişi" : "Bilinmiyor"))" readonly />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Güncelle</button>
+            </form>
+        }
+        else
+        {
+            <p>Bilgiler yüklenemedi.</p>
+        }
+    </div>
+</div>
+
+@section Styles { }
+
+    @section Scripts {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('userInfoForm');
+                if (!form) return;
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const fd = new FormData(form);
+                    const tokenEl = form.querySelector('input[name="__RequestVerificationToken"]');
+                    const antiForgeryToken = tokenEl ? tokenEl.value : '';
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': antiForgeryToken },
+                            body: fd
+                        });
+                        const data = await response.json();
+                        await Swal.fire({
+                            icon: data.success ? 'success' : 'error',
+                            title: data.success ? 'Başarılı' : 'Hata',
+                            text: data.message || (data.success ? 'Güncellendi' : 'Güncelleme başarısız')
+                        });
+                    } catch (err) {
+                        await Swal.fire({
+                            icon: 'error',
+                            title: 'Hata',
+                            text: 'Beklenmeyen bir hata oluştu.'
+                        });
+                    }
+                });
+            });
+        </script>
+    }
