@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.UserHandler.Commands;
+using BusinessLogicLayer.Handler.UserHandler.Commands;
 using BusinessLogicLayer.Handler.UserHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +44,15 @@ namespace ApiLayer.Controllers
             if (result.Error)
                 return UnprocessableEntity(result);
 
+            return Ok(result);
+        }
+        // GET: /User/WithPerson
+        [HttpGet("WithPerson", Name = "GetUsersWithPersonList")]
+        public async Task<IActionResult> GetUsersWithPersonList()
+        {
+            var result = await _mediator.Send(new GetUsersWithPersonListHandleRequest());
+            if (result.Error)
+                return UnprocessableEntity(result);
             return Ok(result);
         }
         // PUT: /User

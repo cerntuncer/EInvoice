@@ -2,22 +2,21 @@ using System.Diagnostics;
 using EInvoice.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using DatabaseAccessLayer.Contexts;
-using Microsoft.EntityFrameworkCore;
 using PresentationLayer.Models;
-using DatabaseAccessLayer.Enumerations;
+using PresentationLayer.Models.ApiResponses;
+using System.Net.Http.Headers;
 
 namespace EInvoice.Controllers
 {
     public class DashboardController : Controller
     {
         private readonly ILogger<DashboardController> _logger;
-        private readonly MyContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public DashboardController(ILogger<DashboardController> logger, MyContext context)
+        public DashboardController(ILogger<DashboardController> logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
-            _context = context;
+            _httpClientFactory = httpClientFactory;
         }
         [Authorize]
         public async Task<IActionResult> Index()
@@ -31,15 +30,30 @@ namespace EInvoice.Controllers
                 var role = User.FindFirst("role")?.Value;         // Kullan�c�n�n rol�
             }
 
-            var users = await _context.Users
-                .Include(u => u.Person)
-                .Select(u => new DashboardUserListItemViewModel
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+
+            var apiResponse = await client.GetAsync("/User/WithPerson");
+            var users = new List<DashboardUserListItemViewModel>();
+            if (apiResponse.IsSuccessStatusCode)
+            {
+                var data = await apiResponse.Content.ReadFromJsonAsync<GetUsersWithPersonListResponse>();
+                if (data != null && !data.Error)
                 {
-                    UserId = u.Id,
-                    Name = u.Person.Name,
-                    UserType = u.Type == UserType.NaturalPerson ? "Gerçek Kişi" : "Tüzel Kişi"
-                })
-                .ToListAsync();
+                    users = data.Users
+                        .Select(u => new DashboardUserListItemViewModel
+                        {
+                            UserId = u.UserId,
+                            Name = u.PersonName,
+                            UserType = u.UserType == 1 ? "Gerçek Kişi" : "Tüzel Kişi"
+                        })
+                        .ToList();
+                }
+            }
 
             return View(users);
         }
