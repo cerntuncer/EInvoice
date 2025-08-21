@@ -1,0 +1,145 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Fatura Yazdır";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Fatura Yazdır</h2>
+    <a href="/Invoices" class="btn btn-secondary">Geri</a>
+</div>
+
+<div id="printContainer"></div>
+
+@section Scripts {
+    <script>
+        // Query: /Invoices/Print?id=...
+        const params = new URLSearchParams(location.search);
+        const id = Number(params.get('id'));
+        if (!id) {
+            document.getElementById('printContainer').innerHTML = '<div class="alert alert-danger">Geçersiz fatura.</div>';
+        } else {
+            loadAndRender(id);
+        }
+
+        async function loadAndRender(id) {
+            try {
+                const res = await fetch('/Invoices/Get?id=' + id);
+                if (!res.ok) throw new Error('Fatura alınamadı');
+                const inv = await res.json();
+
+                // Very basic rendering using provided template; replace placeholders
+                const total = (inv.lines || inv.Lines || []).reduce((acc, l) => acc + (Number(l.quantity ?? l.Quantity) * Number(l.unitPrice ?? l.UnitPrice)), 0);
+
+                const rowsHtml = (inv.lines || inv.Lines || []).map((l, i) => {
+                    const qty = Number(l.quantity ?? l.Quantity);
+                    const price = Number(l.unitPrice ?? l.UnitPrice);
+                    const amount = qty * price;
+                    return `<tr><td>${i + 1}</td><td>${l.productAndServiceId ?? l.ProductAndServiceId}</td><td>Ürün/Hizmet</td><td>${qty} Adet</td><td class="num">${price.toLocaleString()} TL</td><td class="num">%0</td><td class="num">0 TL</td><td class="num">${amount.toLocaleString()} TL</td></tr>`;
+                }).join('');
+
+                const html = `
+<section class="sheet">
+  <div class="header">
+    <div class="seller">
+      <strong>Satıcı Bilgileri</strong>
+      Adres: -<br>
+      Web: -<br>
+      E‑posta: -<br>
+      Vergi Dairesi: -<br>
+      TCKN/VKN: -
+    </div>
+    <div class="logo">
+      <div style="width:120px;height:60px;border:1px solid #002147;margin:auto;"></div>
+      <div>e‑FATURA</div>
+    </div>
+    <div class="buyer">
+      <strong>SAYIN</strong><br>
+      Alıcı: ${inv.customerSupplierId ?? inv.CustomerSupplierId}<br>
+      Adres: -<br>
+      E‑posta: -<br>
+      Tel: -<br>
+      Vergi Dairesi: -
+    </div>
+  </div>
+
+  <div class="meta">
+    <table>
+      <tr><td>Senaryo</td><td>${inv.senario ?? inv.Senario}</td></tr>
+      <tr><td>Fatura Tipi</td><td>${inv.type ?? inv.Type}</td></tr>
+      <tr><td>Fatura No</td><td>${inv.no ?? inv.No}</td></tr>
+      <tr><td>Fatura Tarihi</td><td>${inv.date ?? inv.Date}</td></tr>
+    </table>
+  </div>
+
+  <div class="ettn">ETTN: -</div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>Sıra No</th>
+        <th>Stok Kodu</th>
+        <th>Mal Hizmet</th>
+        <th>Miktar</th>
+        <th>Birim Fiyat</th>
+        <th>KDV Oranı</th>
+        <th>KDV Tutarı</th>
+        <th>Mal Hizmet Tutarı</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
+
+  <style>
+    body { margin:0; font:13px/1.4 Arial, sans-serif; color:#000; background:#fff; }
+    .sheet{ width:210mm; min-height:297mm; margin:0 auto; padding:12mm; border:1px solid #000; }
+    .header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #002147; padding-bottom:6px; margin-bottom:6px; }
+    .seller{ font-size:12px; max-width:40%; }
+    .seller strong{ display:block; margin-bottom:4px; color:#002147; }
+    .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; }
+    .logo div{ margin-top:4px; }
+    .buyer{ font-size:12px; max-width:40%; text-align:left; }
+    .meta{ float:right; margin:8px 0; width:50%; }
+    .meta table{ width:100%; border-collapse:collapse; font-size:12px; }
+    .meta td{ border:1px solid #000; padding:4px 6px; }
+    .meta td:first-child{ font-weight:bold; background:#f2f2f2; width:160px; color:#000; }
+    .ettn{ margin:10px 0; font-weight:bold; border:2px solid #002147; padding:6px; display:inline-block; background:#fafafa; color:#002147; }
+    .items{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+    .items th, .items td{ border:1px solid #000; padding:6px; }
+    .items th{ background:#f2f2f2; text-align:center; color:#000; border:2px solid #002147; }
+    .items td.num{ text-align:right; }
+    .totals{ margin-top:8px; display:flex; justify-content:flex-end; }
+    .totals table{ border-collapse:collapse; font-size:12px; width:60%; }
+    .totals td{ border:1px solid #000; padding:6px; }
+    .totals td:first-child{ background:#f2f2f2; font-weight:bold; color:#000; border-right:2px solid #002147; }
+    .totals td.num{ text-align:right; }
+    .totals .pay{ color:#d0021b; font-weight:bold; }
+    .footbox{ margin-top:8px; border:1px solid #000; padding:8px; font-size:12px; background:#fafafa; }
+    footer{ margin-top:15px; text-align:center; font-size:11px; color:#555; }
+  </style>
+
+  <div class="totals">
+    <table>
+      <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${total.toLocaleString()} TL</td></tr>
+      <tr><td>Toplam İskonto</td><td class="num">0 TL</td></tr>
+      <tr><td>Hesaplanan KDV (%0)</td><td class="num">0 TL</td></tr>
+      <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${total.toLocaleString()} TL</td></tr>
+      <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${total.toLocaleString()} TL</td></tr>
+    </table>
+  </div>
+
+  <div class="footbox">
+    <strong>Yalnız:</strong> -
+  </div>
+
+  <footer>Bu belge örnek fatura düzenidir.</footer>
+</section>`;
+
+                document.getElementById('printContainer').innerHTML = html;
+            } catch (e) {
+                document.getElementById('printContainer').innerHTML = '<div class="alert alert-danger">' + (e.message || e) + '</div>';
+            }
+        }
+    </script>
+}

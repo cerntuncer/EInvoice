@@ -21,6 +21,12 @@ namespace EInvoice.Controllers
         }
 
         [HttpGet]
+        public IActionResult Print()
+        {
+            return View();
+        }
+
+        [HttpGet]
         public async Task<IActionResult> List()
         {
             var client = _httpClientFactory.CreateClient("Api");

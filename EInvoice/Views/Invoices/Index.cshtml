@@ -211,6 +211,7 @@
                     <td>${(r.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
+                        <a class="btn btn-sm btn-outline-primary me-1" href="/Invoices/Print?id=${r.id}" target="_blank">Yazdır</a>
                         <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
                         <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
                     </td>`;
