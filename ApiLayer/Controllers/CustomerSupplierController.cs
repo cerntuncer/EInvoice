@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.CustomerSupplierHandler;
+using BusinessLogicLayer.Handler.CustomerSupplierHandler;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.UserHandler;
 using MediatR;
@@ -24,6 +24,16 @@ namespace ApiLayer.Controllers
         public async Task<IActionResult> Create(CreateCustomerSupplierHandleRequest request)
         {
             var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        // GET: /CustomerSupplier/List
+        [HttpGet("List")]
+        public async Task<IActionResult> List()
+        {
+            var result = await _mediator.Send(new GetCustomerSuppliersHandleRequest());
             if (result.Error)
                 return UnprocessableEntity(result);
             return Ok(result);
