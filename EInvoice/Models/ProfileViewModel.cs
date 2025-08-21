@@ -2,7 +2,7 @@
 
 namespace PresentationLayer.Models
 {
-    public class DashboardProfileViewModel
+    public class ProfileViewModel
     {
         public long UserId { get; set; }
         public int UserType { get; set; }
@@ -20,5 +20,7 @@ namespace PresentationLayer.Models
 
         public int PersonType { get; set; }
         public int PersonStatus { get; set; }
+
+        // Dashboard data
     }
 }

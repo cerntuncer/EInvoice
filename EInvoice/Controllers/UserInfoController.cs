@@ -56,7 +56,7 @@ namespace EInvoice.Controllers
                 return View(model: null);
             }
 
-            var model = new DashboardProfileViewModel
+            var model = new ProfileViewModel
             {
                 UserId = user.UserId,
                 UserType = user.UserType,
@@ -75,7 +75,7 @@ namespace EInvoice.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update(DashboardProfileViewModel model)
+        public async Task<IActionResult> Update(ProfileViewModel model)
         {
             if (!ModelState.IsValid)
             {
