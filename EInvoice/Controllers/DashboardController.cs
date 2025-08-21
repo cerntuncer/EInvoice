@@ -25,10 +25,11 @@ namespace EInvoice.Controllers
         {
             var client = _httpClientFactory.CreateClient("Api");
             var accessToken = HttpContext.Session.GetString("AccessToken");
-            if (!string.IsNullOrEmpty(accessToken))
+            if (string.IsNullOrEmpty(accessToken))
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                return RedirectToAction("Index", "Login");
             }
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             // 1) Me: email'den UserId al
             var meResponse = await client.GetAsync("/Credential/Me");

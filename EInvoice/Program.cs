@@ -1,5 +1,6 @@
 using DatabaseAccessLayer.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 
 
@@ -20,11 +21,22 @@ builder.Services.AddAuthentication("Cookies")
     {
         options.LoginPath = "/Login";
         options.AccessDeniedPath = "/Auth/Denied";
-        options.SlidingExpiration = true;
+        options.SlidingExpiration = false;
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+        options.Cookie.Name = ".EInvoice.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddSession();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.Name = ".EInvoice.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();

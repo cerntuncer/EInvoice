@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 public class LoginController : Controller
 {
@@ -24,17 +25,17 @@ public class LoginController : Controller
         var apiRes = await client.PostAsJsonAsync("/Auth/login", model);
 
         if (!apiRes.IsSuccessStatusCode)
-            return BadRequest(new { message = "Giriþ baþarýsýz" });
+            return BadRequest(new { message = "Giriï¿½ baï¿½arï¿½sï¿½z" });
 
         var data = await apiRes.Content.ReadFromJsonAsync<LoginResponse>();
         if (data is null || string.IsNullOrEmpty(data.AccessToken))
-            return BadRequest(new { message = "Token alýnamadý." });
+            return BadRequest(new { message = "Token alï¿½namadï¿½." });
 
-        // 1) Tokenlarý Session’da tut (API çaðrýlarýnda kullanacaðýz)
+        // 1) Tokenlarï¿½ Sessionï¿½da tut (API ï¿½aï¿½rï¿½larï¿½nda kullanacaï¿½ï¿½z)
         HttpContext.Session.SetString("AccessToken", data.AccessToken);
         HttpContext.Session.SetString("RefreshToken", data.RefreshToken ?? "");
 
-        // 2) Cookie auth ile oturum aç
+        // 2) Cookie auth ile oturum aï¿½
         var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, "uid:" + (User?.Identity?.Name ?? model.Email)),
@@ -43,9 +44,15 @@ public class LoginController : Controller
     };
         var identity = new ClaimsIdentity(claims, "Cookies");
         var principal = new ClaimsPrincipal(identity);
-        await HttpContext.SignInAsync("Cookies", principal);
+        var authProperties = new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2),
+            AllowRefresh = false
+        };
+        await HttpContext.SignInAsync("Cookies", principal, authProperties);
 
-        // 3) AJAX’e baþarýlý JSON dön – client tarafý Dashboard’a yönlendirsin
+        // 3) AJAXï¿½e baï¿½arï¿½lï¿½ JSON dï¿½n ï¿½ client tarafï¿½ Dashboardï¿½a yï¿½nlendirsin
         return Ok(new { success = true });
     }
 
