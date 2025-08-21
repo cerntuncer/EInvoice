@@ -79,19 +79,17 @@
                         body: fd
                     });
                     const data = await response.json();
-                    const existing = form.parentElement.querySelector('.alert');
-                    if (existing) existing.remove();
-                    const alert = document.createElement('div');
-                    alert.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
-                    alert.innerText = data.message || (data.success ? 'Güncellendi' : 'Güncelleme başarısız');
-                    form.parentElement.insertBefore(alert, form);
+                    await Swal.fire({
+                        icon: data.success ? 'success' : 'error',
+                        title: data.success ? 'Başarılı' : 'Hata',
+                        text: data.message || (data.success ? 'Güncellendi' : 'Güncelleme başarısız')
+                    });
                 } catch (err) {
-                    const existing = form.parentElement.querySelector('.alert');
-                    if (existing) existing.remove();
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-danger';
-                    alert.innerText = 'Beklenmeyen bir hata oluştu.';
-                    form.parentElement.insertBefore(alert, form);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Hata',
+                        text: 'Beklenmeyen bir hata oluştu.'
+                    });
                 }
             });
         });
