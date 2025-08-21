@@ -195,7 +195,8 @@
         async function loadData() {
             const res = await fetch('/Currents/List');
             if (!res.ok) {
-                renderTable([]);
+                cachedRows = [];
+                renderTable();
                 console.warn('Currents/List failed');
                 return;
             }
@@ -203,7 +204,8 @@
             try {
                 data = await res.json();
             } catch (e) {
-                renderTable([]);
+                cachedRows = [];
+                renderTable();
                 console.warn('Invalid JSON for Currents/List');
                 return;
             }
@@ -221,6 +223,8 @@
         }
 
         function renderTable(rows) {
+            // Destroy existing DataTable instance before manipulating DOM
+            if (table) { table.destroy(); table = null; }
             const body = document.querySelector('#currentsTable tbody');
             body.innerHTML = '';
             const rowsToRender = rows || (currentFilter === null ? cachedRows : cachedRows.filter(r => r.currentType === Number(currentFilter)));
@@ -240,7 +244,6 @@
                 body.appendChild(tr);
             });
 
-            if (table) { table.destroy(); }
             table = new simpleDatatables.DataTable('#currentsTable');
         }
 
