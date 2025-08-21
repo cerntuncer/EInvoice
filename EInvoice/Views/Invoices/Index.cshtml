@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Faturalar";
 }
 
@@ -121,6 +121,7 @@
         const senarioMap = { 1: 'e-Fatura', 2: 'e-Arşiv', 3: 'Kağıt' };
         let table, modal, isEdit = false, editingId = null;
         let cachedInvoices = [], products = [], currents = [], csList = [];
+        let currentLines = [];
 
         function getCsrf() {
             const token = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -242,7 +243,7 @@
             document.querySelector('#invForm').reset();
             fillLookup(document.querySelector('select[name="currentId"]'), currents);
             fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
-            renderLines([{ productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: 0 }]);
+            renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: 0 }]);
             document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
             modal.show();
         }
@@ -258,44 +259,49 @@
         }
 
         function addEmptyLine() {
-            const lines = collectLines();
-            lines.push({ productAndServiceId: '', quantity: 1, unitPrice: 0 });
-            renderLines(lines);
+            currentLines.push({ id: null, productAndServiceId: '', quantity: 1, unitPrice: 0 });
+            renderLines(currentLines);
         }
 
         function onLineChanged(e) {
             const tr = e.target.closest('tr[data-idx]');
             if (!tr) return;
             const idx = Number(tr.dataset.idx);
-            const lines = collectLines();
             const inputName = e.target.name;
             if (inputName === 'product') {
-                lines[idx].productAndServiceId = Number(e.target.value);
+                currentLines[idx].productAndServiceId = Number(e.target.value);
             } else if (inputName === 'qty') {
-                lines[idx].quantity = Number(e.target.value) || 0;
+                currentLines[idx].quantity = Number(e.target.value) || 0;
             } else if (inputName === 'price') {
-                lines[idx].unitPrice = Number(e.target.value) || 0;
+                currentLines[idx].unitPrice = Number(e.target.value) || 0;
             }
-            renderLines(lines);
+            // Sadece ilgili satırın tutarını ve toplamı güncelle
+            const amount = (Number(currentLines[idx].quantity) || 0) * (Number(currentLines[idx].unitPrice) || 0);
+            const amountCell = tr.querySelector('[data-amount]');
+            if (amountCell) {
+                amountCell.innerText = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            updateTotal();
         }
         function onLineRemove(e) {
             const btn = e.target.closest('button[data-remove]');
             if (!btn) return;
             const idx = Number(btn.dataset.remove);
-            const lines = collectLines();
-            lines.splice(idx, 1);
-            renderLines(lines);
+            currentLines.splice(idx, 1);
+            renderLines(currentLines);
         }
 
         function renderLines(lines) {
+            currentLines = Array.isArray(lines) ? lines.map(l => ({ id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId) || '', quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 })) : currentLines;
             const body = document.querySelector('#linesTable tbody');
             body.innerHTML = '';
             let total = 0;
-            lines.forEach((ln, i) => {
+            currentLines.forEach((ln, i) => {
                 const amount = (Number(ln.quantity) || 0) * (Number(ln.unitPrice) || 0);
                 total += amount;
                 const tr = document.createElement('tr');
                 tr.dataset.idx = i;
+                if (ln.id) tr.dataset.id = ln.id;
                 tr.innerHTML = `
                     <td>
                         <select name="product" class="form-select">
@@ -304,7 +310,7 @@
                     </td>
                     <td><input name="qty" type="number" min="1" step="1" class="form-control" value="${ln.quantity ?? 1}" /></td>
                     <td><input name="price" type="number" min="0" step="0.01" class="form-control" value="${ln.unitPrice ?? 0}" /></td>
-                    <td>${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td data-amount>${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
                 body.appendChild(tr);
             });
@@ -312,13 +318,12 @@
         }
 
         function collectLines() {
-            const rows = Array.from(document.querySelectorAll('#linesTable tbody tr[data-idx]'));
-            const toNum = (val) => Number(String(val).replaceAll('.', '').replace(',', '.')) || 0;
-            return rows.map(r => ({
-                productAndServiceId: Number(r.querySelector('select[name="product"]').value),
-                quantity: toNum(r.querySelector('input[name="qty"]').value),
-                unitPrice: toNum(r.querySelector('input[name="price"]').value)
-            }));
+            return currentLines.map(l => ({ id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId), quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 }));
+        }
+
+        function updateTotal() {
+            const total = currentLines.reduce((acc, l) => acc + ((Number(l.quantity) || 0) * (Number(l.unitPrice) || 0)), 0);
+            document.getElementById('sumTotal').innerText = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         async function onSave() {
@@ -345,9 +350,9 @@
                     if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
                     return;
                 } else {
-                payload.id = editingId;
-                const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-                if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                    payload.id = editingId;
+                    const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                    if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
                 }
             } finally {
                 btn.disabled = false; btn.innerText = oldText;
@@ -377,7 +382,7 @@
                 }
                 fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
                 fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
-                const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice }));
+                const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ id: (l.id ?? l.Id) ?? null, productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice }));
                 renderLines(lines);
                 document.querySelector('.modal-title').innerText = 'Fatura Güncelle';
                 modal.show();

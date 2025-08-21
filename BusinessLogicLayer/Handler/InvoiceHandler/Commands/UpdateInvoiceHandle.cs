@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
@@ -53,27 +53,60 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
                 _invoiceRepository.Update(invoice);
 
-                // Önce eski satırları sil
+                // Mevcut satırları getir
                 var existingLines = _lineRepository.Where(x => x.InvoiceId == invoice.Id).ToList();
-                foreach (var item in existingLines)
+
+                // Güncellenecek veya eklenecek satırlar
+                foreach (var reqLine in request.lineOfInovices)
                 {
-                    _lineRepository.Delete(item);
+                    if (reqLine.Id.HasValue && reqLine.Id.Value > 0)
+                    {
+                        // Güncelle
+                        var toUpdate = existingLines.FirstOrDefault(l => l.Id == reqLine.Id.Value);
+                        if (toUpdate != null)
+                        {
+                            toUpdate.ProductAndServiceId = reqLine.ProductAndServiceId;
+                            toUpdate.Quantity = reqLine.Quantity;
+                            toUpdate.UnitPrice = reqLine.UnitPrice;
+                            _lineRepository.Update(toUpdate);
+                        }
+                        else
+                        {
+                            // ID gelmiş ama mevcutta yoksa güvenli olması adına ekle
+                            var createReq = new CreateLineOfInvoiceHandleRequest
+                            {
+                                InvoiceId = invoice.Id,
+                                ProductAndServiceId = reqLine.ProductAndServiceId,
+                                Quantity = reqLine.Quantity,
+                                UnitPrice = reqLine.UnitPrice
+                            };
+                            var r = await _mediator.Send(createReq);
+                            if (r.Error) throw new Exception(r.Message);
+                        }
+                    }
+                    else
+                    {
+                        // Yeni ekle
+                        var createReq = new CreateLineOfInvoiceHandleRequest
+                        {
+                            InvoiceId = invoice.Id,
+                            ProductAndServiceId = reqLine.ProductAndServiceId,
+                            Quantity = reqLine.Quantity,
+                            UnitPrice = reqLine.UnitPrice
+                        };
+                        var r = await _mediator.Send(createReq);
+                        if (r.Error) throw new Exception(r.Message);
+                    }
                 }
 
-                // Yeni satırları ekle
-                foreach (var line in request.lineOfInovices)
+                // Request'te olmayan mevcut satırları sil
+                var requestIds = request.lineOfInovices.Where(x => x.Id.HasValue && x.Id.Value > 0).Select(x => x.Id.Value).ToHashSet();
+                foreach (var ex in existingLines)
                 {
-                    var createLineRequest = new CreateLineOfInvoiceHandleRequest
+                    if (!requestIds.Contains(ex.Id))
                     {
-                        InvoiceId = invoice.Id,
-                        ProductAndServiceId = line.ProductAndServiceId,
-                        Quantity = line.Quantity,
-                        UnitPrice = line.UnitPrice
-                    };
-
-                    var result = await _mediator.Send(createLineRequest);
-                    if (result.Error)
-                        throw new Exception(result.Message);
+                        _lineRepository.Delete(ex);
+                    }
                 }
 
                 await transaction.CommitAsync();
