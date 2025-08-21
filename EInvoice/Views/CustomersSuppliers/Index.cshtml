@@ -9,6 +9,11 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Müşteri/Tedarikçi</h2>
     <div class="ms-auto">
+        <select id="statusFilter" class="form-select form-select-sm d-inline-block me-2" style="width: auto;">
+            <option value="-1">Tümü</option>
+            <option value="1" selected>Aktif</option>
+            <option value="0">Pasif</option>
+        </select>
         <button id="btnCreate" class="btn btn-primary btn-sm">Ekle</button>
     </div>
     @Html.AntiForgeryToken()
@@ -130,7 +135,9 @@
                 const id = Number(btn.dataset.id);
                 if (btn.dataset.action === 'edit') onEdit(id);
                 else if (btn.dataset.action === 'delete') onDelete(id);
+                else if (btn.dataset.action === 'activate') onActivate(id);
             });
+            document.getElementById('statusFilter').addEventListener('change', renderTable);
         }
 
         async function loadData() {
@@ -149,11 +156,18 @@
             renderTable();
         }
 
+        function getFilteredRows() {
+            const filterVal = Number(document.getElementById('statusFilter').value);
+            if (filterVal === -1) return cachedRows.slice();
+            return cachedRows.filter(r => r.status === filterVal);
+        }
+
         function renderTable() {
             if (table) { table.destroy(); table = null; }
             const body = document.querySelector('#csTable tbody');
             body.innerHTML = '';
-            cachedRows.forEach(r => {
+            const rows = getFilteredRows();
+            rows.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${r.personName}</td>
@@ -161,6 +175,7 @@
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        ${r.status === 0 ? `<button class="btn btn-sm btn-outline-success me-1" data-action="activate" data-id="${r.id}">Aktif Yap</button>` : ''}
                         <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
                     </td>`;
                 body.appendChild(tr);
@@ -227,6 +242,14 @@
             if (!result.isConfirmed) return;
             const res = await fetch(`/CustomersSuppliers/Delete?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
             if (res.ok) { await loadData(); Swal.fire('Silindi', 'Kayıt başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+
+        async function onActivate(id) {
+            const row = cachedRows.find(r => r.id === id);
+            if (!row) return;
+            const payload = { id: id, type: row.type, status: 1 };
+            const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+            if (res.ok) { await loadData(); Swal.fire('Başarılı', 'Kayıt aktifleştirildi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
         }
 
         // Yeni kayıt için form açıldığında alanları etkinleştir

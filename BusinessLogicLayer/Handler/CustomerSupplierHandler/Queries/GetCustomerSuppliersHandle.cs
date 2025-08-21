@@ -26,7 +26,6 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Queries
                     Type = cs.Type,
                     Status = cs.Status
                 })
-                .Where(x => x.Status != Status.Passive)
                 .OrderBy(x => x.PersonName)
                 .ToList();
 
