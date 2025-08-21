@@ -1,5 +1,6 @@
-﻿using BusinessLogicLayer.Handler.ProductAndServiceHandler;
+using BusinessLogicLayer.Handler.ProductAndServiceHandler;
 using BusinessLogicLayer.Handler.ProductAndServiceHandler.DTOs;
+using BusinessLogicLayer.Handler.ProductAndServiceHandler.Queries;
 using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -35,6 +36,20 @@ namespace ApiLayer.Controllers
             if (cred.Error)
                 return null;
             return cred.UserId;
+        }
+        // GET: /ProductAndService/ByUser/{userId}
+        [Authorize]
+        [HttpGet("ByUser/{userId}", Name = "GetProductsAndServicesByUserId")]
+        public async Task<IActionResult> GetByUserId(long userId)
+        {
+            var currentUserId = await GetCurrentUserIdAsync();
+            if (currentUserId is null || currentUserId.Value != userId)
+                return Unauthorized();
+
+            var result = await _mediator.Send(new GetProductsAndServicesByUserIdHandleRequest { UserId = userId });
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
         }
         // POST: /ProductAndService
         [Authorize]

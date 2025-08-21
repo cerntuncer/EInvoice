@@ -1,4 +1,194 @@
-﻿@{
+@{
+    ViewData["Title"] = "Ürünler & Hizmetler";
+}
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Ürünler & Hizmetler</h2>
+    <div>
+        <button id="btnCreate" class="btn btn-primary btn-sm">Ekle</button>
+    </div>
+    @Html.AntiForgeryToken()
+}</div>
+
+<div class="card">
+    <div class="card-body">
+        <table id="pasTable" class="table table-bordered table-striped" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Ad</th>
+                    <th>Birim</th>
+                    <th>Birim Fiyat</th>
+                    <th>Durum</th>
+                    <th style="width: 140px;">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="pasModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ürün/Hizmet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPaS">
+                    <div class="mb-3">
+                        <label class="form-label">Ad</label>
+                        <input type="text" class="form-control" name="name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Birim</label>
+                        <select class="form-select" name="unitType">
+                            <option value="0">Adet</option>
+                            <option value="1">Kg</option>
+                            <option value="2">Saat</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Birim Fiyat</label>
+                        <input type="number" step="0.01" class="form-control" name="unitPrice" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button id="btnSave" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
+    <script>
+        const unitMap = { 0: 'Adet', 1: 'Kg', 2: 'Saat' };
+        let table, modal, isEdit = false, editingId = null, cachedRows = [];
+
+        function getCsrf() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            return token ? token.value : '';
+        }
+
+        async function getErrorMessage(res) {
+            try {
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const j = await res.json();
+                    return j.message || j.Message || JSON.stringify(j);
+                }
+                const t = await res.text();
+                return t || `${res.status} ${res.statusText}`;
+            } catch (e) {
+                return `${res.status} ${res.statusText}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('pasModal'));
+            hookUI();
+            loadData();
+        });
+
+        function hookUI() {
+            document.getElementById('btnCreate').addEventListener('click', () => {
+                isEdit = false; editingId = null;
+                document.querySelector('#formPaS').reset();
+                document.querySelector('.modal-title').innerText = 'Ürün/Hizmet Ekle';
+                modal.show();
+            });
+            document.getElementById('btnSave').addEventListener('click', onSave);
+            document.getElementById('pasTable').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = Number(btn.dataset.id);
+                if (btn.dataset.action === 'edit') onEdit(id);
+                else if (btn.dataset.action === 'delete') onDelete(id);
+            });
+        }
+
+        async function loadData() {
+            const res = await fetch(`/ProductsAndServices/List?ts=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) { cachedRows = []; renderTable(); return; }
+            let data;
+            try { data = await res.json(); } catch { cachedRows = []; renderTable(); return; }
+            cachedRows = (data.items || data.Items || []).map(x => ({
+                id: x.id ?? x.Id,
+                name: x.name ?? x.Name,
+                unitPrice: x.unitPrice ?? x.UnitPrice,
+                unitType: x.unitType ?? x.UnitType,
+                status: x.status ?? x.Status
+            }));
+            renderTable();
+        }
+
+        function renderTable() {
+            if (table) { table.destroy(); table = null; }
+            const body = document.querySelector('#pasTable tbody');
+            body.innerHTML = '';
+            cachedRows.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.name}</td>
+                    <td>${unitMap[r.unitType] ?? r.unitType}</td>
+                    <td>${Number(r.unitPrice).toFixed(2)}</td>
+                    <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
+                    </td>`;
+                body.appendChild(tr);
+            });
+            table = new simpleDatatables.DataTable('#pasTable');
+        }
+
+        async function onSave() {
+            const form = document.getElementById('formPaS');
+            const payload = {
+                id: editingId,
+                name: form.name.value,
+                unitType: Number(form.unitType.value),
+                unitPrice: Number(form.unitPrice.value)
+            };
+            if (!isEdit) {
+                const res = await fetch('/ProductsAndServices/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+            } else {
+                const res = await fetch('/ProductsAndServices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+            }
+        }
+
+        async function onEdit(id) {
+            const row = cachedRows.find(r => r.id === id);
+            if (!row) return;
+            isEdit = true; editingId = id;
+            document.querySelector('.modal-title').innerText = 'Ürün/Hizmet Güncelle';
+            const form = document.getElementById('formPaS');
+            form.name.value = row.name;
+            form.unitType.value = row.unitType;
+            form.unitPrice.value = row.unitPrice;
+            modal.show();
+        }
+
+        async function onDelete(id) {
+            const result = await Swal.fire({ title: 'Silmek istiyor musunuz?', text: 'Bu işlem geri alınamaz', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç' });
+            if (!result.isConfirmed) return;
+            const res = await fetch(`/ProductsAndServices/Delete?id=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
+            if (res.ok) { await loadData(); Swal.fire('Silindi', 'Kayıt başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+    </script>
+}
+
+@{
     ViewData["Title"] = "Ürünler ve Hizmetler";
 }
 
