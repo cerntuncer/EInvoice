@@ -12,7 +12,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Ürünler & Hizmetler</h2>
-    <div>
+    <div class="ms-auto">
         <button id="btnCreate" class="btn btn-primary btn-sm">Ekle</button>
     </div>
     @Html.AntiForgeryToken()
@@ -62,7 +62,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Birim Fiyat</label>
-                        <input type="number" step="0.01" class="form-control" name="unitPrice" />
+                        <input type="text" inputmode="decimal" class="form-control" name="unitPrice" placeholder="0,00" />
                     </div>
                 </form>
             </div>
@@ -155,7 +155,7 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#pasTable');
+            table = new simpleDatatables.DataTable('#pasTable', { perPageSelect: false });
         }
 
         async function onSave() {
@@ -205,10 +205,3 @@
         }
     </script>
 }
-
-@{
-    ViewData["Title"] = "Ürünler ve Hizmetler";
-}
-
-<h1>Ürünler ve Hizmetler</h1>
-<p>Kullanıcıya ait ürün ve hizmetler burada yönetilecek.</p>
