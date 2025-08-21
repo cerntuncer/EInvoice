@@ -87,6 +87,17 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                     }
                 }
             }
+            // Cari bakiye güncelle
+            var total = (request.lineOfInovices ?? new List<lineOfInvoices>()).Sum(x => x.UnitPrice * x.Quantity);
+            var current = _currentRepository.Find(invoice.CurrentId);
+            if (current != null)
+            {
+                if (request.Type == InvoiceType.Purchase)
+                    current.Balance -= total; // alış: düş
+                else if (request.Type == InvoiceType.Sales)
+                    current.Balance += total; // satış: ekle
+                _currentRepository.Update(current);
+            }
             await transaction.CommitAsync();
             return new CreateInvoiceHandleResponse
             {
@@ -103,6 +114,6 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                 Error = true
             };
         }
-     
+
     }
 }

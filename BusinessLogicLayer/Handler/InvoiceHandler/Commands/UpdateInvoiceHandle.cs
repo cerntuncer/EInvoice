@@ -12,17 +12,20 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
     {
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly ILineOfInvoiceRepository _lineRepository;
+        private readonly ICurrentRepository _currentRepository;
         private readonly MyContext _context;
         private readonly IMediator _mediator;
 
         public UpdateInvoiceHandle(
             IInvoiceRepository invoiceRepository,
             ILineOfInvoiceRepository lineRepository,
+            ICurrentRepository currentRepository,
             MyContext context,
             IMediator mediator)
         {
             _invoiceRepository = invoiceRepository;
             _lineRepository = lineRepository;
+            _currentRepository = currentRepository;
             _context = context;
             _mediator = mediator;
         }
@@ -43,6 +46,9 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
             try
             {
+                // Önce eski değerleri tut
+                var previousType = invoice.Type;
+                var previousCurrentId = invoice.CurrentId;
                 // Fatura bilgilerini güncelle
                 invoice.Type = request.Type;
                 invoice.Senario = request.Senario;
@@ -53,27 +59,83 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
                 _invoiceRepository.Update(invoice);
 
-                // Önce eski satırları sil
+                // Mevcut satırları getir
                 var existingLines = _lineRepository.Where(x => x.InvoiceId == invoice.Id).ToList();
-                foreach (var item in existingLines)
+                var oldTotal = existingLines.Sum(l => l.UnitPrice * l.Quantity);
+                var newTotal = request.lineOfInovices?.Sum(l => l.UnitPrice * l.Quantity) ?? 0m;
+
+                // Güncellenecek veya eklenecek satırlar
+                foreach (var reqLine in request.lineOfInovices)
                 {
-                    _lineRepository.Delete(item);
+                    if (reqLine.Id.HasValue && reqLine.Id.Value > 0)
+                    {
+                        // Güncelle
+                        var toUpdate = existingLines.FirstOrDefault(l => l.Id == reqLine.Id.Value);
+                        if (toUpdate != null)
+                        {
+                            toUpdate.ProductAndServiceId = reqLine.ProductAndServiceId;
+                            toUpdate.Quantity = reqLine.Quantity;
+                            toUpdate.UnitPrice = reqLine.UnitPrice;
+                            _lineRepository.Update(toUpdate);
+                        }
+                        else
+                        {
+                            // ID gelmiş ama mevcutta yoksa güvenli olması adına ekle
+                            var createReq = new CreateLineOfInvoiceHandleRequest
+                            {
+                                InvoiceId = invoice.Id,
+                                ProductAndServiceId = reqLine.ProductAndServiceId,
+                                Quantity = reqLine.Quantity,
+                                UnitPrice = reqLine.UnitPrice
+                            };
+                            var r = await _mediator.Send(createReq);
+                            if (r.Error) throw new Exception(r.Message);
+                        }
+                    }
+                    else
+                    {
+                        // Yeni ekle
+                        var createReq = new CreateLineOfInvoiceHandleRequest
+                        {
+                            InvoiceId = invoice.Id,
+                            ProductAndServiceId = reqLine.ProductAndServiceId,
+                            Quantity = reqLine.Quantity,
+                            UnitPrice = reqLine.UnitPrice
+                        };
+                        var r = await _mediator.Send(createReq);
+                        if (r.Error) throw new Exception(r.Message);
+                    }
                 }
 
-                // Yeni satırları ekle
-                foreach (var line in request.lineOfInovices)
+                // Request'te olmayan mevcut satırları sil
+                var requestIds = request.lineOfInovices.Where(x => x.Id.HasValue && x.Id.Value > 0).Select(x => x.Id.Value).ToHashSet();
+                foreach (var ex in existingLines)
                 {
-                    var createLineRequest = new CreateLineOfInvoiceHandleRequest
+                    if (!requestIds.Contains(ex.Id))
                     {
-                        InvoiceId = invoice.Id,
-                        ProductAndServiceId = line.ProductAndServiceId,
-                        Quantity = line.Quantity,
-                        UnitPrice = line.UnitPrice
-                    };
+                        _lineRepository.Delete(ex);
+                    }
+                }
 
-                    var result = await _mediator.Send(createLineRequest);
-                    if (result.Error)
-                        throw new Exception(result.Message);
+                // Cari bakiye güncelle: önce önceki etkileri geri al, sonra yenisini uygula
+                var prevCurrent = _currentRepository.Find(previousCurrentId);
+                if (prevCurrent != null)
+                {
+                    if (previousType == InvoiceType.Purchase)
+                        prevCurrent.Balance += oldTotal; // alış etkisini geri al
+                    else if (previousType == InvoiceType.Sales)
+                        prevCurrent.Balance -= oldTotal; // satış etkisini geri al
+                    _currentRepository.Update(prevCurrent);
+                }
+
+                var newCurrent = _currentRepository.Find(invoice.CurrentId);
+                if (newCurrent != null)
+                {
+                    if (request.Type == InvoiceType.Purchase)
+                        newCurrent.Balance -= newTotal; // alışta para düşer
+                    else if (request.Type == InvoiceType.Sales)
+                        newCurrent.Balance += newTotal; // satışta para artar
+                    _currentRepository.Update(newCurrent);
                 }
 
                 await transaction.CommitAsync();
