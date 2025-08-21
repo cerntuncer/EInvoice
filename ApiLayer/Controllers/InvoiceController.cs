@@ -1,5 +1,6 @@
 ﻿using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -36,6 +37,16 @@ namespace ApiLayer.Controllers
             if (result.Error)
                 return UnprocessableEntity(result);
 
+            return Ok(result);
+        }
+        // GET: /Invoice/ByUser/{userId}
+        [Authorize]
+        [HttpGet("ByUser/{userId}", Name = "GetInvoicesByUserId")]
+        public async Task<IActionResult> GetByUserId(long userId)
+        {
+            var result = await _mediator.Send(new GetInvoicesByUserIdHandleRequest { UserId = userId });
+            if (result.Error)
+                return UnprocessableEntity(result);
             return Ok(result);
         }
         // PUT: api/Invoice

@@ -2,5 +2,391 @@
     ViewData["Title"] = "Faturalar";
 }
 
-<h1>Faturalar</h1>
-<p>Kullanıcıya özel faturalar burada listelenecek.</p>
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.css" />
+    <style>
+        .dataTable-bottom {
+            display: none !important;
+        }
+
+        .dataTable-top {
+            display: none !important;
+        }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Faturalar</h2>
+    <button id="btnCreate" class="btn btn-primary">Yeni Fatura</button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table id="invTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Tarih</th>
+                    <th>Tip</th>
+                    <th>Senaryo</th>
+                    <th>Satır</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="modal fade" id="invModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Fatura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="invForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Fatura Tipi</label>
+                            <select class="form-select" name="type">
+                                <option value="1">Alış</option>
+                                <option value="2">Satış</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Senaryo</label>
+                            <select class="form-select" name="senario">
+                                <option value="1">e-Fatura</option>
+                                <option value="2">e-Arşiv</option>
+                                <option value="3">Kağıt</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kasa/Banka (Current)</label>
+                            <select class="form-select" name="currentId"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Müşteri/Tedarikçi</label>
+                            <select class="form-select" name="customerSupplierId"></select>
+                        </div>
+                    </div>
+
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Satırlar</h6>
+                        <button id="btnAddLine" type="button" class="btn btn-sm btn-outline-primary">Satır Ekle</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle" id="linesTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%">Ürün/Hizmet</th>
+                                    <th style="width: 15%">Miktar</th>
+                                    <th style="width: 20%">Birim Fiyat</th>
+                                    <th style="width: 20%">Tutar</th>
+                                    <th style="width: 5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Toplam:</th>
+                                    <th id="sumTotal">0,00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button id="btnSave" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
+    <script>
+        const invTypeMap = { 1: 'Alış', 2: 'Satış' };
+        const senarioMap = { 1: 'e-Fatura', 2: 'e-Arşiv', 3: 'Kağıt' };
+        let table, modal, isEdit = false, editingId = null;
+        let cachedInvoices = [], products = [], currents = [], csList = [];
+
+        function getCsrf() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            return token ? token.value : '';
+        }
+        async function getErrorMessage(res) {
+            try {
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const j = await res.json();
+                    return j.message || j.Message || JSON.stringify(j);
+                }
+                const t = await res.text();
+                return t || `${res.status} ${res.statusText}`;
+            } catch (e) { return `${res.status} ${res.statusText}`; }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            modal = new bootstrap.Modal(document.getElementById('invModal'));
+            hookUI();
+            await preloadLookups();
+            await loadInvoices();
+        });
+
+        function hookUI() {
+            document.getElementById('btnCreate').addEventListener('click', onCreateClick);
+            document.getElementById('btnAddLine').addEventListener('click', addEmptyLine);
+            document.getElementById('btnSave').addEventListener('click', onSave);
+            document.getElementById('btnSave').setAttribute('data-loading-text', 'Kaydediliyor...');
+            document.getElementById('invTable').addEventListener('click', onTableAction);
+            document.getElementById('linesTable').addEventListener('input', onLineChanged);
+            document.getElementById('linesTable').addEventListener('click', onLineRemove);
+            document.getElementById('invForm').addEventListener('submit', (e) => e.preventDefault());
+            // CSRF token for modal form
+            if (!document.querySelector('#invForm input[name="__RequestVerificationToken"]')) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden'; hidden.name = '__RequestVerificationToken';
+                hidden.value = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                document.getElementById('invForm').appendChild(hidden);
+            }
+        }
+
+        async function preloadLookups() {
+            const [currRes, csRes, prodRes] = await Promise.all([
+                fetch('/Currents/List?ts=' + Date.now(), { cache: 'no-store' }),
+                fetch('/CustomersSuppliers/List?ts=' + Date.now(), { cache: 'no-store' }),
+                fetch('/ProductsAndServices/List?ts=' + Date.now(), { cache: 'no-store' })
+            ]);
+
+            // currents
+            if (currRes.ok) {
+                const j = await currRes.json();
+                const arr = j.currents || j.Currents || j.items || j.Items || [];
+                currents = arr.map(x => ({ id: x.currentId ?? x.CurrentId ?? x.id ?? x.Id, name: x.currentName ?? x.CurrentName ?? x.name ?? x.Name }));
+            }
+            // customers/suppliers
+            if (csRes.ok) {
+                const j = await csRes.json();
+                const arr = j.items || j.Items || [];
+                csList = arr.filter(x => (x.status ?? x.Status) === 1).map(x => ({ id: x.id ?? x.Id, name: x.personName ?? x.PersonName }));
+            }
+            // products
+            if (prodRes.ok) {
+                const j = await prodRes.json();
+                const arr = j.items || j.Items || [];
+                products = arr.filter(x => (x.status ?? x.Status) === 1).map(x => ({ id: x.id ?? x.Id, name: x.name ?? x.Name }));
+            }
+        }
+
+        async function loadInvoices() {
+            const res = await fetch('/Invoices/List?ts=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) { cachedInvoices = []; renderTable(); return; }
+            let data;
+            try { data = await res.json(); } catch { cachedInvoices = []; renderTable(); return; }
+            const items = data.items || data.Items || [];
+            cachedInvoices = items.map(x => ({
+                id: x.id ?? x.Id,
+                no: x.no ?? x.No,
+                date: x.date ?? x.Date,
+                type: x.type ?? x.Type,
+                senario: x.senario ?? x.Senario,
+                lineCount: x.lineCount ?? x.LineCount,
+                totalAmount: x.totalAmount ?? x.TotalAmount,
+                status: x.status ?? x.Status
+            })).filter(x => x.status === 1);
+            renderTable();
+        }
+
+        function renderTable() {
+            if (table) { table.destroy(); table = null; }
+            const body = document.querySelector('#invTable tbody');
+            body.innerHTML = '';
+            cachedInvoices.forEach(r => {
+                const tr = document.createElement('tr');
+                const date = r.date ? new Date(r.date) : null;
+                tr.innerHTML = `
+                    <td>${r.no ?? ''}</td>
+                    <td>${date ? date.toLocaleString() : ''}</td>
+                    <td>${invTypeMap[r.type] ?? r.type}</td>
+                    <td>${senarioMap[r.senario] ?? r.senario}</td>
+                    <td>${r.lineCount ?? 0}</td>
+                    <td>${(r.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary me-1" href="/Invoices/Print?id=${r.id}" target="_blank" rel="noopener">Yazdır</a>
+                        <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
+                    </td>`;
+                body.appendChild(tr);
+            });
+            const perPageAll = Math.max(cachedInvoices.length, 1000);
+            table = new simpleDatatables.DataTable('#invTable', { searchable: true, fixedHeight: false, perPage: perPageAll, perPageSelect: [], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok', info: '' }, columns: [ { select: 0, sortable: false } ] });
+            const bottom = document.querySelector('#invTable').closest('.dataTable-wrapper')?.querySelector('.dataTable-bottom');
+            if (bottom) bottom.remove();
+        }
+
+        function onCreateClick() {
+            isEdit = false; editingId = null;
+            document.querySelector('#invForm').reset();
+            fillLookup(document.querySelector('select[name="currentId"]'), currents);
+            fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
+            renderLines([{ productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: 0 }]);
+            document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
+            modal.show();
+        }
+
+        function fillLookup(selectEl, items) {
+            selectEl.innerHTML = '<option value="">Seçiniz...</option>';
+            items.forEach(it => {
+                const opt = document.createElement('option');
+                opt.value = it.id;
+                opt.textContent = it.name;
+                selectEl.appendChild(opt);
+            });
+        }
+
+        function addEmptyLine() {
+            const lines = collectLines();
+            lines.push({ productAndServiceId: '', quantity: 1, unitPrice: 0 });
+            renderLines(lines);
+        }
+
+        function onLineChanged(e) {
+            const tr = e.target.closest('tr[data-idx]');
+            if (!tr) return;
+            const idx = Number(tr.dataset.idx);
+            const lines = collectLines();
+            const inputName = e.target.name;
+            if (inputName === 'product') {
+                lines[idx].productAndServiceId = Number(e.target.value);
+            } else if (inputName === 'qty') {
+                lines[idx].quantity = Number(e.target.value) || 0;
+            } else if (inputName === 'price') {
+                lines[idx].unitPrice = Number(e.target.value) || 0;
+            }
+            renderLines(lines);
+        }
+        function onLineRemove(e) {
+            const btn = e.target.closest('button[data-remove]');
+            if (!btn) return;
+            const idx = Number(btn.dataset.remove);
+            const lines = collectLines();
+            lines.splice(idx, 1);
+            renderLines(lines);
+        }
+
+        function renderLines(lines) {
+            const body = document.querySelector('#linesTable tbody');
+            body.innerHTML = '';
+            let total = 0;
+            lines.forEach((ln, i) => {
+                const amount = (Number(ln.quantity) || 0) * (Number(ln.unitPrice) || 0);
+                total += amount;
+                const tr = document.createElement('tr');
+                tr.dataset.idx = i;
+                tr.innerHTML = `
+                    <td>
+                        <select name="product" class="form-select">
+                            ${products.map(p => `<option value="${p.id}" ${Number(ln.productAndServiceId) === Number(p.id) ? 'selected' : ''}>${p.name}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td><input name="qty" type="number" min="1" step="1" class="form-control" value="${ln.quantity ?? 1}" /></td>
+                    <td><input name="price" type="number" min="0" step="0.01" class="form-control" value="${ln.unitPrice ?? 0}" /></td>
+                    <td>${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
+                body.appendChild(tr);
+            });
+            document.getElementById('sumTotal').innerText = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function collectLines() {
+            const rows = Array.from(document.querySelectorAll('#linesTable tbody tr[data-idx]'));
+            const toNum = (val) => Number(String(val).replaceAll('.', '').replace(',', '.')) || 0;
+            return rows.map(r => ({
+                productAndServiceId: Number(r.querySelector('select[name="product"]').value),
+                quantity: toNum(r.querySelector('input[name="qty"]').value),
+                unitPrice: toNum(r.querySelector('input[name="price"]').value)
+            }));
+        }
+
+        async function onSave() {
+            const form = document.getElementById('invForm');
+            const payload = {
+                type: Number(form.type.value),
+                senario: Number(form.senario.value),
+                currentId: Number(form.currentId.value),
+                customerSupplierId: Number(form.customerSupplierId.value),
+                status: 1,
+                lineOfInovices: collectLines()
+            };
+            if (!payload.currentId) { Swal.fire('Hata', 'Kasa/Banka seçiniz', 'error'); return; }
+            if (!payload.customerSupplierId) { Swal.fire('Hata', 'Müşteri/Tedarikçi seçiniz', 'error'); return; }
+            if (!payload.lineOfInovices || payload.lineOfInovices.length === 0) {
+                Swal.fire('Hata', 'En az bir satır ekleyin.', 'error');
+                return;
+            }
+            const btn = document.getElementById('btnSave');
+            const oldText = btn.innerText; btn.disabled = true; btn.innerText = btn.getAttribute('data-loading-text') || 'Kaydediliyor...';
+            try {
+                if (!isEdit) {
+                    const res = await fetch('/Invoices/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                    if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                    return;
+                } else {
+                payload.id = editingId;
+                const res = await fetch('/Invoices/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                if (res.ok) { modal.hide(); await loadInvoices(); Swal.fire('Başarılı', 'Fatura güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                }
+            } finally {
+                btn.disabled = false; btn.innerText = oldText;
+            }
+        }
+
+        async function onTableAction(e) {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const id = Number(btn.dataset.id);
+            if (btn.dataset.action === 'print') {
+                const id = Number(btn.dataset.id);
+                const url = `${location.origin}/Invoices/Print?id=${id}`;
+                window.open(url, '_blank');
+                return;
+            } else if (btn.dataset.action === 'edit') {
+                const res = await fetch('/Invoices/Get?id=' + id);
+                if (!res.ok) { Swal.fire('Hata', await getErrorMessage(res), 'error'); return; }
+                const data = await res.json();
+                const inv = data || {};
+                isEdit = true; editingId = inv.id ?? inv.Id;
+                const form = document.getElementById('invForm');
+                form.type.value = inv.type ?? inv.Type;
+                form.senario.value = inv.senario ?? inv.Senario;
+                if (currents.length === 0 || csList.length === 0 || products.length === 0) {
+                    await preloadLookups();
+                }
+                fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
+                fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
+                const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice }));
+                renderLines(lines);
+                document.querySelector('.modal-title').innerText = 'Fatura Güncelle';
+                modal.show();
+            } else if (btn.dataset.action === 'delete') {
+                const result = await Swal.fire({ title: 'Silmek istiyor musunuz?', text: 'Bu işlem geri alınamaz', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç' });
+                if (!result.isConfirmed) return;
+                const res = await fetch('/Invoices/Delete?id=' + id, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
+                if (res.ok) { await loadInvoices(); Swal.fire('Silindi', 'Fatura pasife alındı', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+            }
+        }
+    </script>
+}
