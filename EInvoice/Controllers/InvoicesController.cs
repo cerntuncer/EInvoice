@@ -154,8 +154,12 @@ namespace EInvoice.Controllers
 
             var userPhones = userPersonAddresses.Where(a => a.AddressType == 4 && a.Status == 1).Select(a => a.Text).ToList();
             var userBranches = userPersonAddresses.Where(a => a.AddressType == 2 && a.Status == 1).Select(a => a.Text).ToList();
+            var userEmails = userPersonAddresses.Where(a => a.AddressType == 1 && a.Status == 1).Select(a => a.Text).ToList();
+            var userWebsites = userPersonAddresses.Where(a => a.AddressType == 5 && a.Status == 1).Select(a => a.Text).ToList();
             var csPhones = csPersonAddresses.Where(a => a.AddressType == 4 && a.Status == 1).Select(a => a.Text).ToList();
             var csBranches = csPersonAddresses.Where(a => a.AddressType == 2 && a.Status == 1).Select(a => a.Text).ToList();
+            var csEmails = csPersonAddresses.Where(a => a.AddressType == 1 && a.Status == 1).Select(a => a.Text).ToList();
+            var csWebsites = csPersonAddresses.Where(a => a.AddressType == 5 && a.Status == 1).Select(a => a.Text).ToList();
 
             return Ok(new
             {
@@ -169,7 +173,9 @@ namespace EInvoice.Controllers
                     userWithPerson.IdentityNumber,
                     userWithPerson.TaxOffice,
                     Phones = userPhones,
-                    BranchAddresses = userBranches
+                    BranchAddresses = userBranches,
+                    Emails = userEmails,
+                    Websites = userWebsites
                 },
                 CustomerSupplierPerson = csPerson == null ? null : new
                 {
@@ -178,7 +184,9 @@ namespace EInvoice.Controllers
                     csPerson.IdentityNumber,
                     csPerson.TaxOffice,
                     Phones = csPhones,
-                    BranchAddresses = csBranches
+                    BranchAddresses = csBranches,
+                    Emails = csEmails,
+                    Websites = csWebsites
                 }
             });
         }

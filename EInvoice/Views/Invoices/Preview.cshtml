@@ -26,14 +26,21 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         const invoiceId = @id;
         document.addEventListener('DOMContentLoaded', async () => {
             const model = await loadInvoice(invoiceId);
-            const docDef = buildDocDefinition(model);
-            const pdfDoc = pdfMake.createPdf(docDef);
-            renderInIframe(pdfDoc);
-            document.getElementById('btnDownload').addEventListener('click', () => pdfDoc.download(`Fatura_${(model.inv.No ?? model.inv.no) || model.inv.Id || model.inv.id || ''}.pdf`));
+            const html = buildInvoiceHtml(model);
+            const blob = await renderHtmlToPdfBlob(html);
+            const url = URL.createObjectURL(blob);
+            document.getElementById('pdfFrame').src = url;
+            document.getElementById('btnDownload').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Fatura_${(model.inv.No ?? model.inv.no) || model.inv.Id || model.inv.id || ''}.pdf`;
+                a.click();
+            });
         });
 
         async function loadInvoice(id) {
@@ -46,6 +53,7 @@
             const csPerson = data.customerSupplierPerson || data.CustomerSupplierPerson || null;
             const linesSrc = data.lineDetails || data.LineDetails || [];
             const lines = linesSrc.map(l => ({
+                Code: (l.productAndServiceId ?? l.ProductAndServiceId) ?? '',
                 ProductName: l.productName ?? l.ProductName ?? '',
                 UnitType: (l.unitType ?? l.UnitType),
                 Quantity: Number((l.quantity ?? l.Quantity) || 0) || 0,
@@ -53,74 +61,175 @@
             }));
             return { inv, current, userPerson, csPerson, lines };
         }
+        async function renderHtmlToPdfBlob(html) {
+            const host = document.createElement('div');
+            host.style.position = 'fixed';
+            host.style.left = '-10000px';
+            host.style.top = '0';
+            host.innerHTML = html;
+            document.body.appendChild(host);
+            const opt = { margin:       0,
+                          filename:     'fatura.pdf',
+                          image:        { type: 'jpeg', quality: 0.98 },
+                          html2canvas:  { scale: 2, useCORS: true },
+                          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            const blob = await html2pdf().set(opt).from(host).outputPdf('blob');
+            document.body.removeChild(host);
+            return blob;
+        }
 
-        function buildDocDefinition(model) {
+        function buildInvoiceHtml(model) {
             const inv = model.inv || {};
-            const userPerson = model.userPerson;
-            const csPerson = model.csPerson;
-            const rows = [
-                [{ text: 'Ürün/Hizmet', style: 'th' }, { text: 'Miktar', style: 'th' }, { text: 'Birim Fiyat', style: 'th' }, { text: 'Tutar', style: 'th' }]
-            ];
-            let total = 0;
-            (model.lines || []).forEach(line => {
-                const amount = (line.Quantity || 0) * (line.UnitPrice || 0);
-                total += amount;
-                rows.push([
-                    `${line.ProductName}${line.UnitType != null ? ' (' + mapUnitType(line.UnitType) + ')' : ''}`,
-                    { text: (line.Quantity || 0).toLocaleString() , alignment: 'right' },
-                    { text: (line.UnitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' },
-                    { text: amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' }
-                ]);
-            });
-            rows.push([
-                { text: 'Toplam', colSpan: 3, alignment: 'right', bold: true }, {}, {},
-                { text: total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), bold: true, alignment: 'right' }
-            ]);
+            const user = model.userPerson || {};
+            const buyer = model.csPerson || {};
+            const sellerAddress = (user.BranchAddresses ?? user.branchAddresses ?? [])[0] || '';
+            const sellerWeb = (user.Websites ?? user.websites ?? [])[0] || '';
+            const sellerMail = (user.Emails ?? user.emails ?? [])[0] || '';
+            const sellerTax = (user.TaxOffice ?? user.taxOffice) || '';
+            const sellerId = (user.IdentityNumber ?? user.identityNumber) || '';
+            const buyerName = (buyer.PersonName ?? buyer.personName) || '';
+            const buyerAddr = (buyer.BranchAddresses ?? buyer.branchAddresses ?? [])[0] || '';
+            const buyerMail = (buyer.Emails ?? buyer.emails ?? [])[0] || '';
+            const buyerPhone = (buyer.Phones ?? buyer.phones ?? [])[0] || '';
+            const buyerTax = (buyer.TaxOffice ?? buyer.taxOffice) || '';
+            const invNo = (inv.No ?? inv.no) || '';
+            const invDate = (inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleDateString('tr-TR') : '';
+            const sentDate = (inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString('tr-TR') : '';
+            const invType = mapInvoiceType(inv.Type ?? inv.type).toUpperCase();
+            const sen = (inv.Senario ?? inv.senario);
+            const senText = sen === 1 ? 'TICARIFATURA' : (sen === 2 ? 'ARSIVFATURA' : 'KAGITFATURA');
+            const itemsHtml = (model.lines || []).map((ln, i) => {
+                const qtyText = `${(ln.Quantity || 0)} ${mapUnitType(ln.UnitType)}`;
+                const priceText = `${(ln.UnitPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
+                const amount = (ln.Quantity || 0) * (ln.UnitPrice || 0);
+                const amountText = `${amount.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
+                const vatRate = '%0';
+                const vatAmt = '0 TL';
+                return `<tr><td>${i + 1}</td><td>${ln.Code ?? ''}</td><td>${escapeHtml(ln.ProductName || '')}</td><td>${qtyText}</td><td class="num">${priceText}</td><td class="num">${vatRate}</td><td class="num">${vatAmt}</td><td class="num">${amountText}</td></tr>`;
+            }).join('');
+            const total = (model.lines || []).reduce((a, l) => a + ((l.Quantity || 0) * (l.UnitPrice || 0)), 0);
+            const totalText = `${total.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
+            const totalVat = '0 TL';
+            const grand = totalText;
+            const pay = totalText;
 
-            return {
-                pageMargins: [30, 40, 30, 40],
-                content: [
-                    { text: 'FATURA', style: 'title' },
-                    { text: `No: ${(inv.No ?? inv.no) || ''}`, margin: [0, 5, 0, 0] },
-                    { text: `Tarih: ${(inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
-                    { columns: [
-                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type ?? inv.type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario ?? inv.senario)}` } ],
-                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name ?? model.current?.name ?? '-'}` }, { text: `Tür: ${mapCurrentType((model.current?.CurrentType ?? model.current?.currentType))}` }, { text: `Para Birimi: ${mapCurrency((model.current?.CurrencyType ?? model.current?.currencyType))}` } ]
-                    ], margin: [0, 0, 0, 10] },
-                    { columns: [
-                        [
-                            { text: 'Cari Kullanıcı', style: 'subtitle' },
-                            { text: userPerson ? `${(userPerson.PersonName ?? userPerson.personName) || ''} (${(userPerson.IdentityNumber ?? userPerson.identityNumber) || ''})` : '-' },
-                            { text: userPerson && (userPerson.TaxOffice ?? userPerson.taxOffice) ? `Vergi Dairesi: ${(userPerson.TaxOffice ?? userPerson.taxOffice)}` : '' },
-                            { text: userPerson && (userPerson.Phones ?? userPerson.phones)?.length ? `Telefon: ${(userPerson.Phones ?? userPerson.phones).join(', ')}` : '' },
-                            { text: userPerson && (userPerson.BranchAddresses ?? userPerson.branchAddresses)?.length ? `Şube: ${(userPerson.BranchAddresses ?? userPerson.branchAddresses).join(' | ')}` : '' }
-                        ],
-                        [
-                            { text: 'Müşteri/Tedarikçi', style: 'subtitle' },
-                            { text: csPerson ? `${(csPerson.PersonName ?? csPerson.personName) || ''} (${(csPerson.IdentityNumber ?? csPerson.identityNumber) || ''})` : '-' },
-                            { text: csPerson && (csPerson.TaxOffice ?? csPerson.taxOffice) ? `Vergi Dairesi: ${(csPerson.TaxOffice ?? csPerson.taxOffice)}` : '' },
-                            { text: csPerson && (csPerson.Phones ?? csPerson.phones)?.length ? `Telefon: ${(csPerson.Phones ?? csPerson.phones).join(', ')}` : '' },
-                            { text: csPerson && (csPerson.BranchAddresses ?? csPerson.branchAddresses)?.length ? `Şube: ${(csPerson.BranchAddresses ?? csPerson.branchAddresses).join(' | ')}` : '' }
-                        ]
-                    ], margin: [0, 0, 0, 10] },
-                    { table: { headerRows: 1, widths: ['*', 80, 100, 100], body: rows } }
-                ],
-                styles: {
-                    title: { fontSize: 18, bold: true },
-                    subtitle: { fontSize: 12, bold: true, margin: [0, 0, 0, 4] },
-                    th: { bold: true }
-                }
-            };
+            const html = `<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>e‑FATURA</title>
+<style>
+  body { margin:0; font:13px/1.4 Arial, sans-serif; color:#000; background:#fff; }
+  .sheet{ width:210mm; min-height:297mm; margin:0 auto; padding:12mm; border:1px solid #000; }
+  .header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #002147; padding-bottom:6px; margin-bottom:6px; }
+  .seller{ font-size:12px; max-width:40%; }
+  .seller strong{ display:block; margin-bottom:4px; color:#002147; }
+  .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; }
+  .logo div{ margin-top:4px; }
+  .buyer{ font-size:12px; max-width:40%; text-align:left; }
+  .meta{ float:right; margin:8px 0; width:50%; }
+  .meta table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .meta td{ border:1px solid #000; padding:4px 6px; }
+  .meta td:first-child{ font-weight:bold; background:#f2f2f2; width:160px; color:#000; }
+  .ettn{ margin:10px 0; font-weight:bold; border:2px solid #002147; padding:6px; display:inline-block; background:#fafafa; color:#002147; }
+  .items{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+  .items th, .items td{ border:1px solid #000; padding:6px; }
+  .items th{ background:#f2f2f2; text-align:center; color:#000; border:2px solid #002147; }
+  .items td.num{ text-align:right; }
+  .totals{ margin-top:8px; display:flex; justify-content:flex-end; }
+  .totals table{ border-collapse:collapse; font-size:12px; width:60%; }
+  .totals td{ border:1px solid #000; padding:6px; }
+  .totals td:first-child{ background:#f2f2f2; font-weight:bold; color:#000; border-right:2px solid #002147; }
+  .totals td.num{ text-align:right; }
+  .totals .pay{ color:#d0021b; font-weight:bold; }
+  .footbox{ margin-top:8px; border:1px solid #000; padding:8px; font-size:12px; background:#fafafa; }
+  .bank{ margin-top:8px; font-size:12px; border:2px solid #002147; padding:6px; }
+  .bank table{ width:100%; border-collapse:collapse; }
+  .bank th, .bank td{ border:1px solid #000; padding:6px; text-align:left; }
+  .bank th{ background:#f2f2f2; font-weight:bold; color:#000; border-bottom:2px solid #002147; }
+  footer{ margin-top:15px; text-align:center; font-size:11px; color:#555; }
+</style></head>
+<body>
+  <section class="sheet">
+    <div class="header">
+      <div class="seller">
+        <strong>Satıcı Bilgileri</strong>
+        Adres: ${escapeHtml(sellerAddress)}<br>
+        Web: ${escapeHtml(sellerWeb)}<br>
+        E‑posta: ${escapeHtml(sellerMail)}<br>
+        Vergi Dairesi: ${escapeHtml(sellerTax)}<br>
+        TCKN/VKN: ${escapeHtml(String(sellerId))}
+      </div>
+      <div class="logo">
+        <div style="width:120px;height:60px;border:1px solid #002147;margin:auto;"></div>
+        <div>${sen === 2 ? 'e‑ARŞİV' : 'e‑FATURA'}</div>
+      </div>
+      <div class="buyer">
+        <strong>SAYIN</strong><br>
+        ${escapeHtml(buyerName)}<br>
+        Adres: ${escapeHtml(buyerAddr)}<br>
+        E‑posta: ${escapeHtml(buyerMail)}<br>
+        Tel: ${escapeHtml(buyerPhone)}<br>
+        Vergi Dairesi: ${escapeHtml(buyerTax)}
+      </div>
+    </div>
+    <div class="meta">
+      <table>
+        <tr><td>Özelleştirme No</td><td>TR1.2</td></tr>
+        <tr><td>Senaryo</td><td>${senText}</td></tr>
+        <tr><td>Fatura Tipi</td><td>${invType}</td></tr>
+        <tr><td>Fatura No</td><td>${escapeHtml(String(invNo))}</td></tr>
+        <tr><td>Fatura Tarihi</td><td>${escapeHtml(invDate)}</td></tr>
+        <tr><td>Gönderim Tarihi</td><td>${escapeHtml(sentDate)}</td></tr>
+        <tr><td>Muhasebe Fatura No</td><td>-</td></tr>
+        <tr><td>Satış Kanalı</td><td>Diğer</td></tr>
+      </table>
+    </div>
+    <div class="ettn">ETTN: -</div>
+    <table class="items">
+      <thead>
+        <tr>
+          <th>Sıra No</th>
+          <th>Stok Kodu</th>
+          <th>Mal Hizmet</th>
+          <th>Miktar</th>
+          <th>Birim Fiyat</th>
+          <th>KDV Oranı</th>
+          <th>KDV Tutarı</th>
+          <th>Mal Hizmet Tutarı</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+    <div class="totals">
+      <table>
+        <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${totalText}</td></tr>
+        <tr><td>Toplam İskonto</td><td class="num">0 TL</td></tr>
+        <tr><td>Hesaplanan KDV (%0)</td><td class="num">${totalVat}</td></tr>
+        <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${grand}</td></tr>
+        <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${pay}</td></tr>
+      </table>
+    </div>
+    <div class="footbox">
+      <strong>Yalnız:</strong> ${yaziIle(total)}
+    </div>
+    <div class="bank">
+      <table>
+        <thead><tr><th>IBAN</th><th>Banka</th><th>Döviz Türü</th><th>Açıklama</th></tr></thead>
+        <tbody>
+          <tr><td>-</td><td>-</td><td>${mapCurrency(model.current?.CurrencyType ?? model.current?.currencyType) === 'TL' ? 'TRY' : mapCurrency(model.current?.CurrencyType ?? model.current?.currencyType)}</td><td>-</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer>Bu belge sistem tarafından oluşturulmuştur.</footer>
+  </section>
+</body></html>`;
+            return html;
         }
 
-        function renderInIframe(pdfDoc) {
-            pdfDoc.getBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const frame = document.getElementById('pdfFrame');
-                frame.src = url;
-            });
-        }
-
+        function escapeHtml(s) { return String(s || '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+        function yaziIle(amount) { try { const a = Math.round(Number(amount)||0); return a.toLocaleString('tr-TR') + ' Türk Lirası'; } catch { return ''; } }
+ 
         function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
         function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
         function mapCurrentType(ct) { return ct === 0 ? 'Kasa' : ct === 1 ? 'Banka' : String(ct ?? ''); }
