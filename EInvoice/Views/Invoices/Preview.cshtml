@@ -29,44 +29,44 @@
     <script>
         const invoiceId = @id;
         document.addEventListener('DOMContentLoaded', async () => {
-            const inv = await loadInvoice(invoiceId);
-            const docDef = buildDocDefinition(inv);
+            const model = await loadInvoice(invoiceId);
+            const docDef = buildDocDefinition(model);
             const pdfDoc = pdfMake.createPdf(docDef);
             renderInIframe(pdfDoc);
-            document.getElementById('btnDownload').addEventListener('click', () => pdfDoc.download(`Fatura_${inv.No || inv.Id}.pdf`));
+            document.getElementById('btnDownload').addEventListener('click', () => pdfDoc.download(`Fatura_${(model.inv.No ?? model.inv.no) || model.inv.Id || model.inv.id || ''}.pdf`));
         });
 
         async function loadInvoice(id) {
-            const res = await fetch(`/Invoices/Get?id=${id}`, { cache: 'no-store' });
+            const res = await fetch(`/Invoices/GetFull?id=${id}`, { cache: 'no-store' });
             if (!res.ok) throw new Error('Fatura getirilemedi');
             const data = await res.json();
-            const inv = {
-                Id: data.id ?? data.Id,
-                No: data.no ?? data.No,
-                Date: data.date ?? data.Date,
-                Type: data.type ?? data.Type,
-                Senario: data.senario ?? data.Senario,
-                CurrentName: data.current?.name ?? data.Current?.Name ?? '',
-                CustomerSupplierName: data.customerSupplier?.personName ?? data.CustomerSupplier?.PersonName ?? '',
-                Lines: (data.lines ?? data.Lines ?? (data.lineOfInovices ?? data.LineOfInovices) ?? []).map(l => ({
-                    ProductName: l.product?.name ?? l.Product?.Name ?? l.productName ?? l.ProductName ?? '',
-                    Quantity: Number(l.quantity ?? l.Quantity) || 0,
-                    UnitPrice: Number(l.unitPrice ?? l.UnitPrice) || 0,
-                }))
-            };
-            return inv;
+            const inv = data.invoice || data.Invoice || {};
+            const current = data.current || data.Current || {};
+            const userPerson = data.currentUserPerson || data.CurrentUserPerson || null;
+            const csPerson = data.customerSupplierPerson || data.CustomerSupplierPerson || null;
+            const linesSrc = data.lineDetails || data.LineDetails || [];
+            const lines = linesSrc.map(l => ({
+                ProductName: l.productName ?? l.ProductName ?? '',
+                UnitType: (l.unitType ?? l.UnitType),
+                Quantity: Number((l.quantity ?? l.Quantity) || 0) || 0,
+                UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0
+            }));
+            return { inv, current, userPerson, csPerson, lines };
         }
 
-        function buildDocDefinition(inv) {
+        function buildDocDefinition(model) {
+            const inv = model.inv || {};
+            const userPerson = model.userPerson;
+            const csPerson = model.csPerson;
             const rows = [
                 [{ text: 'Ürün/Hizmet', style: 'th' }, { text: 'Miktar', style: 'th' }, { text: 'Birim Fiyat', style: 'th' }, { text: 'Tutar', style: 'th' }]
             ];
             let total = 0;
-            inv.Lines.forEach(line => {
+            (model.lines || []).forEach(line => {
                 const amount = (line.Quantity || 0) * (line.UnitPrice || 0);
                 total += amount;
                 rows.push([
-                    line.ProductName,
+                    `${line.ProductName}${line.UnitType != null ? ' (' + mapUnitType(line.UnitType) + ')' : ''}`,
                     { text: (line.Quantity || 0).toLocaleString() , alignment: 'right' },
                     { text: (line.UnitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' },
                     { text: amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' }
@@ -81,11 +81,27 @@
                 pageMargins: [30, 40, 30, 40],
                 content: [
                     { text: 'FATURA', style: 'title' },
-                    { text: `No: ${inv.No || ''}`, margin: [0, 5, 0, 0] },
-                    { text: `Tarih: ${inv.Date ? new Date(inv.Date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
+                    { text: `No: ${(inv.No ?? inv.no) || ''}`, margin: [0, 5, 0, 0] },
+                    { text: `Tarih: ${(inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
                     { columns: [
-                        [ { text: 'Cari', style: 'subtitle' }, { text: inv.CurrentName || '-' } ],
-                        [ { text: 'Müşteri/Tedarikçi', style: 'subtitle' }, { text: inv.CustomerSupplierName || '-' } ]
+                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type ?? inv.type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario ?? inv.senario)}` } ],
+                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name ?? model.current?.name ?? '-'}` }, { text: `Tür: ${mapCurrentType((model.current?.CurrentType ?? model.current?.currentType))}` }, { text: `Para Birimi: ${mapCurrency((model.current?.CurrencyType ?? model.current?.currencyType))}` } ]
+                    ], margin: [0, 0, 0, 10] },
+                    { columns: [
+                        [
+                            { text: 'Cari Kullanıcı', style: 'subtitle' },
+                            { text: userPerson ? `${(userPerson.PersonName ?? userPerson.personName) || ''} (${(userPerson.IdentityNumber ?? userPerson.identityNumber) || ''})` : '-' },
+                            { text: userPerson && (userPerson.TaxOffice ?? userPerson.taxOffice) ? `Vergi Dairesi: ${(userPerson.TaxOffice ?? userPerson.taxOffice)}` : '' },
+                            { text: userPerson && (userPerson.Phones ?? userPerson.phones)?.length ? `Telefon: ${(userPerson.Phones ?? userPerson.phones).join(', ')}` : '' },
+                            { text: userPerson && (userPerson.BranchAddresses ?? userPerson.branchAddresses)?.length ? `Şube: ${(userPerson.BranchAddresses ?? userPerson.branchAddresses).join(' | ')}` : '' }
+                        ],
+                        [
+                            { text: 'Müşteri/Tedarikçi', style: 'subtitle' },
+                            { text: csPerson ? `${(csPerson.PersonName ?? csPerson.personName) || ''} (${(csPerson.IdentityNumber ?? csPerson.identityNumber) || ''})` : '-' },
+                            { text: csPerson && (csPerson.TaxOffice ?? csPerson.taxOffice) ? `Vergi Dairesi: ${(csPerson.TaxOffice ?? csPerson.taxOffice)}` : '' },
+                            { text: csPerson && (csPerson.Phones ?? csPerson.phones)?.length ? `Telefon: ${(csPerson.Phones ?? csPerson.phones).join(', ')}` : '' },
+                            { text: csPerson && (csPerson.BranchAddresses ?? csPerson.branchAddresses)?.length ? `Şube: ${(csPerson.BranchAddresses ?? csPerson.branchAddresses).join(' | ')}` : '' }
+                        ]
                     ], margin: [0, 0, 0, 10] },
                     { table: { headerRows: 1, widths: ['*', 80, 100, 100], body: rows } }
                 ],
@@ -104,5 +120,11 @@
                 frame.src = url;
             });
         }
+
+        function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
+        function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
+        function mapCurrentType(ct) { return ct === 0 ? 'Kasa' : ct === 1 ? 'Banka' : String(ct ?? ''); }
+        function mapCurrency(c) { return c === 1 ? 'TL' : c === 2 ? 'EUR' : c === 3 ? 'USD' : String(c ?? ''); }
+        function mapUnitType(u) { return u === 1 ? 'Adet' : u === 2 ? 'Kg' : u === 3 ? 'Saat' : String(u ?? ''); }
     </script>
 }
