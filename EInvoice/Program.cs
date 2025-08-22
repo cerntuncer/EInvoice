@@ -9,7 +9,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<MyContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+	var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+	options.UseSqlServer(connectionString, sql =>
+	{
+		sql.MigrationsAssembly(typeof(MyContext).Assembly.FullName);
+		sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+	});
+	options.CommandTimeout(60);
+#if DEBUG
+	options.EnableSensitiveDataLogging();
+	options.EnableDetailedErrors();
+#endif
+});
 
 builder.Services.AddHttpClient("Api", c =>
 {

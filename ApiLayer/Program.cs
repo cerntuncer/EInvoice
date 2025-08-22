@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.DesignPatterns.Services.Auth;
 using BusinessLogicLayer.Handler.PersonHandler.Commands;
@@ -20,7 +20,19 @@ builder.Services.AddControllers();
 
 // DI Kayıtları
 builder.Services.AddDbContext<MyContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(connectionString, sql =>
+    {
+        sql.MigrationsAssembly(typeof(MyContext).Assembly.FullName);
+        sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+    });
+    options.CommandTimeout(60);
+#if DEBUG
+    options.EnableSensitiveDataLogging();
+    options.EnableDetailedErrors();
+#endif
+});
 // Repositories (DAL concrete’leri burada kaydet)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserCredentialRepository, UserCredentialRepository>();

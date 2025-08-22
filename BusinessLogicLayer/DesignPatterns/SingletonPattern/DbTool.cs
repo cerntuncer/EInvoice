@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Contexts;
+using DatabaseAccessLayer.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,25 +9,33 @@ using System.Threading.Tasks;
 
 namespace BusinessLogicLayer.DesignPatterns.SingletonPattern
 {
-    public static class DbTool
-    {
-        private static MyContext _dbInstance;
+	public static class DbTool
+	{
+		private static MyContext _dbInstance;
 
-        public static MyContext DbInstance
-        {
-            get
-            {
-                if (_dbInstance == null)
-                {
-                    var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
-                    optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=InvoiceDb;Trusted_Connection=True;TrustServerCertificate=True");
+		public static MyContext DbInstance
+		{
+			get
+			{
+				if (_dbInstance == null)
+				{
+					var optionsBuilder = new DbContextOptionsBuilder<MyContext>();
+					var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
+						?? "Server=(localdb)\\MSSQLLocalDB;Database=InvoiceDb;Trusted_Connection=True;TrustServerCertificate=True";
 
-                    _dbInstance = new MyContext(optionsBuilder.Options);
-                }
+					optionsBuilder.UseSqlServer(connectionString, sql =>
+					{
+						sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+						sql.MigrationsAssembly(typeof(MyContext).Assembly.FullName);
+					});
+					optionsBuilder.CommandTimeout(60);
 
-                return _dbInstance;
-            }
-        }
-    }
+					_dbInstance = new MyContext(optionsBuilder.Options);
+				}
+
+				return _dbInstance;
+			}
+		}
+	}
 
 }
