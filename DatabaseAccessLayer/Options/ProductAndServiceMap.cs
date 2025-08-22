@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Entities;
+using DatabaseAccessLayer.Entities;
 using MAP.Options;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,7 +12,8 @@ namespace DatabaseAccessLayer.Options
 
             builder.HasOne(x => x.User)
                    .WithMany()
-                   .HasForeignKey(x => x.UserId);
+                   .HasForeignKey(x => x.UserId)
+                   .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

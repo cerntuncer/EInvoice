@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Entities;
+using DatabaseAccessLayer.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,8 @@ namespace MAP.Options
 
             builder.HasOne(x => x.User)
                    .WithMany(x => x.Current)
-                   .HasForeignKey(x => x.UserId);
+                   .HasForeignKey(x => x.UserId)
+                   .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
