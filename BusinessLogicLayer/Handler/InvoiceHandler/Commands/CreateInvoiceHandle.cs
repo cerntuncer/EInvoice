@@ -90,7 +90,7 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                 }
             }
             // Cari bakiye güncelle
-            var total = (request.lineOfInovices ?? new List<lineOfInvoices>()).Sum(x => x.UnitPrice * x.Quantity);
+            var total = (request.lineOfInovices ?? new List<lineOfInvoices>()).Sum(x => x.UnitPrice * x.Quantity * (1 + (decimal)x.VatRate / 100m));
             var current = _currentRepository.Find(invoice.CurrentId);
             if (current != null)
             {
