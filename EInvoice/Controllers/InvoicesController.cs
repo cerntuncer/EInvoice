@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models.ApiResponses;
 using System.Net.Http.Headers;
@@ -100,6 +100,14 @@ namespace EInvoice.Controllers
             var apiRes = await client.DeleteAsync($"/Invoice/{id}");
             var body = await apiRes.Content.ReadAsStringAsync();
             return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
+        }
+
+        [HttpGet]
+        public IActionResult Preview(long id)
+        {
+            ViewData["Title"] = "Fatura Önizleme";
+            ViewBag.InvoiceId = id;
+            return View();
         }
     }
 }

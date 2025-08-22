@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Faturalar";
 }
 
@@ -237,7 +237,7 @@
                     <td>${(r.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
-                        <a class="btn btn-sm btn-outline-primary me-1" href="/Invoices/Print?id=${r.id}" target="_blank" rel="noopener">Yazdır</a>
+                        <a class="btn btn-sm btn-outline-primary me-1" href="/Invoices/Preview?id=${r.id}" target="_blank" rel="noopener">Görüntüle</a>
                         <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
                         <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
                     </td>`;
@@ -381,12 +381,7 @@
             const btn = e.target.closest('button[data-action]');
             if (!btn) return;
             const id = Number(btn.dataset.id);
-            if (btn.dataset.action === 'print') {
-                const id = Number(btn.dataset.id);
-                const url = `${location.origin}/Invoices/Print?id=${id}`;
-                window.open(url, '_blank');
-                return;
-            } else if (btn.dataset.action === 'edit') {
+            if (btn.dataset.action === 'edit') {
                 const res = await fetch('/Invoices/Get?id=' + id);
                 if (!res.ok) { Swal.fire('Hata', await getErrorMessage(res), 'error'); return; }
                 const data = await res.json();
