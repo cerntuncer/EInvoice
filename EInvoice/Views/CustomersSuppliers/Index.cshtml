@@ -45,13 +45,8 @@
             <div class="modal-body">
                 <form id="formCs">
                     <div class="mb-3">
-                        <label class="form-label">Kişi</label>
-                        <div class="form-text">Mevcut kişi ID girin ya da aşağıdaki kişi bilgileri ile yeni kişi oluşturun.</div>
-                        <input type="number" class="form-control" name="personId" placeholder="Mevcut Kişi Id (opsiyonel)" />
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Ad</label>
-                        <input type="text" class="form-control" name="personName" placeholder="Yeni kişi adı (opsiyonel)" />
+                        <input type="text" class="form-control" name="personName" />
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -126,6 +121,11 @@
                 isEdit = false; editingId = null;
                 document.querySelector('#formCs').reset();
                 document.querySelector('.modal-title').innerText = 'Müşteri/Tedarikçi Ekle';
+                // Yeni kayıt için kişisel alanlar aktif
+                const form = document.getElementById('formCs');
+                form.personName.disabled = false;
+                form.identityNumber.disabled = false;
+                form.taxOffice.disabled = false;
                 modal.show();
             });
             document.getElementById('btnSave').addEventListener('click', onSave);
@@ -186,7 +186,6 @@
         async function onSave() {
             const form = document.getElementById('formCs');
 
-            const personIdVal = form.personId.value ? Number(form.personId.value) : null;
             const personNameVal = form.personName.value?.trim();
             const identityNumberVal = form.identityNumber.value?.trim();
             const taxOfficeVal = form.taxOffice.value?.trim();
@@ -198,20 +197,14 @@
 
             let payload = { id: editingId, type: typeVal, status: statusVal };
             if (!isEdit) {
-                if (personIdVal) {
-                    payload.personId = personIdVal;
-                } else if (personNameVal) {
-                    payload.person = {
-                        name: personNameVal,
-                        identityNumber: identityNumberVal ? Number(identityNumberVal) : 0,
-                        taxOffice: taxOfficeVal || '',
-                        type: 1,
-                        status: statusVal
-                    };
-                } else {
-                    Swal.fire('Hata', 'Mevcut kişi Id girin ya da yeni kişi bilgilerini doldurun.', 'error');
-                    return;
-                }
+                if (!personNameVal) { Swal.fire('Hata', 'Yeni kişi adını giriniz.', 'error'); return; }
+                payload.person = {
+                    name: personNameVal,
+                    identityNumber: identityNumberVal ? Number(identityNumberVal) : 0,
+                    taxOffice: taxOfficeVal || '',
+                    type: 1,
+                    status: statusVal
+                };
                 const res = await fetch('/CustomersSuppliers/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
             } else {
@@ -226,11 +219,9 @@
             isEdit = true; editingId = id;
             document.querySelector('.modal-title').innerText = 'Müşteri/Tedarikçi Güncelle';
             const form = document.getElementById('formCs');
-            form.personId.value = row.personId;
             form.personName.value = row.personName;
             form.type.value = row.type;
             form.status.value = row.status;
-            form.personId.disabled = true;
             form.personName.disabled = true;
             form.identityNumber.disabled = true;
             form.taxOffice.disabled = true;
@@ -251,14 +242,5 @@
             const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
             if (res.ok) { await loadData(); Swal.fire('Başarılı', 'Kayıt aktifleştirildi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
         }
-
-        // Yeni kayıt için form açıldığında alanları etkinleştir
-        document.getElementById('btnCreate').addEventListener('click', () => {
-            const form = document.getElementById('formCs');
-            form.personId.disabled = false;
-            form.personName.disabled = false;
-            form.identityNumber.disabled = false;
-            form.taxOffice.disabled = false;
-        });
     </script>
 }

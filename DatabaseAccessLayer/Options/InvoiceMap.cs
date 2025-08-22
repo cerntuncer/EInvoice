@@ -18,12 +18,12 @@ namespace MAP.Options
             builder.HasOne(x => x.Current)
                    .WithMany()
                    .HasForeignKey(x => x.CurrentId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(x => x.CustomerSupplier)
                    .WithMany()
                    .HasForeignKey(x => x.CustomerSupplierId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.NoAction);
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using DatabaseAccessLayer.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
@@ -12,12 +13,14 @@ namespace MAP.Options
 
             builder.HasOne(x => x.ProductAndService)
                    .WithMany()
-                   .HasForeignKey(x => x.ProductAndServiceId);
+                   .HasForeignKey(x => x.ProductAndServiceId)
+                   .OnDelete(DeleteBehavior.NoAction);
 
 
             builder.HasOne(x => x.Invoice)
                    .WithMany(x => x.LineOfInvoices)
-                   .HasForeignKey(x => x.InvoiceId);
+                   .HasForeignKey(x => x.InvoiceId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

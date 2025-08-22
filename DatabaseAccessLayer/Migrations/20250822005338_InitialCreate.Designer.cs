@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DatabaseAccessLayer.Migrations
 {
     [DbContext(typeof(MyContext))]
-    [Migration("20250822002106_InitialCreate")]
+    [Migration("20250822005338_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -37,7 +37,9 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -75,7 +77,9 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -117,7 +121,9 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -147,7 +153,9 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<int>("CurrencyType")
                         .HasColumnType("int");
@@ -185,7 +193,9 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -204,7 +214,8 @@ namespace DatabaseAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("PersonId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -220,7 +231,9 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -264,7 +277,9 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("InvoiceId")
                         .HasColumnType("bigint");
@@ -340,7 +355,9 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -378,7 +395,9 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -394,7 +413,8 @@ namespace DatabaseAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("PersonId")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -411,7 +431,9 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -471,7 +493,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.Person", "Person")
                         .WithMany("Addresses")
                         .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Person");
@@ -482,7 +504,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.Current", "Current")
                         .WithMany()
                         .HasForeignKey("CurrentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Current");
@@ -493,7 +515,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.Current", "Current")
                         .WithMany()
                         .HasForeignKey("CurrentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Current");
@@ -504,7 +526,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.User", "User")
                         .WithMany("Current")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -513,15 +535,15 @@ namespace DatabaseAccessLayer.Migrations
             modelBuilder.Entity("DatabaseAccessLayer.Entities.CustomerSupplier", b =>
                 {
                     b.HasOne("DatabaseAccessLayer.Entities.Person", "Person")
-                        .WithMany()
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne()
+                        .HasForeignKey("DatabaseAccessLayer.Entities.CustomerSupplier", "PersonId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("DatabaseAccessLayer.Entities.User", "User")
                         .WithMany("CustomerSuppliers")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Person");
@@ -534,13 +556,13 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.Current", "Current")
                         .WithMany()
                         .HasForeignKey("CurrentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("DatabaseAccessLayer.Entities.CustomerSupplier", "CustomerSupplier")
                         .WithMany()
                         .HasForeignKey("CustomerSupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Current");
@@ -559,7 +581,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.ProductAndService", "ProductAndService")
                         .WithMany()
                         .HasForeignKey("ProductAndServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Invoice");
@@ -572,7 +594,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -581,8 +603,8 @@ namespace DatabaseAccessLayer.Migrations
             modelBuilder.Entity("DatabaseAccessLayer.Entities.User", b =>
                 {
                     b.HasOne("DatabaseAccessLayer.Entities.Person", "Person")
-                        .WithMany()
-                        .HasForeignKey("PersonId")
+                        .WithOne()
+                        .HasForeignKey("DatabaseAccessLayer.Entities.User", "PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

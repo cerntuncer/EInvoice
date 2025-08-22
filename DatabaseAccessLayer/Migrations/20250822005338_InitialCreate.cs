@@ -39,7 +39,7 @@ namespace DatabaseAccessLayer.Migrations
                     AddressType = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     PersonId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -50,8 +50,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_Addresses_Person_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Person",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -62,7 +61,7 @@ namespace DatabaseAccessLayer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Type = table.Column<int>(type: "int", nullable: false),
                     PersonId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -88,7 +87,7 @@ namespace DatabaseAccessLayer.Migrations
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -99,8 +98,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_Currents_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -112,7 +110,7 @@ namespace DatabaseAccessLayer.Migrations
                     Type = table.Column<int>(type: "int", nullable: false),
                     PersonId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -123,14 +121,12 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_CustomersSuppliers_Person_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Person",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_CustomersSuppliers_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -143,7 +139,7 @@ namespace DatabaseAccessLayer.Migrations
                     UnitType = table.Column<int>(type: "int", nullable: false),
                     price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -154,8 +150,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_ProductsAndServices_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -177,7 +172,7 @@ namespace DatabaseAccessLayer.Migrations
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RefreshTokenExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PasswordUpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -203,7 +198,7 @@ namespace DatabaseAccessLayer.Migrations
                     BranchCode = table.Column<int>(type: "int", nullable: false),
                     AccountNo = table.Column<int>(type: "int", nullable: false),
                     CurrentId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -214,8 +209,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_Banks_Currents_CurrentId",
                         column: x => x.CurrentId,
                         principalTable: "Currents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -226,7 +220,7 @@ namespace DatabaseAccessLayer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Address = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     CurrentId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -237,8 +231,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_Cases_Currents_CurrentId",
                         column: x => x.CurrentId,
                         principalTable: "Currents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -253,7 +246,7 @@ namespace DatabaseAccessLayer.Migrations
                     Senario = table.Column<int>(type: "int", nullable: false),
                     CurrentId = table.Column<long>(type: "bigint", nullable: false),
                     CustomerSupplierId = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -264,14 +257,12 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_Invoices_Currents_CurrentId",
                         column: x => x.CurrentId,
                         principalTable: "Currents",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Invoices_CustomersSuppliers_CustomerSupplierId",
                         column: x => x.CustomerSupplierId,
                         principalTable: "CustomersSuppliers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -284,7 +275,7 @@ namespace DatabaseAccessLayer.Migrations
                     ProductAndServiceId = table.Column<long>(type: "bigint", nullable: false),
                     InvoiceId = table.Column<long>(type: "bigint", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
@@ -301,8 +292,7 @@ namespace DatabaseAccessLayer.Migrations
                         name: "FK_LineOfInvoices_ProductsAndServices_ProductAndServiceId",
                         column: x => x.ProductAndServiceId,
                         principalTable: "ProductsAndServices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -328,7 +318,8 @@ namespace DatabaseAccessLayer.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_CustomersSuppliers_PersonId",
                 table: "CustomersSuppliers",
-                column: "PersonId");
+                column: "PersonId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomersSuppliers_UserId",
@@ -369,7 +360,8 @@ namespace DatabaseAccessLayer.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Users_PersonId",
                 table: "Users",
-                column: "PersonId");
+                column: "PersonId",
+                unique: true);
         }
 
         /// <inheritdoc />

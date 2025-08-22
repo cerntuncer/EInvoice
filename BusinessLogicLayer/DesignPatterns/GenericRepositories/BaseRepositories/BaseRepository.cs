@@ -31,9 +31,9 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
         public void Add(T item)
         {
             _db.Set<T>().Add(item);//generic olduğu için T neyse _db ye set et kendini ve add yap
-            
+
             Save();
-            
+
         }
 
         public void AddRange(List<T> list)
@@ -73,11 +73,11 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
             _db.Set<T>().UpdateRange(list);
             Save();
         }
-        
+
 
         public void Destroy(T item)
         {
-           _db.Set<T>().Remove(item);
+            _db.Set<T>().Remove(item);
             Save();
 
         }
@@ -156,10 +156,10 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
         {
             var existingItem = _db.Set<T>().Find(item.Id);
 
-            item.UpdatedDate = DateTime.UtcNow;       
-            _db.Set<T>().Update(item);                  
-            Save();                                     
-        
+            item.UpdatedDate = DateTime.UtcNow;
+            _db.Set<T>().Update(item);
+            Save();
+
         }
 
         public void UpdateRange(List<T> list)
@@ -172,9 +172,9 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
             Save();
         }
 
-        public List<T> Where(Expression<Func<T, bool>> expression)
+        public IQueryable<T> Where(Expression<Func<T, bool>> expression)
         {
-            return _db.Set<T>().Where(expression).ToList();
+            return _db.Set<T>().Where(expression);
         }
     }
 
