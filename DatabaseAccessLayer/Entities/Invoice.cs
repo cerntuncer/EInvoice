@@ -21,8 +21,9 @@ namespace DatabaseAccessLayer.Entities
         public Current Current { get; set; }//faturada hangi kasa ya da bankadan giriş çıkış oldu 
         public long CustomerSupplierId { get; set; }
         [ForeignKey("CustomerSupplierId")]
-        public CustomerSupplier CustomerSupplier { get; set; } 
+        public CustomerSupplier CustomerSupplier { get; set; }
         public ICollection<LineOfInvoice> LineOfInvoices { get; set; } = new List<LineOfInvoice>();
-   
+        public string Ettn { get; set; }
+
     }
 }

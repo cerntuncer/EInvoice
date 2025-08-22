@@ -25,26 +25,23 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Queries
                 };
             }
 
-            var invoices = await _context.Invoices
-                .Include(i => i.LineOfInvoices)
-                .Include(i => i.Current)
+            var items = await _context.Invoices
                 .Where(i => i.Current.UserId == request.UserId)
                 .OrderByDescending(i => i.Date)
+                .Select(inv => new InvoiceSummaryDto
+                {
+                    Id = inv.Id,
+                    Type = inv.Type,
+                    Senario = inv.Senario,
+                    Date = inv.Date,
+                    No = inv.No,
+                    CurrentId = inv.CurrentId,
+                    CustomerSupplierId = inv.CustomerSupplierId,
+                    Status = inv.Status,
+                    LineCount = inv.LineOfInvoices.Count(),
+                    TotalAmount = inv.LineOfInvoices.Sum(l => l.UnitPrice * l.Quantity)
+                })
                 .ToListAsync(cancellationToken);
-
-            var items = invoices.Select(inv => new InvoiceSummaryDto
-            {
-                Id = inv.Id,
-                Type = inv.Type,
-                Senario = inv.Senario,
-                Date = inv.Date,
-                No = inv.No,
-                CurrentId = inv.CurrentId,
-                CustomerSupplierId = inv.CustomerSupplierId,
-                Status = inv.Status,
-                LineCount = inv.LineOfInvoices.Count,
-                TotalAmount = inv.LineOfInvoices.Sum(l => l.UnitPrice * l.Quantity)
-            }).ToList();
 
             return new GetInvoicesByUserIdHandleResponse
             {

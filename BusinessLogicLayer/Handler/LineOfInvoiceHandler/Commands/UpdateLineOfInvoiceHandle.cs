@@ -29,6 +29,7 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.Commands
 
             line.Quantity = request.Quantity;
             line.UnitPrice = request.UnitPrice;
+            line.VatRate = request.VatRate;
 
             _repository.Update(line);
 

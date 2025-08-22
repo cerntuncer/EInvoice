@@ -93,17 +93,19 @@
                         <table class="table table-bordered align-middle" id="linesTable">
                             <thead>
                                 <tr>
-                                    <th style="width: 40%">Ürün/Hizmet</th>
-                                    <th style="width: 15%">Miktar</th>
-                                    <th style="width: 20%">Birim Fiyat</th>
-                                    <th style="width: 20%">Tutar</th>
+                                    <th style="width: 32%">Ürün/Hizmet</th>
+                                    <th style="width: 12%">Miktar</th>
+                                    <th style="width: 14%">Birim Fiyat</th>
+                                    <th style="width: 12%">KDV (%)</th>
+                                    <th style="width: 15%">KDV Tutarı</th>
+                                    <th style="width: 15%">Tutar</th>
                                     <th style="width: 5%"></th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="3" class="text-end">Toplam:</th>
+                                    <th colspan="5" class="text-end">Toplam:</th>
                                     <th id="sumTotal">0,00</th>
                                     <th></th>
                                 </tr>
@@ -281,7 +283,7 @@
             document.querySelector('#invForm').reset();
             fillLookup(document.querySelector('select[name="currentId"]'), currents);
             fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
-            renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: products[0]?.unitPrice || 0 }]);
+            renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: products[0]?.unitPrice || 0, vatRate: 0 }]);
             document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
             modal.show();
         }
@@ -297,7 +299,7 @@
         }
 
         function addEmptyLine() {
-            currentLines.push({ id: null, productAndServiceId: (products[0]?.id ?? ''), quantity: 1, unitPrice: products[0]?.unitPrice || 0 });
+            currentLines.push({ id: null, productAndServiceId: (products[0]?.id ?? ''), quantity: 1, unitPrice: products[0]?.unitPrice || 0, vatRate: 0 });
             renderLines(currentLines);
         }
 
@@ -317,11 +319,19 @@
                 currentLines[idx].quantity = Number(e.target.value) || 0;
             } else if (inputName === 'price') {
                 currentLines[idx].unitPrice = Number(e.target.value) || 0;
+            } else if (inputName === 'vat') {
+                currentLines[idx].vatRate = Number(e.target.value) || 0;
             }
-            // Sadece ilgili satırın tutarını ve toplamı güncelle
-            const amount = (Number(currentLines[idx].quantity) || 0) * (Number(currentLines[idx].unitPrice) || 0);
+            // Sadece ilgili satırın tutarlarını ve toplamı güncelle
+            const qty = Number(currentLines[idx].quantity) || 0;
+            const unitPrice = Number(currentLines[idx].unitPrice) || 0;
+            const vatRate = Number(currentLines[idx].vatRate) || 0;
+            const amount = qty * unitPrice;
+            const vatAmount = amount * (vatRate / 100);
             const amountInput = tr.querySelector('input[name="amount"]');
             if (amountInput) amountInput.value = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const vatAmountInput = tr.querySelector('input[name="vatAmount"]');
+            if (vatAmountInput) vatAmountInput.value = vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             updateTotal();
         }
         function onLineRemove(e) {
@@ -333,12 +343,16 @@
         }
 
         function renderLines(lines) {
-            currentLines = Array.isArray(lines) ? lines.map(l => ({ id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId) || '', quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 })) : currentLines;
+            currentLines = Array.isArray(lines) ? lines.map(l => ({ id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId) || '', quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0, vatRate: Number(l.vatRate ?? l.VatRate) || 0 })) : currentLines;
             const body = document.querySelector('#linesTable tbody');
             body.innerHTML = '';
             let total = 0;
             currentLines.forEach((ln, i) => {
-                const amount = (Number(ln.quantity) || 0) * (Number(ln.unitPrice) || 0);
+                const qty = (Number(ln.quantity) || 0);
+                const price = (Number(ln.unitPrice) || 0);
+                const amount = qty * price;
+                const vatRate = Number(ln.vatRate) || 0;
+                const vatAmount = amount * (vatRate / 100);
                 total += amount;
                 const tr = document.createElement('tr');
                 tr.dataset.idx = i;
@@ -351,6 +365,8 @@
                     </td>
                     <td><input name="qty" type="number" min="1" step="1" class="form-control" value="${ln.quantity ?? 1}" /></td>
                     <td><input name="price" type="number" min="0" step="0.01" class="form-control" value="${ln.unitPrice ?? 0}" /></td>
+                    <td><input name="vat" type="number" min="0" max="100" step="1" class="form-control" value="${vatRate}" /></td>
+                    <td><input name="vatAmount" class="form-control" value="${vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
                     <td><input name="amount" class="form-control" value="${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
                     <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
                 body.appendChild(tr);
@@ -360,7 +376,7 @@
 
         function collectLines() {
             return currentLines.map(l => {
-                const item = { id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId), quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0 };
+                const item = { id: l.id ?? null, productAndServiceId: Number(l.productAndServiceId), quantity: Number(l.quantity) || 0, unitPrice: Number(l.unitPrice) || 0, vatRate: Number(l.vatRate) || 0 };
                 if (!item.id || item.id <= 0) delete item.id;
                 return item;
             });
@@ -422,7 +438,7 @@
                 }
                 fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
                 fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
-                const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ id: (l.id ?? l.Id) ?? null, productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice }));
+                const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ id: (l.id ?? l.Id) ?? null, productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice, vatRate: l.vatRate ?? l.VatRate ?? 0 }));
                 renderLines(lines);
                 document.querySelector('.modal-title').innerText = 'Fatura Güncelle';
                 modal.show();
@@ -445,7 +461,8 @@
                     ProductName: l.productName ?? l.ProductName ?? '',
                     UnitType: (l.unitType ?? l.UnitType),
                     Quantity: Number((l.quantity ?? l.Quantity) || 0) || 0,
-                    UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0
+                    UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0,
+                    VatRate: Number((l.vatRate ?? l.VatRate) || 0) || 0
                 }));
                 const docDef = buildPdfDoc({ inv, current, userPerson, csPerson, lines });
                 const pdfDoc = pdfMake.createPdf(docDef);
@@ -491,12 +508,11 @@
           const senText = (mapSenario ? mapSenario(sen) : (sen===1?'e-Fatura':sen===2?'e-Arşiv':sen===3?'Kağıt':String(sen ?? ''))).toUpperCase().replace('İ','I').replace('Ş','S');
           const titleText = sen === 2 ? 'e-ARŞİV' : 'e-FATURA';
 
-          // --- Satırlar + toplamlar (KDV yoksa 0) ---
+          // --- Satırlar + toplamlar ---
           const lines = (model.lines || []);
           const itemRows = [
             [
               { text: 'Sıra No', style: 'th' },
-              { text: 'Stok Kodu', style: 'th' },
               { text: 'Mal Hizmet', style: 'th' },
               { text: 'Miktar', style: 'th', alignment: 'right' },
               { text: 'Birim Fiyat', style: 'th', alignment: 'right' },
@@ -506,16 +522,17 @@
             ]
           ];
           let subTotal = 0;
+          let totalVat = 0;
           lines.forEach((ln, i) => {
             const qty = Number(ln.Quantity || 0);
             const price = Number(ln.UnitPrice || 0);
             const amount = qty * price;
-            subTotal += amount;
-            const vatRate = 0;
+            const vatRate = Number(ln.VatRate || ln.vatRate || 0);
             const vatAmt = amount * (vatRate/100);
+            subTotal += amount;
+            totalVat += vatAmt;
             itemRows.push([
               String(i+1),
-              String(ln.Code ?? ''),
               String(ln.ProductName ?? ''),
               { text: `${qty} ${mapUnitType?mapUnitType(ln.UnitType):String(ln.UnitType??'')}`, alignment:'right' },
               { text: num(price), alignment:'right' },
@@ -524,14 +541,9 @@
               { text: num(amount), alignment:'right' }
             ]);
           });
-          const totalVat = 0;
           const grand = subTotal + totalVat;
 
-          // --- IBAN tablosu (veri yoksa tire) ---
-          const currencyText = (mapCurrency ? mapCurrency(current.CurrencyType ?? current.currencyType) : (current.CurrencyType===1?'TL':current.CurrencyType===2?'EUR':current.CurrencyType===3?'USD':''));
-          const ibanText = '-';
-          const bankText = '-';
-          const ibanNote = '-';
+        
 
           // --- Doküman ---
           return {
@@ -601,7 +613,6 @@
                         [ metaKey('Fatura No', GRAY), String(invNo) ],
                         [ metaKey('Fatura Tarihi', GRAY), invDate ],
                         [ metaKey('Gönderim Tarihi', GRAY), sentDt ],
-                        [ metaKey('Muhasebe Fatura No', GRAY), '-' ],
                         [ metaKey('Satış Kanalı', GRAY), 'Diğer' ]
                       ]
                     },
@@ -619,7 +630,7 @@
               {
                 table: {
                   widths: ['*'],
-                  body: [[ { text: 'ETTN: -', bold: true, color: NAVY } ]]
+                  body: [[ { text: 'ETTN: ' + String(inv.Ettn ?? inv.ettn ?? '-'), bold: true, color: NAVY } ]]
                 },
                 layout: {
                   hLineWidth: (i,n) => (i===0||i===n)?2:2,
@@ -662,8 +673,7 @@
                       widths: ['*', 120],
                       body: [
                         [ { text: 'Mal Hizmet Toplam Tutarı', fillColor: GRAY, bold: true }, { text: num(subTotal), alignment: 'right' } ],
-                        [ { text: 'Toplam İskonto', fillColor: GRAY, bold: true }, { text: num(0), alignment: 'right' } ],
-                        [ { text: 'Hesaplanan KDV (%0)', fillColor: GRAY, bold: true }, { text: num(totalVat), alignment: 'right' } ],
+                        [ { text: 'Hesaplanan KDV', fillColor: GRAY, bold: true }, { text: num(totalVat), alignment: 'right' } ],
                         [ { text: 'Vergiler Dahil Toplam Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right' } ],
                         [ { text: 'Ödenecek Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right', color: RED, bold: true } ]
                       ]
@@ -690,30 +700,6 @@
                 margin: [0,0,0,8]
               },
 
-              // IBAN tablosu (dış çerçeve lacivert kalın)
-              {
-                table: {
-                  widths: ['*','*','*','*'],
-                  headerRows: 1,
-                  body: [
-                    [
-                      { text:'IBAN', style:'th' },
-                      { text:'Banka', style:'th' },
-                      { text:'Döviz Türü', style:'th' },
-                      { text:'Açıklama', style:'th' }
-                    ],
-                    [ ibanText, bankText, (currencyText === 'TL' ? 'TRY' : (currencyText || '')), ibanNote ]
-                  ]
-                },
-                layout: {
-                  hLineWidth: (i,n)=> (i===0||i===n)?2:1,
-                  vLineWidth: (i,n)=> (i===0||i===n)?2:1,
-                  hLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000',
-                  vLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000'
-                },
-                margin: [0,0,0,10]
-              },
-
               { text: 'Bu belge sistem tarafından oluşturulmuştur.', alignment: 'center', color: '#555', fontSize: 11 }
             ],
 
@@ -729,7 +715,7 @@
           // ---- helpers (pdf çıktısı için) ----
           function num(n){ return Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
           function metaKey(text, fill){ return { text, bold:true, fillColor: fill, color:'#000' }; }
-          function textYaziIle(x){ try{const a=Math.round(Number(x)||0); return a.toLocaleString('tr-TR')+' Türk Lirası';}catch{return '';} }
+          function textYaziIle(x){ try{const a=Math.round(Number(x)||0); return a.toLocaleString('tr-TR')+' Türk Lirası';}catch{return ''; } }
         }
         function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
         function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }

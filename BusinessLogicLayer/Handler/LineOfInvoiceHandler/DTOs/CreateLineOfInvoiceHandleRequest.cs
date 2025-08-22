@@ -8,6 +8,7 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs
         public long ProductAndServiceId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public int VatRate { get; set; }
     }
 
 }

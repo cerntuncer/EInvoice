@@ -21,9 +21,10 @@ namespace DatabaseAccessLayer.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; }
 
-    
-    
+
+        public int VatRate { get; set; }
+
+
     }
 
 }
-

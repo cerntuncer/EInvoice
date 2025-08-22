@@ -76,6 +76,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                             toUpdate.ProductAndServiceId = reqLine.ProductAndServiceId;
                             toUpdate.Quantity = reqLine.Quantity;
                             toUpdate.UnitPrice = reqLine.UnitPrice;
+                            toUpdate.VatRate = reqLine.VatRate;
                             _lineRepository.Update(toUpdate);
                         }
                         else
@@ -86,7 +87,8 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                                 InvoiceId = invoice.Id,
                                 ProductAndServiceId = reqLine.ProductAndServiceId,
                                 Quantity = reqLine.Quantity,
-                                UnitPrice = reqLine.UnitPrice
+                                UnitPrice = reqLine.UnitPrice,
+                                VatRate = reqLine.VatRate
                             };
                             var r = await _mediator.Send(createReq);
                             if (r.Error) throw new Exception(r.Message);
@@ -100,7 +102,8 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
                             InvoiceId = invoice.Id,
                             ProductAndServiceId = reqLine.ProductAndServiceId,
                             Quantity = reqLine.Quantity,
-                            UnitPrice = reqLine.UnitPrice
+                            UnitPrice = reqLine.UnitPrice,
+                            VatRate = reqLine.VatRate
                         };
                         var r = await _mediator.Send(createReq);
                         if (r.Error) throw new Exception(r.Message);

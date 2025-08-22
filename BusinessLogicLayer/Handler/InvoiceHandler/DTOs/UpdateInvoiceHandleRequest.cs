@@ -6,7 +6,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
 {
     public class UpdateInvoiceHandleRequest : IRequest<UpdateInvoiceHandleResponse>
     {
-        public long Id { get; set; } 
+        public long Id { get; set; }
         public InvoiceType Type { get; set; }
         public InvoiceSenario Senario { get; set; }
         public long CurrentId { get; set; }
@@ -21,5 +21,6 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
         public long ProductAndServiceId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public int VatRate { get; set; }
     }
 }

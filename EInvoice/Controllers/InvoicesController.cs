@@ -149,7 +149,8 @@ namespace EInvoice.Controllers
                 ProductName = productMap.TryGetValue(l.ProductAndServiceId, out var pd) ? pd.Name : string.Empty,
                 UnitType = productMap.TryGetValue(l.ProductAndServiceId, out var pd2) ? pd2.UnitType : 0,
                 Quantity = l.Quantity,
-                UnitPrice = l.UnitPrice
+                UnitPrice = l.UnitPrice,
+                VatRate = l.VatRate
             }).ToList();
 
             var userPhones = userPersonAddresses.Where(a => a.AddressType == 4 && a.Status == 1).Select(a => a.Text).ToList();
@@ -201,6 +202,7 @@ namespace EInvoice.Controllers
             public long CurrentId { get; set; }
             public long CustomerSupplierId { get; set; }
             public int Status { get; set; }
+            public string? Ettn { get; set; }
             public List<LineDto> Lines { get; set; } = new();
         }
         private class LineDto
@@ -210,6 +212,7 @@ namespace EInvoice.Controllers
             public long ProductAndServiceId { get; set; }
             public int Quantity { get; set; }
             public decimal UnitPrice { get; set; }
+            public int VatRate { get; set; }
         }
         private class LineDetailDto
         {
@@ -220,6 +223,7 @@ namespace EInvoice.Controllers
             public int UnitType { get; set; }
             public int Quantity { get; set; }
             public decimal UnitPrice { get; set; }
+            public int VatRate { get; set; }
         }
         private class CurrentDto
         {
