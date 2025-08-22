@@ -129,6 +129,29 @@ namespace EInvoice.Controllers
                 }
             }
 
+            // 5) Product details for lines
+            var productIdSet = (invoice.Lines ?? new List<LineDto>()).Select(l => l.ProductAndServiceId).Distinct().ToList();
+            var productMap = new Dictionary<long, ProductDto>();
+            foreach (var pid in productIdSet)
+            {
+                var pHttp = await client.GetAsync($"/ProductAndService/{pid}");
+                if (pHttp.IsSuccessStatusCode)
+                {
+                    var p = await pHttp.Content.ReadFromJsonAsync<ProductDto>();
+                    if (p != null) productMap[pid] = p;
+                }
+            }
+            var lineDetails = (invoice.Lines ?? new List<LineDto>()).Select(l => new LineDetailDto
+            {
+                Id = l.Id,
+                InvoiceId = l.InvoiceId,
+                ProductAndServiceId = l.ProductAndServiceId,
+                ProductName = productMap.TryGetValue(l.ProductAndServiceId, out var pd) ? pd.Name : string.Empty,
+                UnitType = productMap.TryGetValue(l.ProductAndServiceId, out var pd2) ? pd2.UnitType : 0,
+                Quantity = l.Quantity,
+                UnitPrice = l.UnitPrice
+            }).ToList();
+
             var userPhones = userPersonAddresses.Where(a => a.AddressType == 4 && a.Status == 1).Select(a => a.Text).ToList();
             var userBranches = userPersonAddresses.Where(a => a.AddressType == 2 && a.Status == 1).Select(a => a.Text).ToList();
             var csPhones = csPersonAddresses.Where(a => a.AddressType == 4 && a.Status == 1).Select(a => a.Text).ToList();
@@ -138,6 +161,7 @@ namespace EInvoice.Controllers
             {
                 Invoice = invoice,
                 Current = current,
+                LineDetails = lineDetails,
                 CurrentUserPerson = userWithPerson == null ? null : new
                 {
                     userWithPerson.PersonId,
@@ -176,6 +200,16 @@ namespace EInvoice.Controllers
             public long Id { get; set; }
             public long InvoiceId { get; set; }
             public long ProductAndServiceId { get; set; }
+            public int Quantity { get; set; }
+            public decimal UnitPrice { get; set; }
+        }
+        private class LineDetailDto
+        {
+            public long Id { get; set; }
+            public long InvoiceId { get; set; }
+            public long ProductAndServiceId { get; set; }
+            public string ProductName { get; set; }
+            public int UnitType { get; set; }
             public int Quantity { get; set; }
             public decimal UnitPrice { get; set; }
         }
@@ -228,6 +262,14 @@ namespace EInvoice.Controllers
             public long Id { get; set; }
             public string Text { get; set; }
             public int AddressType { get; set; }
+            public int Status { get; set; }
+        }
+        private class ProductDto
+        {
+            public long Id { get; set; }
+            public string Name { get; set; }
+            public decimal UnitPrice { get; set; }
+            public int UnitType { get; set; }
             public int Status { get; set; }
         }
 

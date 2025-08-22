@@ -440,10 +440,11 @@
                 const current = data.Current || {};
                 const userPerson = data.CurrentUserPerson || null;
                 const csPerson = data.CustomerSupplierPerson || null;
-                const lines = (inv.Lines || []).map(l => ({
-                    ProductName: '',
-                    Quantity: Number(l.Quantity || l.quantity) || 0,
-                    UnitPrice: Number(l.UnitPrice || l.unitPrice) || 0
+                const lines = (data.LineDetails || []).map(l => ({
+                    ProductName: l.ProductName || '',
+                    UnitType: l.UnitType ?? null,
+                    Quantity: Number(l.Quantity || 0) || 0,
+                    UnitPrice: Number(l.UnitPrice || 0) || 0
                 }));
                 const docDef = buildPdfDoc({ inv, current, userPerson, csPerson, lines });
                 const pdfDoc = pdfMake.createPdf(docDef);
@@ -467,7 +468,7 @@
                 const amount = (line.Quantity || 0) * (line.UnitPrice || 0);
                 total += amount;
                 rows.push([
-                    line.ProductName,
+                    `${line.ProductName}${line.UnitType != null ? ' (' + mapUnitType(line.UnitType) + ')' : ''}`,
                     { text: (line.Quantity || 0).toLocaleString(), alignment: 'right' },
                     { text: (line.UnitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' },
                     { text: amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' }
@@ -483,6 +484,10 @@
                     { text: 'FATURA', style: 'title' },
                     { text: `No: ${inv.No || ''}`, margin: [0, 5, 0, 0] },
                     { text: `Tarih: ${inv.Date ? new Date(inv.Date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
+                    { columns: [
+                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario)}` } ],
+                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name || '-'}` }, { text: `Tür: ${mapCurrentType(model.current?.CurrentType)}` }, { text: `Para Birimi: ${mapCurrency(model.current?.CurrencyType)}` } ]
+                    ], margin: [0, 0, 0, 10] },
                     { columns: [
                         [
                             { text: 'Cari Kullanıcı', style: 'subtitle' },
@@ -504,5 +509,10 @@
                 styles: { title: { fontSize: 18, bold: true }, subtitle: { fontSize: 12, bold: true, margin: [0, 0, 0, 4] }, th: { bold: true } }
             };
         }
+        function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
+        function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
+        function mapCurrentType(ct) { return ct === 0 ? 'Kasa' : ct === 1 ? 'Banka' : String(ct ?? ''); }
+        function mapCurrency(c) { return c === 1 ? 'TL' : c === 2 ? 'EUR' : c === 3 ? 'USD' : String(c ?? ''); }
+        function mapUnitType(u) { return u === 1 ? 'Adet' : u === 2 ? 'Kg' : u === 3 ? 'Saat' : String(u ?? ''); }
     </script>
 }
