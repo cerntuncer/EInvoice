@@ -125,6 +125,6 @@
         function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
         function mapCurrentType(ct) { return ct === 0 ? 'Kasa' : ct === 1 ? 'Banka' : String(ct ?? ''); }
         function mapCurrency(c) { return c === 1 ? 'TL' : c === 2 ? 'EUR' : c === 3 ? 'USD' : String(c ?? ''); }
-        function mapUnitType(u) { return u === 1 ? 'Adet' : u === 2 ? 'Kg' : u === 3 ? 'Saat' : String(u ?? ''); }
+        function mapUnitType(u) { return u === 1 ? 'Adet' : u === 2 ? 'Kilogram' : u === 3 ? 'Gram' : u === 4 ? 'Litre' : u === 5 ? 'Mililitre' : u === 6 ? 'Metre' : u === 7 ? 'Santimetre' : String(u ?? ''); }
     </script>
 }
