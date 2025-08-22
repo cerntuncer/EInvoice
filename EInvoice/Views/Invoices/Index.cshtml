@@ -436,15 +436,16 @@
                 const invRes = await fetch('/Invoices/GetFull?id=' + id, { cache: 'no-store' });
                 if (!invRes.ok) { Swal.fire('Hata', await getErrorMessage(invRes), 'error'); return; }
                 const data = await invRes.json();
-                const inv = data.Invoice || {};
-                const current = data.Current || {};
-                const userPerson = data.CurrentUserPerson || null;
-                const csPerson = data.CustomerSupplierPerson || null;
-                const lines = (data.LineDetails || []).map(l => ({
-                    ProductName: l.ProductName || '',
-                    UnitType: l.UnitType ?? null,
-                    Quantity: Number(l.Quantity || 0) || 0,
-                    UnitPrice: Number(l.UnitPrice || 0) || 0
+                const inv = data.invoice || data.Invoice || {};
+                const current = data.current || data.Current || {};
+                const userPerson = data.currentUserPerson || data.CurrentUserPerson || null;
+                const csPerson = data.customerSupplierPerson || data.CustomerSupplierPerson || null;
+                const linesSrc = data.lineDetails || data.LineDetails || [];
+                const lines = linesSrc.map(l => ({
+                    ProductName: l.productName ?? l.ProductName ?? '',
+                    UnitType: (l.unitType ?? l.UnitType),
+                    Quantity: Number((l.quantity ?? l.Quantity) || 0) || 0,
+                    UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0
                 }));
                 const docDef = buildPdfDoc({ inv, current, userPerson, csPerson, lines });
                 const pdfDoc = pdfMake.createPdf(docDef);
@@ -482,26 +483,26 @@
                 pageMargins: [30, 40, 30, 40],
                 content: [
                     { text: 'FATURA', style: 'title' },
-                    { text: `No: ${inv.No || ''}`, margin: [0, 5, 0, 0] },
-                    { text: `Tarih: ${inv.Date ? new Date(inv.Date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
+                    { text: `No: ${(inv.No ?? inv.no) || ''}`, margin: [0, 5, 0, 0] },
+                    { text: `Tarih: ${(inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
                     { columns: [
-                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario)}` } ],
-                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name || '-'}` }, { text: `Tür: ${mapCurrentType(model.current?.CurrentType)}` }, { text: `Para Birimi: ${mapCurrency(model.current?.CurrencyType)}` } ]
+                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type ?? inv.type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario ?? inv.senario)}` } ],
+                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name ?? model.current?.name ?? '-'}` }, { text: `Tür: ${mapCurrentType((model.current?.CurrentType ?? model.current?.currentType))}` }, { text: `Para Birimi: ${mapCurrency((model.current?.CurrencyType ?? model.current?.currencyType))}` } ]
                     ], margin: [0, 0, 0, 10] },
                     { columns: [
                         [
                             { text: 'Cari Kullanıcı', style: 'subtitle' },
-                            { text: userPerson ? `${userPerson.PersonName} (${userPerson.IdentityNumber || ''})` : '-' },
-                            { text: userPerson && userPerson.TaxOffice ? `Vergi Dairesi: ${userPerson.TaxOffice}` : '' },
-                            { text: userPerson && userPerson.Phones && userPerson.Phones.length ? `Telefon: ${userPerson.Phones.join(', ')}` : '' },
-                            { text: userPerson && userPerson.BranchAddresses && userPerson.BranchAddresses.length ? `Şube: ${userPerson.BranchAddresses.join(' | ')}` : '' }
+                            { text: userPerson ? `${(userPerson.PersonName ?? userPerson.personName) || ''} (${(userPerson.IdentityNumber ?? userPerson.identityNumber) || ''})` : '-' },
+                            { text: userPerson && (userPerson.TaxOffice ?? userPerson.taxOffice) ? `Vergi Dairesi: ${(userPerson.TaxOffice ?? userPerson.taxOffice)}` : '' },
+                            { text: userPerson && (userPerson.Phones ?? userPerson.phones)?.length ? `Telefon: ${(userPerson.Phones ?? userPerson.phones).join(', ')}` : '' },
+                            { text: userPerson && (userPerson.BranchAddresses ?? userPerson.branchAddresses)?.length ? `Şube: ${(userPerson.BranchAddresses ?? userPerson.branchAddresses).join(' | ')}` : '' }
                         ],
                         [
                             { text: 'Müşteri/Tedarikçi', style: 'subtitle' },
-                            { text: csPerson ? `${csPerson.PersonName} (${csPerson.IdentityNumber || ''})` : '-' },
-                            { text: csPerson && csPerson.TaxOffice ? `Vergi Dairesi: ${csPerson.TaxOffice}` : '' },
-                            { text: csPerson && csPerson.Phones && csPerson.Phones.length ? `Telefon: ${csPerson.Phones.join(', ')}` : '' },
-                            { text: csPerson && csPerson.BranchAddresses && csPerson.BranchAddresses.length ? `Şube: ${csPerson.BranchAddresses.join(' | ')}` : '' }
+                            { text: csPerson ? `${(csPerson.PersonName ?? csPerson.personName) || ''} (${(csPerson.IdentityNumber ?? csPerson.identityNumber) || ''})` : '-' },
+                            { text: csPerson && (csPerson.TaxOffice ?? csPerson.taxOffice) ? `Vergi Dairesi: ${(csPerson.TaxOffice ?? csPerson.taxOffice)}` : '' },
+                            { text: csPerson && (csPerson.Phones ?? csPerson.phones)?.length ? `Telefon: ${(csPerson.Phones ?? csPerson.phones).join(', ')}` : '' },
+                            { text: csPerson && (csPerson.BranchAddresses ?? csPerson.branchAddresses)?.length ? `Şube: ${(csPerson.BranchAddresses ?? csPerson.branchAddresses).join(' | ')}` : '' }
                         ]
                     ], margin: [0, 0, 0, 10] },
                     { table: { headerRows: 1, widths: ['*', 80, 100, 100], body: rows } }
