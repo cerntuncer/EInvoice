@@ -1,9 +1,10 @@
-﻿using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
+using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BusinessLogicLayer.Handler.AddressHandler.DTOs;
 
 namespace ApiLayer.Controllers
 {
@@ -104,6 +105,77 @@ namespace ApiLayer.Controllers
 
             var request = new DeleteCustomerSupplierHandleRequest { Id = id, UserId = userId.Value };
             var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        // --- Address management for a Customer/Supplier ---
+        [Authorize]
+        [HttpGet("{id}/Addresses")]
+        public async Task<IActionResult> GetAddresses(long id)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+
+            var cs = await _mediator.Send(new GetCustomerSupplierByIdHandleRequest { Id = id, UserId = userId.Value });
+            if (cs.Error)
+                return UnprocessableEntity(cs);
+
+            var result = await _mediator.Send(new GetAddressesByPersonIdRequest { PersonId = cs.PersonId });
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("{id}/Addresses")]
+        public async Task<IActionResult> CreateAddress(long id, CreateAddressHandleRequest request)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+
+            var cs = await _mediator.Send(new GetCustomerSupplierByIdHandleRequest { Id = id, UserId = userId.Value });
+            if (cs.Error)
+                return UnprocessableEntity(cs);
+
+            request.PersonId = cs.PersonId;
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("{id}/Addresses")]
+        public async Task<IActionResult> UpdateAddress(long id, UpdateAddressHandleRequest request)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+
+            var cs = await _mediator.Send(new GetCustomerSupplierByIdHandleRequest { Id = id, UserId = userId.Value });
+            if (cs.Error)
+                return UnprocessableEntity(cs);
+
+            request.PersonId = cs.PersonId;
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpDelete("{id}/Addresses/{addressId}")]
+        public async Task<IActionResult> DeleteAddress(long id, long addressId)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            if (userId is null) return Unauthorized();
+
+            var cs = await _mediator.Send(new GetCustomerSupplierByIdHandleRequest { Id = id, UserId = userId.Value });
+            if (cs.Error)
+                return UnprocessableEntity(cs);
+
+            var result = await _mediator.Send(new DeleteAddressHandleRequest { Id = addressId, PersonId = cs.PersonId });
             if (result.Error)
                 return UnprocessableEntity(result);
             return Ok(result);

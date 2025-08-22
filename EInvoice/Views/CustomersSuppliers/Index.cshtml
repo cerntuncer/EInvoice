@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Müşteri/Tedarikçi";
 }
 
@@ -27,7 +27,7 @@
                     <th>Ad</th>
                     <th>Tip</th>
                     <th>Durum</th>
-                    <th style="width: 140px;">İşlemler</th>
+                    <th style="width: 220px;">İşlemler</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -84,12 +84,68 @@
     </div>
 </div>
 
+<!-- Addresses Modal -->
+<div class="modal fade" id="csAddressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adresler</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong id="csAddressTitle"></strong>
+                    <button id="btnAddressCreate" class="btn btn-primary btn-sm">Adres Ekle</button>
+                </div>
+                <table id="csAddressesTable" class="table table-bordered table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Tür</th>
+                            <th>Adres</th>
+                            <th>Durum</th>
+                            <th style="width: 140px;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <hr />
+                <form id="formCsAddress" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tür</label>
+                            <select class="form-select" name="addressType">
+                                <option value="1">E-posta</option>
+                                <option value="2">Şube</option>
+                                <option value="3">Faks</option>
+                                <option value="4">Telefon</option>
+                                <option value="5">Web Sitesi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Adres Metni</label>
+                            <input type="text" class="form-control" name="text" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button id="btnAddressSave" class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
     <script>
         const typeMap = { 1: 'Müşteri', 2: 'Tedarikçi' };
+        const addressTypeMap = { 1: 'E-posta', 2: 'Şube', 3: 'Faks', 4: 'Telefon', 5: 'Web Sitesi' };
         let table, modal, isEdit = false, editingId = null, cachedRows = [];
+        let csAddressModal, isAddressEdit = false, editingAddressId = null, currentCsId = null, cachedAddresses = [];
 
         function getCsrf() {
             const token = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -112,6 +168,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             modal = new bootstrap.Modal(document.getElementById('csModal'));
+            csAddressModal = new bootstrap.Modal(document.getElementById('csAddressModal'));
             hookUI();
             loadData();
         });
@@ -121,7 +178,6 @@
                 isEdit = false; editingId = null;
                 document.querySelector('#formCs').reset();
                 document.querySelector('.modal-title').innerText = 'Müşteri/Tedarikçi Ekle';
-                // Yeni kayıt için kişisel alanlar aktif
                 const form = document.getElementById('formCs');
                 form.personName.disabled = false;
                 form.identityNumber.disabled = false;
@@ -136,8 +192,22 @@
                 if (btn.dataset.action === 'edit') onEdit(id);
                 else if (btn.dataset.action === 'delete') onDelete(id);
                 else if (btn.dataset.action === 'activate') onActivate(id);
+                else if (btn.dataset.action === 'addresses') openAddresses(id);
             });
             document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+            document.getElementById('btnAddressCreate').addEventListener('click', () => {
+                isAddressEdit = false; editingAddressId = null;
+                document.getElementById('formCsAddress').reset();
+            });
+            document.getElementById('btnAddressSave').addEventListener('click', onAddressSave);
+            document.getElementById('csAddressesTable').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = Number(btn.dataset.id);
+                if (btn.dataset.action === 'edit') onAddressEdit(id);
+                else if (btn.dataset.action === 'delete') onAddressDelete(id);
+            });
         }
 
         async function loadData() {
@@ -179,6 +249,7 @@
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        <button class="btn btn-sm btn-outline-info me-1" data-action="addresses" data-id="${r.id}">Adresler</button>
                         ${r.status === 0 ? `<button class="btn btn-sm btn-outline-success me-1" data-action="activate" data-id="${r.id}">Aktif Yap</button>` : ''}
                         <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
                     </td>`;
@@ -245,6 +316,85 @@
             const payload = { id: id, type: row.type, status: 1 };
             const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
             if (res.ok) { await loadData(); Swal.fire('Başarılı', 'Kayıt aktifleştirildi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+
+        // --- Addresses management ---
+        async function openAddresses(csId) {
+            currentCsId = csId;
+            const row = cachedRows.find(r => r.id === csId);
+            document.getElementById('csAddressTitle').innerText = row ? `${row.personName} - Adresler` : 'Adresler';
+            await loadAddresses();
+            document.getElementById('formCsAddress').reset();
+            isAddressEdit = false; editingAddressId = null;
+            csAddressModal.show();
+        }
+
+        async function loadAddresses() {
+            const res = await fetch(`/CustomersSuppliers/ListAddresses?id=${currentCsId}&ts=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) { cachedAddresses = []; renderAddresses(); return; }
+            let data;
+            try { data = await res.json(); } catch { cachedAddresses = []; renderAddresses(); return; }
+            const list = data.addresses || data.Addresses || [];
+            cachedAddresses = list.map(x => ({
+                id: x.id ?? x.Id,
+                text: x.text ?? x.Text,
+                addressType: x.addressType ?? x.AddressType,
+                status: x.status ?? x.Status
+            }));
+            renderAddresses();
+        }
+
+        function renderAddresses() {
+            const body = document.querySelector('#csAddressesTable tbody');
+            body.innerHTML = '';
+            if (!cachedAddresses || cachedAddresses.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok</td></tr>`;
+                return;
+            }
+            cachedAddresses.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${addressTypeMap[r.addressType] || r.addressType}</td>
+                    <td>${r.text}</td>
+                    <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>
+                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${r.id}">Sil</button>
+                    </td>`;
+                body.appendChild(tr);
+            });
+        }
+
+        async function onAddressSave() {
+            const form = document.getElementById('formCsAddress');
+            const payload = {
+                addressType: Number(form.addressType.value),
+                text: form.text.value
+            };
+            if (isAddressEdit) {
+                const body = { id: editingAddressId, ...payload };
+                const res = await fetch(`/CustomersSuppliers/UpdateAddress?id=${currentCsId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
+                if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                return;
+            }
+            const res = await fetch(`/CustomersSuppliers/CreateAddress?id=${currentCsId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+            if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+        }
+
+        function onAddressEdit(id) {
+            const row = cachedAddresses.find(r => r.id === id);
+            if (!row) return;
+            isAddressEdit = true; editingAddressId = id;
+            const form = document.getElementById('formCsAddress');
+            form.addressType.value = row.addressType;
+            form.text.value = row.text;
+        }
+
+        async function onAddressDelete(id) {
+            const result = await Swal.fire({ title: 'Silmek istiyor musunuz?', text: 'Bu işlem geri alınamaz', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç' });
+            if (!result.isConfirmed) return;
+            const res = await fetch(`/CustomersSuppliers/DeleteAddress?id=${currentCsId}&addressId=${id}`, { method: 'DELETE', headers: { 'RequestVerificationToken': getCsrf() } });
+            if (res.ok) { await loadAddresses(); Swal.fire('Silindi', 'Adres başarıyla silindi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
         }
     </script>
 }
