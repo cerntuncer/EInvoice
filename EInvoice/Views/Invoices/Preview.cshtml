@@ -107,7 +107,7 @@
                 const vatRate = Number(ln.VatRate || 0);
                 const vatAmt = amount * (vatRate/100);
                 const vatAmtText = `${vatAmt.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
-                return `<tr><td>${i + 1}</td><td>${ln.Code ?? ''}</td><td>${escapeHtml(ln.ProductName || '')}</td><td>${qtyText}</td><td class="num">${priceText}</td><td class="num">%${vatRate}</td><td class="num">${vatAmtText}</td><td class="num">${amountText}</td></tr>`;
+                return `<tr><td>${i + 1}</td><td>${escapeHtml(ln.ProductName || '')}</td><td>${qtyText}</td><td class="num">${priceText}</td><td class="num">%${vatRate}</td><td class="num">${vatAmtText}</td><td class="num">${amountText}</td></tr>`;
             }).join('');
             const subTotal = (model.lines || []).reduce((a, l) => a + ((l.Quantity || 0) * (l.UnitPrice || 0)), 0);
             const totalVat = (model.lines || []).reduce((a, l) => {
@@ -191,7 +191,6 @@
               <thead>
                 <tr>
                   <th>Sıra No</th>
-                  <th>Stok Kodu</th>
                   <th>Mal Hizmet</th>
                   <th>Miktar</th>
                   <th>Birim Fiyat</th>
@@ -206,7 +205,6 @@
             <div class="totals">
               <table>
                 <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${tl(subTotal)}</td></tr>
-                <tr><td>Toplam İskonto</td><td class="num">${tl(0)}</td></tr>
                 <tr><td>Hesaplanan KDV</td><td class="num">${tl(totalVat)}</td></tr>
                 <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${tl(grand)}</td></tr>
                 <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${tl(grand)}</td></tr>

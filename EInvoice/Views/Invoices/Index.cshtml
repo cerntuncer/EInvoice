@@ -513,7 +513,6 @@
           const itemRows = [
             [
               { text: 'Sıra No', style: 'th' },
-              { text: 'Stok Kodu', style: 'th' },
               { text: 'Mal Hizmet', style: 'th' },
               { text: 'Miktar', style: 'th', alignment: 'right' },
               { text: 'Birim Fiyat', style: 'th', alignment: 'right' },
@@ -534,7 +533,6 @@
             totalVat += vatAmt;
             itemRows.push([
               String(i+1),
-              String(ln.Code ?? ''),
               String(ln.ProductName ?? ''),
               { text: `${qty} ${mapUnitType?mapUnitType(ln.UnitType):String(ln.UnitType??'')}`, alignment:'right' },
               { text: num(price), alignment:'right' },
@@ -653,7 +651,7 @@
               {
                 table: {
                   headerRows: 1,
-                  widths: [45, 70, '*', 65, 70, 60, 70, 85],
+                  widths: [45, '*', 65, 70, 60, 70, 85],
                   body: itemRows
                 },
                 layout: {
@@ -680,7 +678,6 @@
                       widths: ['*', 120],
                       body: [
                         [ { text: 'Mal Hizmet Toplam Tutarı', fillColor: GRAY, bold: true }, { text: num(subTotal), alignment: 'right' } ],
-                        [ { text: 'Toplam İskonto', fillColor: GRAY, bold: true }, { text: num(0), alignment: 'right' } ],
                         [ { text: 'Hesaplanan KDV', fillColor: GRAY, bold: true }, { text: num(totalVat), alignment: 'right' } ],
                         [ { text: 'Vergiler Dahil Toplam Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right' } ],
                         [ { text: 'Ödenecek Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right', color: RED, bold: true } ]
