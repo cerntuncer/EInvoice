@@ -1,4 +1,4 @@
-﻿
+
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.DesignPatterns.SingletonPattern;
 using DatabaseAccessLayer.Contexts;
@@ -172,9 +172,9 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories
             Save();
         }
 
-        public List<T> Where(Expression<Func<T, bool>> expression)
+        public IQueryable<T> Where(Expression<Func<T, bool>> expression)
         {
-            return _db.Set<T>().Where(expression).ToList();
+            return _db.Set<T>().Where(expression);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Models;
+using DatabaseAccessLayer.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceReposit
         //linq commands
         T GetById(long id);                    // Id ile bul
         T Find(long id);                       // Alternatif Find
-        List<T> Where(Expression<Func<T, bool>> expression); // Şarta göre listele
+        IQueryable<T> Where(Expression<Func<T, bool>> expression); // Şarta göre sorgu (deferred)
         bool Any(Expression<Func<T, bool>> expression);      // Veri var mı?
         T FirstOrDefault(Expression<Func<T, bool>> expression); // İlk uyumlu kayıt
         int Count(Expression<Func<T, bool>> expression);     // Kaç kayıt var?
