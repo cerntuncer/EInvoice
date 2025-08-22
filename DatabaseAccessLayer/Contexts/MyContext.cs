@@ -25,8 +25,22 @@ namespace DatabaseAccessLayer.Contexts
         public DbSet<User> Users { get; set; }
         public DbSet<UserCredential> UserCredentials { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-       
+            modelBuilder.ApplyConfiguration(new AddressMap());
+            modelBuilder.ApplyConfiguration(new BankMap());
+            modelBuilder.ApplyConfiguration(new CaseMap());
+            modelBuilder.ApplyConfiguration(new CurrentMap());
+            modelBuilder.ApplyConfiguration(new CustomerSupplierMap());
+            modelBuilder.ApplyConfiguration(new InvoiceMap());
+            modelBuilder.ApplyConfiguration(new LineOfInvoiceMap());
+            modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new UserCredentialMap());
+            modelBuilder.ApplyConfiguration(new ProductAndServiceMap());
+        }
+
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
             //birden fazla veri gönderildiğin herhangi biri hata alırsa bu istekle oluşanları kaydetmiyor 
