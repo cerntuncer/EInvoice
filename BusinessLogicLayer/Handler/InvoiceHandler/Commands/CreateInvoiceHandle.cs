@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
@@ -64,7 +64,8 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                 CustomerSupplierId = request.CustomerSupplierId,
                 Status = request.Status,
                 Date = DateTime.UtcNow,
-                No = new Random().Next(1000, 9999)
+                No = new Random().Next(1000, 9999),
+                Ettn = Guid.NewGuid().ToString()
             };
 
             _invoiceRepository.Add(invoice); // ekleme işlemi yine repo üzerinden
@@ -79,6 +80,7 @@ public class CreateInvoiceHandle : IRequestHandler<CreateInvoiceHandleRequest, C
                         ProductAndServiceId = line.ProductAndServiceId,
                         Quantity = line.Quantity,
                         UnitPrice = line.UnitPrice,
+                        VatRate = line.VatRate
                     };
                     var newLine = await _mediator.Send(newlineInvoice, cancellationToken);
                     if (newLine.Error)

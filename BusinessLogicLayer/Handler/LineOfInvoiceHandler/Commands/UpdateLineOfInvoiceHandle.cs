@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -29,6 +29,7 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.Commands
 
             line.Quantity = request.Quantity;
             line.UnitPrice = request.UnitPrice;
+            line.VatRate = request.VatRate;
 
             _repository.Update(line);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -23,6 +23,7 @@ namespace DatabaseAccessLayer.Entities
         [ForeignKey("CustomerSupplierId")]
         public CustomerSupplier CustomerSupplier { get; set; } 
         public ICollection<LineOfInvoice> LineOfInvoices { get; set; } = new List<LineOfInvoice>();
-   
+        public string Ettn { get; set; }
+       
     }
 }

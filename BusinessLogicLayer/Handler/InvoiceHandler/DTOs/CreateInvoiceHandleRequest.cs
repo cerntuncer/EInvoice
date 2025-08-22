@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
+using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
@@ -18,5 +18,6 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
         public long ProductAndServiceId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public int VatRate { get; set; }
     }
 }

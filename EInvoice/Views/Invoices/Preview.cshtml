@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Fatura Önizleme";
     var id = ViewBag.InvoiceId as long? ?? 0;
 }
@@ -57,7 +57,8 @@
                 ProductName: l.productName ?? l.ProductName ?? '',
                 UnitType: (l.unitType ?? l.UnitType),
                 Quantity: Number((l.quantity ?? l.Quantity) || 0) || 0,
-                UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0
+                UnitPrice: Number((l.unitPrice ?? l.UnitPrice) || 0) || 0,
+                VatRate: Number((l.vatRate ?? l.VatRate) || 0) || 0
             }));
             return { inv, current, userPerson, csPerson, lines };
         }
@@ -103,15 +104,18 @@
                 const priceText = `${(ln.UnitPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
                 const amount = (ln.Quantity || 0) * (ln.UnitPrice || 0);
                 const amountText = `${amount.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
-                const vatRate = '%0';
-                const vatAmt = '0 TL';
-                return `<tr><td>${i + 1}</td><td>${ln.Code ?? ''}</td><td>${escapeHtml(ln.ProductName || '')}</td><td>${qtyText}</td><td class="num">${priceText}</td><td class="num">${vatRate}</td><td class="num">${vatAmt}</td><td class="num">${amountText}</td></tr>`;
+                const vatRate = Number(ln.VatRate || 0);
+                const vatAmt = amount * (vatRate/100);
+                const vatAmtText = `${vatAmt.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
+                return `<tr><td>${i + 1}</td><td>${ln.Code ?? ''}</td><td>${escapeHtml(ln.ProductName || '')}</td><td>${qtyText}</td><td class="num">${priceText}</td><td class="num">%${vatRate}</td><td class="num">${vatAmtText}</td><td class="num">${amountText}</td></tr>`;
             }).join('');
-            const total = (model.lines || []).reduce((a, l) => a + ((l.Quantity || 0) * (l.UnitPrice || 0)), 0);
-            const totalText = `${total.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL`;
-            const totalVat = '0 TL';
-            const grand = totalText;
-            const pay = totalText;
+            const subTotal = (model.lines || []).reduce((a, l) => a + ((l.Quantity || 0) * (l.UnitPrice || 0)), 0);
+            const totalVat = (model.lines || []).reduce((a, l) => {
+                const rate = Number(l.VatRate || 0);
+                const amt = (Number(l.Quantity||0) * Number(l.UnitPrice||0)) * (rate/100);
+                return a + amt;
+            }, 0);
+            const grand = subTotal + totalVat;
 
             const html = `<!DOCTYPE html>
         <html lang="tr"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -122,7 +126,7 @@
           .header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #002147; padding-bottom:6px; margin-bottom:6px; }
           .seller{ font-size:12px; max-width:40%; }
           .seller strong{ display:block; margin-bottom:4px; color:#002147; }
-          .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; } /* e-FATURA kırmızı */
+          .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; }
           .logo div{ margin-top:4px; }
           .buyer{ font-size:12px; max-width:40%; text-align:left; }
           .meta{ float:right; margin:8px 0; width:50%; }
@@ -152,7 +156,7 @@
             <div class="header">
               <div class="seller">
                 <strong>Satıcı Bilgileri</strong>
-                Adres: ${escapeHtml(sellerAddr)}<br>
+                Adres: ${escapeHtml(sellerAddress)}<br>
                 Web: ${escapeHtml(sellerWeb)}<br>
                 E-posta: ${escapeHtml(sellerMail)}<br>
                 Vergi Dairesi: ${escapeHtml(sellerTax)}<br>
@@ -179,13 +183,13 @@
                 <tr><td>Fatura Tipi</td><td>${escapeHtml(invType)}</td></tr>
                 <tr><td>Fatura No</td><td>${escapeHtml(String(invNo))}</td></tr>
                 <tr><td>Fatura Tarihi</td><td>${escapeHtml(invDate)}</td></tr>
-                <tr><td>Gönderim Tarihi</td><td>${escapeHtml(sentDt)}</td></tr>
+                <tr><td>Gönderim Tarihi</td><td>${escapeHtml(sentDate)}</td></tr>
                 <tr><td>Muhasebe Fatura No</td><td>-</td></tr>
                 <tr><td>Satış Kanalı</td><td>Diğer</td></tr>
               </table>
             </div>
 
-            <div class="ettn">ETTN: -</div>
+            <div class="ettn">ETTN: ${escapeHtml(String(inv.Ettn ?? inv.ettn ?? '-'))}</div>
 
             <table class="items">
               <thead>
@@ -207,7 +211,7 @@
               <table>
                 <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${tl(subTotal)}</td></tr>
                 <tr><td>Toplam İskonto</td><td class="num">${tl(0)}</td></tr>
-                <tr><td>Hesaplanan KDV (%0)</td><td class="num">${tl(totalVat)}</td></tr>
+                <tr><td>Hesaplanan KDV</td><td class="num">${tl(totalVat)}</td></tr>
                 <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${tl(grand)}</td></tr>
                 <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${tl(grand)}</td></tr>
               </table>
@@ -218,7 +222,7 @@
             <div class="bank">
               <table>
                 <thead><tr><th>IBAN</th><th>Banka</th><th>Döviz Türü</th><th>Açıklama</th></tr></thead>
-                <tbody><tr><td>${escapeHtml(iban)}</td><td>${escapeHtml(bank)}</td><td>${currencyText === 'TL' ? 'TRY' : escapeHtml(currencyText)}</td><td>${escapeHtml(note)}</td></tr></tbody>
+                <tbody><tr><td>-</td><td>-</td><td>TRY</td><td>-</td></tr></tbody>
               </table>
             </div>
 
@@ -236,5 +240,6 @@
         function mapCurrentType(ct) { return ct === 0 ? 'Kasa' : ct === 1 ? 'Banka' : String(ct ?? ''); }
         function mapCurrency(c) { return c === 1 ? 'TL' : c === 2 ? 'EUR' : c === 3 ? 'USD' : String(c ?? ''); }
         function mapUnitType(u) { return u === 1 ? 'Adet' : u === 2 ? 'Kilogram' : u === 3 ? 'Gram' : u === 4 ? 'Litre' : u === 5 ? 'Mililitre' : u === 6 ? 'Metre' : u === 7 ? 'Santimetre' : String(u ?? ''); }
+        function tl(n){ return Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:0}); }
     </script>
 }

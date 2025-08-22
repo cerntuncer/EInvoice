@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
@@ -69,7 +69,8 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.Commands
                 ProductAndServiceId = request.ProductAndServiceId,
                 Quantity = request.Quantity,
                 UnitPrice = request.UnitPrice,
-                Status = Status.Active
+                Status = Status.Active,
+                VatRate = request.VatRate
             };
 
             _lineRepository.Add(line);

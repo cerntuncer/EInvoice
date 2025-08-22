@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Enumerations;
 
 namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
 {
@@ -14,6 +14,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
         public long CurrentId { get; set; }
         public long CustomerSupplierId { get; set; }
         public Status Status { get; set; }
+        public string Ettn { get; set; }
 
         public List<LineOfInvoiceDto> Lines { get; set; } = new();
     }
@@ -24,6 +25,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.DTOs
         public long ProductAndServiceId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public int VatRate { get; set; }
     }
 
 }

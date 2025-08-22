@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs
 {
@@ -7,5 +7,6 @@ namespace BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs
         public long Id { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public int VatRate { get; set; }
     }
 }

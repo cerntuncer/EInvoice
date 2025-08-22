@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using DatabaseAccessLayer.Contexts;
 using MediatR;
@@ -42,13 +42,15 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Queries
                 CurrentId = invoice.CurrentId,
                 CustomerSupplierId = invoice.CustomerSupplierId,
                 Status = invoice.Status,
+                Ettn = invoice.Ettn,
                 Lines = invoice.LineOfInvoices.Select(line => new LineOfInvoiceDto
                 {
                     Id = line.Id,
                     InvoiceId = line.InvoiceId,
                     ProductAndServiceId = line.ProductAndServiceId,
                     Quantity = line.Quantity,
-                    UnitPrice = line.UnitPrice
+                    UnitPrice = line.UnitPrice,
+                    VatRate = line.VatRate
                 }).ToList()
             };
         }
