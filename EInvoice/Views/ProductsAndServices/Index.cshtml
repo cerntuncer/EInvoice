@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Ürünler & Hizmetler";
 }
 
@@ -144,6 +144,10 @@
             if (table) { table.destroy(); table = null; }
             const body = document.querySelector('#pasTable tbody');
             body.innerHTML = '';
+            if (!cachedRows || cachedRows.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Kayıt yok</td></tr>`;
+                return;
+            }
             cachedRows.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
