@@ -708,30 +708,6 @@
                 margin: [0,0,0,8]
               },
 
-              // IBAN tablosu (dış çerçeve lacivert kalın)
-              {
-                table: {
-                  widths: ['*','*','*','*'],
-                  headerRows: 1,
-                  body: [
-                    [
-                      { text:'IBAN', style:'th' },
-                      { text:'Banka', style:'th' },
-                      { text:'Döviz Türü', style:'th' },
-                      { text:'Açıklama', style:'th' }
-                    ],
-                    [ ibanText, bankText, (currencyText === 'TL' ? 'TRY' : (currencyText || '')), ibanNote ]
-                  ]
-                },
-                layout: {
-                  hLineWidth: (i,n)=> (i===0||i===n)?2:1,
-                  vLineWidth: (i,n)=> (i===0||i===n)?2:1,
-                  hLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000',
-                  vLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000'
-                },
-                margin: [0,0,0,10]
-              },
-
               { text: 'Bu belge sistem tarafından oluşturulmuştur.', alignment: 'center', color: '#555', fontSize: 11 }
             ],
 
@@ -747,7 +723,7 @@
           // ---- helpers (pdf çıktısı için) ----
           function num(n){ return Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
           function metaKey(text, fill){ return { text, bold:true, fillColor: fill, color:'#000' }; }
-          function textYaziIle(x){ try{const a=Math.round(Number(x)||0); return a.toLocaleString('tr-TR')+' Türk Lirası';}catch{return '';} }
+          function textYaziIle(x){ try{const a=Math.round(Number(x)||0); return a.toLocaleString('tr-TR')+' Türk Lirası';}catch{return ''; } }
         }
         function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
         function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
