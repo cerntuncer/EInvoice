@@ -82,5 +82,69 @@ namespace EInvoice.Controllers
             var body = await apiRes.Content.ReadAsStringAsync();
             return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
         }
+
+        // --- Address endpoints for a specific Customer/Supplier ---
+        [HttpGet]
+        public async Task<IActionResult> ListAddresses(long id)
+        {
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+                return Unauthorized(new { message = "Oturum süresi doldu." });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var resp = await client.GetAsync($"/CustomerSupplier/{id}/Addresses");
+            if (!resp.IsSuccessStatusCode)
+            {
+                return Ok(new { Addresses = Array.Empty<object>() });
+            }
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult { Content = json, ContentType = "application/json", StatusCode = 200 };
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAddress(long id, [FromBody] object model)
+        {
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+                return Unauthorized(new { message = "Oturum süresi doldu." });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var apiRes = await client.PostAsJsonAsync($"/CustomerSupplier/{id}/Addresses", model);
+            var body = await apiRes.Content.ReadAsStringAsync();
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
+        }
+
+        [HttpPut]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAddress(long id, [FromBody] object model)
+        {
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+                return Unauthorized(new { message = "Oturum süresi doldu." });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var apiRes = await client.PutAsJsonAsync($"/CustomerSupplier/{id}/Addresses", model);
+            var body = await apiRes.Content.ReadAsStringAsync();
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
+        }
+
+        [HttpDelete]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAddress(long id, long addressId)
+        {
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+                return Unauthorized(new { message = "Oturum süresi doldu." });
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var apiRes = await client.DeleteAsync($"/CustomerSupplier/{id}/Addresses/{addressId}");
+            var body = await apiRes.Content.ReadAsStringAsync();
+            return new ContentResult { Content = body, ContentType = "application/json", StatusCode = (int)apiRes.StatusCode };
+        }
     }
 }
