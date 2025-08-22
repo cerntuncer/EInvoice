@@ -169,7 +169,7 @@
 				modal.show();
 			});
 
-			
+
 			document.getElementById('btnSave').addEventListener('click', onSave);
 
 			document.getElementById('currentsTable').addEventListener('click', (e) => {
@@ -220,6 +220,10 @@
 			const body = document.querySelector('#currentsTable tbody');
 			body.innerHTML = '';
 			const rowsToRender = rows || (currentFilter === null ? cachedRows : cachedRows.filter(r => r.currentType === Number(currentFilter)));
+			if (!rowsToRender || rowsToRender.length === 0) {
+				body.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Kayıt yok</td></tr>`;
+				return;
+			}
 			rowsToRender.forEach(r => {
 				const tr = document.createElement('tr');
 				tr.dataset.currentType = r.currentType;

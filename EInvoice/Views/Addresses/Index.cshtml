@@ -148,6 +148,10 @@
             const body = document.querySelector('#addressesTable tbody');
             body.innerHTML = '';
             const rowsToRender = rows || cachedRows;
+            if (!rowsToRender || rowsToRender.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok</td></tr>`;
+                return;
+            }
             rowsToRender.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `

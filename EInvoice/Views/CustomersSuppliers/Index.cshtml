@@ -167,6 +167,10 @@
             const body = document.querySelector('#csTable tbody');
             body.innerHTML = '';
             const rows = getFilteredRows();
+            if (!rows || rows.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok</td></tr>`;
+                return;
+            }
             rows.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `

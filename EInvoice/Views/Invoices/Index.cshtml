@@ -221,6 +221,10 @@
             if (table) { table.destroy(); table = null; }
             const body = document.querySelector('#invTable tbody');
             body.innerHTML = '';
+            if (!cachedInvoices || cachedInvoices.length === 0) {
+                body.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Kayıt yok</td></tr>`;
+                return;
+            }
             cachedInvoices.forEach(r => {
                 const tr = document.createElement('tr');
                 const date = r.date ? new Date(r.date) : null;
