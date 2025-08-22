@@ -13,7 +13,7 @@ public class DeleteCustomerSupplierHandle : IRequestHandler<DeleteCustomerSuppli
 
     public async Task<DeleteCustomerSupplierHandleResponse> Handle(DeleteCustomerSupplierHandleRequest request, CancellationToken cancellationToken)
     {
-        var entity = _repository.Find(request.Id);
+        var entity = _repository.FirstOrDefault(x => x.Id == request.Id && x.UserId == request.UserId);
         if (entity == null)
         {
             return new DeleteCustomerSupplierHandleResponse

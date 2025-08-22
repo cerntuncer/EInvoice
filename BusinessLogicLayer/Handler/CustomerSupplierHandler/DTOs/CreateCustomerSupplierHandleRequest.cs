@@ -6,8 +6,9 @@ using MediatR;
 public class CreateCustomerSupplierHandleRequest : IRequest<CreateCustomerSupplierHandleResponse>
 {
     public CustomerOrSupplierType Type { get; set; }
-    public Status Status { get; set; }     // ❗ eklendi (isteğe bağlı olarak sabit de atayabiliriz)
+    public Status Status { get; set; }     
 
     public long? PersonId { get; set; }
     public CreatePersonHandleRequest? Person { get; set; }
+    public long UserId { get; set; }
 }

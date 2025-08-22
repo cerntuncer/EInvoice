@@ -18,6 +18,7 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Queries
         public async Task<GetCustomerSuppliersHandleResponse> Handle(GetCustomerSuppliersHandleRequest request, CancellationToken cancellationToken)
         {
             var projected = _repository
+                .Where(cs => cs.UserId == request.UserId)
                 .Select(cs => new CustomerSupplierListItemDto
                 {
                     Id = cs.Id,

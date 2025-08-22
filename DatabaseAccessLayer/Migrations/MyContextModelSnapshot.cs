@@ -34,9 +34,7 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -74,9 +72,7 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -118,9 +114,7 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -150,9 +144,7 @@ namespace DatabaseAccessLayer.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("CurrencyType")
                         .HasColumnType("int");
@@ -190,9 +182,7 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -206,10 +196,14 @@ namespace DatabaseAccessLayer.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId")
-                        .IsUnique();
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("CustomersSuppliers");
                 });
@@ -223,9 +217,7 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("CurrentId")
                         .HasColumnType("bigint");
@@ -269,9 +261,7 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("InvoiceId")
                         .HasColumnType("bigint");
@@ -363,10 +353,15 @@ namespace DatabaseAccessLayer.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("price")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ProductsAndServices");
                 });
@@ -380,9 +375,7 @@ namespace DatabaseAccessLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("PersonId")
                         .HasColumnType("bigint");
@@ -398,8 +391,7 @@ namespace DatabaseAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId")
-                        .IsUnique();
+                    b.HasIndex("PersonId");
 
                     b.ToTable("Users");
                 });
@@ -415,12 +407,12 @@ namespace DatabaseAccessLayer.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
@@ -454,7 +446,10 @@ namespace DatabaseAccessLayer.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<long>("UserId")
@@ -462,12 +457,10 @@ namespace DatabaseAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
-
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserCredentials", (string)null);
+                    b.ToTable("UserCredentials");
                 });
 
             modelBuilder.Entity("DatabaseAccessLayer.Entities.Address", b =>
@@ -517,12 +510,20 @@ namespace DatabaseAccessLayer.Migrations
             modelBuilder.Entity("DatabaseAccessLayer.Entities.CustomerSupplier", b =>
                 {
                     b.HasOne("DatabaseAccessLayer.Entities.Person", "Person")
-                        .WithOne()
-                        .HasForeignKey("DatabaseAccessLayer.Entities.CustomerSupplier", "PersonId")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DatabaseAccessLayer.Entities.User", "User")
+                        .WithMany("CustomerSuppliers")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Person");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DatabaseAccessLayer.Entities.Invoice", b =>
@@ -536,7 +537,7 @@ namespace DatabaseAccessLayer.Migrations
                     b.HasOne("DatabaseAccessLayer.Entities.CustomerSupplier", "CustomerSupplier")
                         .WithMany()
                         .HasForeignKey("CustomerSupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Current");
@@ -563,11 +564,22 @@ namespace DatabaseAccessLayer.Migrations
                     b.Navigation("ProductAndService");
                 });
 
+            modelBuilder.Entity("DatabaseAccessLayer.Entities.ProductAndService", b =>
+                {
+                    b.HasOne("DatabaseAccessLayer.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DatabaseAccessLayer.Entities.User", b =>
                 {
                     b.HasOne("DatabaseAccessLayer.Entities.Person", "Person")
-                        .WithOne()
-                        .HasForeignKey("DatabaseAccessLayer.Entities.User", "PersonId")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -598,6 +610,8 @@ namespace DatabaseAccessLayer.Migrations
             modelBuilder.Entity("DatabaseAccessLayer.Entities.User", b =>
                 {
                     b.Navigation("Current");
+
+                    b.Navigation("CustomerSuppliers");
 
                     b.Navigation("UserCredential")
                         .IsRequired();

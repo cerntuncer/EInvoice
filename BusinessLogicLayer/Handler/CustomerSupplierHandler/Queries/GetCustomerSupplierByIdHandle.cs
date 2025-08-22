@@ -15,7 +15,7 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Queries
 
         public async Task<GetCustomerSupplierByIdHandleResponse> Handle(GetCustomerSupplierByIdHandleRequest request, CancellationToken cancellationToken)
         {
-            var entity =  _customerSupplierRepository.GetById(request.Id);
+            var entity = _customerSupplierRepository.FirstOrDefault(x => x.Id == request.Id && x.UserId == request.UserId);
 
             if (entity == null)
             {

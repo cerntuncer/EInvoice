@@ -7,4 +7,5 @@ public class UpdateCustomerSupplierHandleRequest : IRequest<UpdateCustomerSuppli
     public long Id { get; set; }
     public CustomerOrSupplierType Type { get; set; }
     public Status Status { get; set; }
+    public long UserId { get; set; }
 }
