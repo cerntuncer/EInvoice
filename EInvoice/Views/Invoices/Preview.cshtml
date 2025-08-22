@@ -114,116 +114,117 @@
             const pay = totalText;
 
             const html = `<!DOCTYPE html>
-<html lang="tr"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>e‑FATURA</title>
-<style>
-  body { margin:0; font:13px/1.4 Arial, sans-serif; color:#000; background:#fff; }
-  .sheet{ width:210mm; min-height:297mm; margin:0 auto; padding:12mm; border:1px solid #000; }
-  .header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #002147; padding-bottom:6px; margin-bottom:6px; }
-  .seller{ font-size:12px; max-width:40%; }
-  .seller strong{ display:block; margin-bottom:4px; color:#002147; }
-  .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; }
-  .logo div{ margin-top:4px; }
-  .buyer{ font-size:12px; max-width:40%; text-align:left; }
-  .meta{ float:right; margin:8px 0; width:50%; }
-  .meta table{ width:100%; border-collapse:collapse; font-size:12px; }
-  .meta td{ border:1px solid #000; padding:4px 6px; }
-  .meta td:first-child{ font-weight:bold; background:#f2f2f2; width:160px; color:#000; }
-  .ettn{ margin:10px 0; font-weight:bold; border:2px solid #002147; padding:6px; display:inline-block; background:#fafafa; color:#002147; }
-  .items{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
-  .items th, .items td{ border:1px solid #000; padding:6px; }
-  .items th{ background:#f2f2f2; text-align:center; color:#000; border:2px solid #002147; }
-  .items td.num{ text-align:right; }
-  .totals{ margin-top:8px; display:flex; justify-content:flex-end; }
-  .totals table{ border-collapse:collapse; font-size:12px; width:60%; }
-  .totals td{ border:1px solid #000; padding:6px; }
-  .totals td:first-child{ background:#f2f2f2; font-weight:bold; color:#000; border-right:2px solid #002147; }
-  .totals td.num{ text-align:right; }
-  .totals .pay{ color:#d0021b; font-weight:bold; }
-  .footbox{ margin-top:8px; border:1px solid #000; padding:8px; font-size:12px; background:#fafafa; }
-  .bank{ margin-top:8px; font-size:12px; border:2px solid #002147; padding:6px; }
-  .bank table{ width:100%; border-collapse:collapse; }
-  .bank th, .bank td{ border:1px solid #000; padding:6px; text-align:left; }
-  .bank th{ background:#f2f2f2; font-weight:bold; color:#000; border-bottom:2px solid #002147; }
-  footer{ margin-top:15px; text-align:center; font-size:11px; color:#555; }
-</style></head>
-<body>
-  <section class="sheet">
-    <div class="header">
-      <div class="seller">
-        <strong>Satıcı Bilgileri</strong>
-        Adres: ${escapeHtml(sellerAddress)}<br>
-        Web: ${escapeHtml(sellerWeb)}<br>
-        E‑posta: ${escapeHtml(sellerMail)}<br>
-        Vergi Dairesi: ${escapeHtml(sellerTax)}<br>
-        TCKN/VKN: ${escapeHtml(String(sellerId))}
-      </div>
-      <div class="logo">
-        <div style="width:120px;height:60px;border:1px solid #002147;margin:auto;"></div>
-        <div>${sen === 2 ? 'e‑ARŞİV' : 'e‑FATURA'}</div>
-      </div>
-      <div class="buyer">
-        <strong>SAYIN</strong><br>
-        ${escapeHtml(buyerName)}<br>
-        Adres: ${escapeHtml(buyerAddr)}<br>
-        E‑posta: ${escapeHtml(buyerMail)}<br>
-        Tel: ${escapeHtml(buyerPhone)}<br>
-        Vergi Dairesi: ${escapeHtml(buyerTax)}
-      </div>
-    </div>
-    <div class="meta">
-      <table>
-        <tr><td>Özelleştirme No</td><td>TR1.2</td></tr>
-        <tr><td>Senaryo</td><td>${senText}</td></tr>
-        <tr><td>Fatura Tipi</td><td>${invType}</td></tr>
-        <tr><td>Fatura No</td><td>${escapeHtml(String(invNo))}</td></tr>
-        <tr><td>Fatura Tarihi</td><td>${escapeHtml(invDate)}</td></tr>
-        <tr><td>Gönderim Tarihi</td><td>${escapeHtml(sentDate)}</td></tr>
-        <tr><td>Muhasebe Fatura No</td><td>-</td></tr>
-        <tr><td>Satış Kanalı</td><td>Diğer</td></tr>
-      </table>
-    </div>
-    <div class="ettn">ETTN: -</div>
-    <table class="items">
-      <thead>
-        <tr>
-          <th>Sıra No</th>
-          <th>Stok Kodu</th>
-          <th>Mal Hizmet</th>
-          <th>Miktar</th>
-          <th>Birim Fiyat</th>
-          <th>KDV Oranı</th>
-          <th>KDV Tutarı</th>
-          <th>Mal Hizmet Tutarı</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHtml}
-      </tbody>
-    </table>
-    <div class="totals">
-      <table>
-        <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${totalText}</td></tr>
-        <tr><td>Toplam İskonto</td><td class="num">0 TL</td></tr>
-        <tr><td>Hesaplanan KDV (%0)</td><td class="num">${totalVat}</td></tr>
-        <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${grand}</td></tr>
-        <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${pay}</td></tr>
-      </table>
-    </div>
-    <div class="footbox">
-      <strong>Yalnız:</strong> ${yaziIle(total)}
-    </div>
-    <div class="bank">
-      <table>
-        <thead><tr><th>IBAN</th><th>Banka</th><th>Döviz Türü</th><th>Açıklama</th></tr></thead>
-        <tbody>
-          <tr><td>-</td><td>-</td><td>${mapCurrency(model.current?.CurrencyType ?? model.current?.currencyType) === 'TL' ? 'TRY' : mapCurrency(model.current?.CurrencyType ?? model.current?.currencyType)}</td><td>-</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <footer>Bu belge sistem tarafından oluşturulmuştur.</footer>
-  </section>
-</body></html>`;
+        <html lang="tr"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>e-FATURA</title>
+        <style>
+          body { margin:0; font:13px/1.4 Arial, sans-serif; color:#000; background:#fff; }
+          .sheet{ width:210mm; min-height:297mm; margin:0 auto; padding:12mm; border:1px solid #000; }
+          .header{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #002147; padding-bottom:6px; margin-bottom:6px; }
+          .seller{ font-size:12px; max-width:40%; }
+          .seller strong{ display:block; margin-bottom:4px; color:#002147; }
+          .logo{ text-align:center; font-size:16px; font-weight:bold; color:#d0021b; } /* e-FATURA kırmızı */
+          .logo div{ margin-top:4px; }
+          .buyer{ font-size:12px; max-width:40%; text-align:left; }
+          .meta{ float:right; margin:8px 0; width:50%; }
+          .meta table{ width:100%; border-collapse:collapse; font-size:12px; }
+          .meta td{ border:1px solid #000; padding:4px 6px; }
+          .meta td:first-child{ font-weight:bold; background:#f2f2f2; width:160px; color:#000; }
+          .ettn{ margin:10px 0; font-weight:bold; border:2px solid #002147; padding:6px; display:inline-block; background:#fafafa; color:#002147; }
+          .items{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+          .items th, .items td{ border:1px solid #000; padding:6px; }
+          .items th{ background:#f2f2f2; text-align:center; color:#000; border:2px solid #002147; }
+          .items td.num{ text-align:right; }
+          .totals{ margin-top:8px; display:flex; justify-content:flex-end; }
+          .totals table{ border-collapse:collapse; font-size:12px; width:60%; }
+          .totals td{ border:1px solid #000; padding:6px; }
+          .totals td:first-child{ background:#f2f2f2; font-weight:bold; color:#000; border-right:2px solid #002147; }
+          .totals td.num{ text-align:right; }
+          .totals .pay{ color:#d0021b; font-weight:bold; }
+          .footbox{ margin-top:8px; border:1px solid #000; padding:8px; font-size:12px; background:#fafafa; }
+          .bank{ margin-top:8px; font-size:12px; border:2px solid #002147; padding:6px; }
+          .bank table{ width:100%; border-collapse:collapse; }
+          .bank th, .bank td{ border:1px solid #000; padding:6px; text-align:left; }
+          .bank th{ background:#f2f2f2; font-weight:bold; color:#000; border-bottom:2px solid #002147; }
+          footer{ margin-top:15px; text-align:center; font-size:11px; color:#555; }
+        </style></head>
+        <body>
+          <section class="sheet">
+            <div class="header">
+              <div class="seller">
+                <strong>Satıcı Bilgileri</strong>
+                Adres: ${escapeHtml(sellerAddr)}<br>
+                Web: ${escapeHtml(sellerWeb)}<br>
+                E-posta: ${escapeHtml(sellerMail)}<br>
+                Vergi Dairesi: ${escapeHtml(sellerTax)}<br>
+                TCKN/VKN: ${escapeHtml(String(sellerId))}
+              </div>
+              <div class="logo">
+                <div style="width:120px;height:60px;border:1px solid #002147;margin:auto;"></div>
+                <div>${sen === 2 ? 'e-ARŞİV' : 'e-FATURA'}</div>
+              </div>
+              <div class="buyer">
+                <strong>SAYIN</strong><br>
+                ${escapeHtml(buyerName)}<br>
+                Adres: ${escapeHtml(buyerAddr)}<br>
+                E-posta: ${escapeHtml(buyerMail)}<br>
+                Tel: ${escapeHtml(buyerPhone)}<br>
+                Vergi Dairesi: ${escapeHtml(buyerTax)}
+              </div>
+            </div>
+
+            <div class="meta">
+              <table>
+                <tr><td>Özelleştirme No</td><td>TR1.2</td></tr>
+                <tr><td>Senaryo</td><td>${senText}</td></tr>
+                <tr><td>Fatura Tipi</td><td>${escapeHtml(invType)}</td></tr>
+                <tr><td>Fatura No</td><td>${escapeHtml(String(invNo))}</td></tr>
+                <tr><td>Fatura Tarihi</td><td>${escapeHtml(invDate)}</td></tr>
+                <tr><td>Gönderim Tarihi</td><td>${escapeHtml(sentDt)}</td></tr>
+                <tr><td>Muhasebe Fatura No</td><td>-</td></tr>
+                <tr><td>Satış Kanalı</td><td>Diğer</td></tr>
+              </table>
+            </div>
+
+            <div class="ettn">ETTN: -</div>
+
+            <table class="items">
+              <thead>
+                <tr>
+                  <th>Sıra No</th>
+                  <th>Stok Kodu</th>
+                  <th>Mal Hizmet</th>
+                  <th>Miktar</th>
+                  <th>Birim Fiyat</th>
+                  <th>KDV Oranı</th>
+                  <th>KDV Tutarı</th>
+                  <th>Mal Hizmet Tutarı</th>
+                </tr>
+              </thead>
+              <tbody>${itemsHtml}</tbody>
+            </table>
+
+            <div class="totals">
+              <table>
+                <tr><td>Mal Hizmet Toplam Tutarı</td><td class="num">${tl(subTotal)}</td></tr>
+                <tr><td>Toplam İskonto</td><td class="num">${tl(0)}</td></tr>
+                <tr><td>Hesaplanan KDV (%0)</td><td class="num">${tl(totalVat)}</td></tr>
+                <tr><td>Vergiler Dahil Toplam Tutar</td><td class="num">${tl(grand)}</td></tr>
+                <tr><td><strong>Ödenecek Tutar</strong></td><td class="num pay">${tl(grand)}</td></tr>
+              </table>
+            </div>
+
+            <div class="footbox"><strong>Yalnız:</strong> ${yaziIle(grand)}</div>
+
+            <div class="bank">
+              <table>
+                <thead><tr><th>IBAN</th><th>Banka</th><th>Döviz Türü</th><th>Açıklama</th></tr></thead>
+                <tbody><tr><td>${escapeHtml(iban)}</td><td>${escapeHtml(bank)}</td><td>${currencyText === 'TL' ? 'TRY' : escapeHtml(currencyText)}</td><td>${escapeHtml(note)}</td></tr></tbody>
+              </table>
+            </div>
+
+            <footer>Bu belge sistem tarafından oluşturulmuştur.</footer>
+          </section>
+        </body></html>`;
             return html;
         }
 

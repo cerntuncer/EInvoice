@@ -459,56 +459,277 @@
                 });
             }
         }
-        function buildPdfDoc(model) {
-            const inv = model.inv || {};
-            const userPerson = model.userPerson;
-            const csPerson = model.csPerson;
-            const rows = [[{ text: 'Ürün/Hizmet', style: 'th' }, { text: 'Miktar', style: 'th' }, { text: 'Birim Fiyat', style: 'th' }, { text: 'Tutar', style: 'th' }]];
-            let total = 0;
-            (model.lines || []).forEach(line => {
-                const amount = (line.Quantity || 0) * (line.UnitPrice || 0);
-                total += amount;
-                rows.push([
-                    `${line.ProductName}${line.UnitType != null ? ' (' + mapUnitType(line.UnitType) + ')' : ''}`,
-                    { text: (line.Quantity || 0).toLocaleString(), alignment: 'right' },
-                    { text: (line.UnitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' },
-                    { text: amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), alignment: 'right' }
-                ]);
-            });
-            rows.push([
-                { text: 'Toplam', colSpan: 3, alignment: 'right', bold: true }, {}, {},
-                { text: total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), bold: true, alignment: 'right' }
+                function buildPdfDoc(model) {
+          const NAVY = '#002147';
+          const RED  = '#d0021b';
+          const GRAY = '#f2f2f2';
+
+          const inv = model.inv || {};
+          const user = model.userPerson || {};
+          const buyer = model.csPerson || {};
+          const current = model.current || {};
+
+          // --- Satıcı / Alıcı verileri ---
+          const sellerAddr = (user.BranchAddresses ?? user.branchAddresses ?? [])[0] || '';
+          const sellerWeb  = (user.Websites ?? user.websites ?? [])[0] || '';
+          const sellerMail = (user.Emails ?? user.emails ?? [])[0] || '';
+          const sellerTax  = (user.TaxOffice ?? user.taxOffice) || '';
+          const sellerId   = (user.IdentityNumber ?? user.identityNumber) || '';
+
+          const buyerName  = (buyer.PersonName ?? buyer.personName) || '';
+          const buyerAddr  = (buyer.BranchAddresses ?? buyer.branchAddresses ?? [])[0] || '';
+          const buyerMail  = (buyer.Emails ?? buyer.emails ?? [])[0] || '';
+          const buyerPhone = (buyer.Phones ?? buyer.phones ?? [])[0] || '';
+          const buyerTax   = (buyer.TaxOffice ?? buyer.taxOffice) || '';
+
+          // --- Fatura başlık bilgileri ---
+          const invNo   = (inv.No ?? inv.no) || '';
+          const invDate = (inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleDateString('tr-TR') : '';
+          const sentDt  = (inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString('tr-TR') : '';
+          const invType = (mapInvoiceType ? mapInvoiceType(inv.Type ?? inv.type) : (inv.Type===1?'Alış':inv.Type===2?'Satış':String(inv.Type ?? ''))).toUpperCase();
+          const sen     = (inv.Senario ?? inv.senario);
+          const senText = (mapSenario ? mapSenario(sen) : (sen===1?'e-Fatura':sen===2?'e-Arşiv':sen===3?'Kağıt':String(sen ?? ''))).toUpperCase().replace('İ','I').replace('Ş','S');
+          const titleText = sen === 2 ? 'e-ARŞİV' : 'e-FATURA';
+
+          // --- Satırlar + toplamlar (KDV yoksa 0) ---
+          const lines = (model.lines || []);
+          const itemRows = [
+            [
+              { text: 'Sıra No', style: 'th' },
+              { text: 'Stok Kodu', style: 'th' },
+              { text: 'Mal Hizmet', style: 'th' },
+              { text: 'Miktar', style: 'th', alignment: 'right' },
+              { text: 'Birim Fiyat', style: 'th', alignment: 'right' },
+              { text: 'KDV Oranı', style: 'th', alignment: 'right' },
+              { text: 'KDV Tutarı', style: 'th', alignment: 'right' },
+              { text: 'Mal Hizmet Tutarı', style: 'th', alignment: 'right' }
+            ]
+          ];
+          let subTotal = 0;
+          lines.forEach((ln, i) => {
+            const qty = Number(ln.Quantity || 0);
+            const price = Number(ln.UnitPrice || 0);
+            const amount = qty * price;
+            subTotal += amount;
+            const vatRate = 0;
+            const vatAmt = amount * (vatRate/100);
+            itemRows.push([
+              String(i+1),
+              String(ln.Code ?? ''),
+              String(ln.ProductName ?? ''),
+              { text: `${qty} ${mapUnitType?mapUnitType(ln.UnitType):String(ln.UnitType??'')}`, alignment:'right' },
+              { text: num(price), alignment:'right' },
+              { text: `%${vatRate}`, alignment:'right' },
+              { text: num(vatAmt), alignment:'right' },
+              { text: num(amount), alignment:'right' }
             ]);
-            return {
-                pageMargins: [30, 40, 30, 40],
-                content: [
-                    { text: 'FATURA', style: 'title' },
-                    { text: `No: ${(inv.No ?? inv.no) || ''}`, margin: [0, 5, 0, 0] },
-                    { text: `Tarih: ${(inv.Date ?? inv.date) ? new Date(inv.Date ?? inv.date).toLocaleString() : ''}`, margin: [0, 2, 0, 10] },
-                    { columns: [
-                        [ { text: 'Fatura Bilgileri', style: 'subtitle' }, { text: `Tip: ${mapInvoiceType(inv.Type ?? inv.type)}` }, { text: `Senaryo: ${mapSenario(inv.Senario ?? inv.senario)}` } ],
-                        [ { text: 'Cari', style: 'subtitle' }, { text: `Ad: ${model.current?.Name ?? model.current?.name ?? '-'}` }, { text: `Tür: ${mapCurrentType((model.current?.CurrentType ?? model.current?.currentType))}` }, { text: `Para Birimi: ${mapCurrency((model.current?.CurrencyType ?? model.current?.currencyType))}` } ]
-                    ], margin: [0, 0, 0, 10] },
-                    { columns: [
-                        [
-                            { text: 'Cari Kullanıcı', style: 'subtitle' },
-                            { text: userPerson ? `${(userPerson.PersonName ?? userPerson.personName) || ''} (${(userPerson.IdentityNumber ?? userPerson.identityNumber) || ''})` : '-' },
-                            { text: userPerson && (userPerson.TaxOffice ?? userPerson.taxOffice) ? `Vergi Dairesi: ${(userPerson.TaxOffice ?? userPerson.taxOffice)}` : '' },
-                            { text: userPerson && (userPerson.Phones ?? userPerson.phones)?.length ? `Telefon: ${(userPerson.Phones ?? userPerson.phones).join(', ')}` : '' },
-                            { text: userPerson && (userPerson.BranchAddresses ?? userPerson.branchAddresses)?.length ? `Şube: ${(userPerson.BranchAddresses ?? userPerson.branchAddresses).join(' | ')}` : '' }
+          });
+          const totalVat = 0;
+          const grand = subTotal + totalVat;
+
+          // --- IBAN tablosu (veri yoksa tire) ---
+          const currencyText = (mapCurrency ? mapCurrency(current.CurrencyType ?? current.currencyType) : (current.CurrencyType===1?'TL':current.CurrencyType===2?'EUR':current.CurrencyType===3?'USD':''));
+          const ibanText = '-';
+          const bankText = '-';
+          const ibanNote = '-';
+
+          // --- Doküman ---
+          return {
+            pageMargins: [30, 40, 30, 40],
+            content: [
+              // Üst başlık (satıcı - logo+title - alıcı)
+              {
+                columns: [
+                  {
+                    width: '*',
+                    stack: [
+                      { text: 'Satıcı Bilgileri', color: NAVY, bold: true, margin: [0,0,0,4] },
+                      { text: [
+                          'Adres: ', {text: sellerAddr}, '\n',
+                          'Web: ', {text: sellerWeb}, '\n',
+                          'E-posta: ', {text: sellerMail}, '\n',
+                          'Vergi Dairesi: ', {text: sellerTax}, '\n',
+                          'TCKN/VKN: ', {text: String(sellerId)}
+                        ] }
+                    ]
+                  },
+                  {
+                    width: 160,
+                    stack: [
+                      {
+                        canvas: [
+                          { type: 'rect', x:0, y:0, w:120, h:60, lineColor: NAVY, lineWidth: 1 }
                         ],
-                        [
-                            { text: 'Müşteri/Tedarikçi', style: 'subtitle' },
-                            { text: csPerson ? `${(csPerson.PersonName ?? csPerson.personName) || ''} (${(csPerson.IdentityNumber ?? csPerson.identityNumber) || ''})` : '-' },
-                            { text: csPerson && (csPerson.TaxOffice ?? csPerson.taxOffice) ? `Vergi Dairesi: ${(csPerson.TaxOffice ?? csPerson.taxOffice)}` : '' },
-                            { text: csPerson && (csPerson.Phones ?? csPerson.phones)?.length ? `Telefon: ${(csPerson.Phones ?? csPerson.phones).join(', ')}` : '' },
-                            { text: csPerson && (csPerson.BranchAddresses ?? csPerson.branchAddresses)?.length ? `Şube: ${(csPerson.BranchAddresses ?? csPerson.branchAddresses).join(' | ')}` : '' }
-                        ]
-                    ], margin: [0, 0, 0, 10] },
-                    { table: { headerRows: 1, widths: ['*', 80, 100, 100], body: rows } }
+                        margin: [20,0,20,6]
+                      },
+                      { text: titleText, color: RED, bold: true, fontSize: 16, alignment: 'center' }
+                    ]
+                  },
+                  {
+                    width: '*',
+                    stack: [
+                      { text: 'SAYIN', bold: true, margin: [0,0,0,4] },
+                      { text: [
+                          (buyerName||'-'), '\n',
+                          'Adres: ', {text: buyerAddr}, '\n',
+                          'E-posta: ', {text: buyerMail}, '\n',
+                          'Tel: ', {text: buyerPhone}, '\n',
+                          'Vergi Dairesi: ', {text: buyerTax}
+                        ] }
+                    ]
+                  }
                 ],
-                styles: { title: { fontSize: 18, bold: true }, subtitle: { fontSize: 12, bold: true, margin: [0, 0, 0, 4] }, th: { bold: true } }
-            };
+                columnGap: 18,
+                margin: [0,0,0,8]
+              },
+
+              // Üst ayırıcı çizgi (lacivert)
+              { canvas: [ { type:'line', x1:0, y1:0, x2:515, y2:0, lineWidth:2, lineColor:NAVY } ], margin:[0,6,0,8] },
+
+              // Sağda meta (2 sütunlu tablo)
+              {
+                columns: [
+                  { width: '*', text: '' },
+                  {
+                    width: 300,
+                    table: {
+                      widths: [140, '*'],
+                      body: [
+                        [ metaKey('Özelleştirme No', GRAY), 'TR1.2' ],
+                        [ metaKey('Senaryo', GRAY), senText ],
+                        [ metaKey('Fatura Tipi', GRAY), invType ],
+                        [ metaKey('Fatura No', GRAY), String(invNo) ],
+                        [ metaKey('Fatura Tarihi', GRAY), invDate ],
+                        [ metaKey('Gönderim Tarihi', GRAY), sentDt ],
+                        [ metaKey('Muhasebe Fatura No', GRAY), '-' ],
+                        [ metaKey('Satış Kanalı', GRAY), 'Diğer' ]
+                      ]
+                    },
+                    layout: {
+                      fillColor: function (row) { return row === 0 ? null : null; },
+                      hLineWidth: () => 1, vLineWidth: () => 1,
+                      hLineColor: () => '#000', vLineColor: () => '#000'
+                    }
+                  }
+                ],
+                margin: [0,0,0,8]
+              },
+
+              // ETTN kutusu
+              {
+                table: {
+                  widths: ['*'],
+                  body: [[ { text: 'ETTN: -', bold: true, color: NAVY } ]]
+                },
+                layout: {
+                  hLineWidth: (i,n) => (i===0||i===n)?2:2,
+                  vLineWidth: (i,n) => (i===0||i===n)?2:2,
+                  hLineColor: () => NAVY,
+                  vLineColor: () => NAVY
+                },
+                fillColor: '#fafafa',
+                margin: [0,6,0,8]
+              },
+
+              // Ürün tablosu (geniş)
+              {
+                table: {
+                  headerRows: 1,
+                  widths: [45, 70, '*', 65, 70, 60, 70, 85],
+                  body: itemRows
+                },
+                layout: {
+                  fillColor: function (rowIndex) { return rowIndex === 0 ? GRAY : null; },
+                  hLineWidth: function (i, n, node) {
+                    // header kalın lacivert, diğerleri 1
+                    if (i === 0 || i === 1) return i === 1 ? 2 : 2;
+                    return 1;
+                  },
+                  vLineWidth: function () { return 1; },
+                  hLineColor: function (i) { return (i===1) ? NAVY : '#000'; },
+                  vLineColor: function () { return '#000'; }
+                },
+                margin: [0,0,0,8]
+              },
+
+              // Totaller (sağda)
+              {
+                columns: [
+                  { width: '*', text: '' },
+                  {
+                    width: 300,
+                    table: {
+                      widths: ['*', 120],
+                      body: [
+                        [ { text: 'Mal Hizmet Toplam Tutarı', fillColor: GRAY, bold: true }, { text: num(subTotal), alignment: 'right' } ],
+                        [ { text: 'Toplam İskonto', fillColor: GRAY, bold: true }, { text: num(0), alignment: 'right' } ],
+                        [ { text: 'Hesaplanan KDV (%0)', fillColor: GRAY, bold: true }, { text: num(totalVat), alignment: 'right' } ],
+                        [ { text: 'Vergiler Dahil Toplam Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right' } ],
+                        [ { text: 'Ödenecek Tutar', fillColor: GRAY, bold: true }, { text: num(grand), alignment: 'right', color: RED, bold: true } ]
+                      ]
+                    },
+                    layout: {
+                      hLineWidth: (i,n) => 1,
+                      vLineWidth: (i,n) => 1,
+                      hLineColor: () => '#000',
+                      vLineColor: (i) => (i===1 ? NAVY : '#000') // sol iç çizgi lacivert vurgulu
+                    }
+                  }
+                ],
+                margin: [0,0,0,8]
+              },
+
+              // Yalnız kutusu
+              {
+                table: {
+                  widths: ['*'],
+                  body: [[ { text: `Yalnız: ${textYaziIle(grand)}` } ]]
+                },
+                layout: { hLineWidth:()=>1, vLineWidth:()=>1, hLineColor:()=>'#000', vLineColor:()=>'#000' },
+                fillColor: '#fafafa',
+                margin: [0,0,0,8]
+              },
+
+              // IBAN tablosu (dış çerçeve lacivert kalın)
+              {
+                table: {
+                  widths: ['*','*','*','*'],
+                  headerRows: 1,
+                  body: [
+                    [
+                      { text:'IBAN', style:'th' },
+                      { text:'Banka', style:'th' },
+                      { text:'Döviz Türü', style:'th' },
+                      { text:'Açıklama', style:'th' }
+                    ],
+                    [ ibanText, bankText, (currencyText === 'TL' ? 'TRY' : (currencyText || '')), ibanNote ]
+                  ]
+                },
+                layout: {
+                  hLineWidth: (i,n)=> (i===0||i===n)?2:1,
+                  vLineWidth: (i,n)=> (i===0||i===n)?2:1,
+                  hLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000',
+                  vLineColor: (i,n)=> (i===0||i===n)?NAVY:'#000'
+                },
+                margin: [0,0,0,10]
+              },
+
+              { text: 'Bu belge sistem tarafından oluşturulmuştur.', alignment: 'center', color: '#555', fontSize: 11 }
+            ],
+
+            styles: {
+              th: { bold: true, fillColor: GRAY, color: '#000' }
+            },
+
+            defaultStyle: {
+              fontSize: 12
+            }
+          };
+
+          // ---- helpers (pdf çıktısı için) ----
+          function num(n){ return Number(n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+          function metaKey(text, fill){ return { text, bold:true, fillColor: fill, color:'#000' }; }
+          function textYaziIle(x){ try{const a=Math.round(Number(x)||0); return a.toLocaleString('tr-TR')+' Türk Lirası';}catch{return '';} }
         }
         function mapInvoiceType(t) { return t === 1 ? 'Alış' : t === 2 ? 'Satış' : String(t ?? ''); }
         function mapSenario(s) { return s === 1 ? 'e-Fatura' : s === 2 ? 'e-Arşiv' : s === 3 ? 'Kağıt' : String(s ?? ''); }
