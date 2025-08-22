@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler;
 using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
@@ -61,8 +61,8 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Commands
 
                 // Mevcut satırları getir
                 var existingLines = _lineRepository.Where(x => x.InvoiceId == invoice.Id).ToList();
-                var oldTotal = existingLines.Sum(l => l.UnitPrice * l.Quantity);
-                var newTotal = request.lineOfInovices?.Sum(l => l.UnitPrice * l.Quantity) ?? 0m;
+                var oldTotal = existingLines.Sum(l => l.UnitPrice * l.Quantity * (1 + (decimal)l.VatRate / 100m));
+                var newTotal = request.lineOfInovices?.Sum(l => l.UnitPrice * l.Quantity * (1 + (decimal)l.VatRate / 100m)) ?? 0m;
 
                 // Güncellenecek veya eklenecek satırlar
                 foreach (var reqLine in request.lineOfInovices)

@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
+using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using DatabaseAccessLayer.Contexts;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +39,7 @@ namespace BusinessLogicLayer.Handler.InvoiceHandler.Queries
                     CustomerSupplierId = inv.CustomerSupplierId,
                     Status = inv.Status,
                     LineCount = inv.LineOfInvoices.Count(),
-                    TotalAmount = inv.LineOfInvoices.Sum(l => l.UnitPrice * l.Quantity)
+                    TotalAmount = inv.LineOfInvoices.Sum(l => l.UnitPrice * l.Quantity * (1 + (decimal)l.VatRate / 100m))
                 })
                 .ToListAsync(cancellationToken);
 
