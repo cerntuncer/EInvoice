@@ -42,11 +42,10 @@ public class LoginController : Controller
     };
         var identity = new ClaimsIdentity(claims, "Cookies");
         var principal = new ClaimsPrincipal(identity);
-        var expire = model.RememberMe ? TimeSpan.FromDays(14) : TimeSpan.FromHours(2);
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = model.RememberMe,
-            ExpiresUtc = DateTimeOffset.UtcNow.Add(expire),
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2),
             AllowRefresh = false
         };
         await HttpContext.SignInAsync("Cookies", principal, authProperties);
