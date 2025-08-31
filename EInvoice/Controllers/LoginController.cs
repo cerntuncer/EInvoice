@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models;
 using System.Security.Claims;
@@ -42,10 +42,11 @@ public class LoginController : Controller
     };
         var identity = new ClaimsIdentity(claims, "Cookies");
         var principal = new ClaimsPrincipal(identity);
+        var expire = model.RememberMe ? TimeSpan.FromDays(14) : TimeSpan.FromHours(2);
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2),
+            IsPersistent = model.RememberMe,
+            ExpiresUtc = DateTimeOffset.UtcNow.Add(expire),
             AllowRefresh = false
         };
         await HttpContext.SignInAsync("Cookies", principal, authProperties);

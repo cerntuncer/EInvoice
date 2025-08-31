@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Login Page";
 }
 
@@ -27,12 +27,12 @@
                                         <label for="inputPassword">Password</label>
                                     </div>
                                     <div class="form-check mb-3">
-                                        <input class="form-check-input" id="inputRememberPassword" type="checkbox" />
-                                        <label class="form-check-label" for="inputRememberPassword">Remember Password</label>
+                                        <input class="form-check-input" id="inputRememberPassword" name="rememberMe" type="checkbox" />
+                                        <label class="form-check-label" for="inputRememberPassword">Beni hatırla</label>
                                     </div>
                                     <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
-                                        <a class="small" href="#">Forgot Password?</a>
-                                        <button type="submit" class="btn btn-primary">Login</button>
+                                        <span></span>
+                                        <button id="loginButton" type="submit" class="btn btn-primary">Giriş yap</button>
                                     </div>
                                 </form>
                             </div>
@@ -60,11 +60,13 @@
             msgBox.classList.remove("d-none");
         }
 
+        // Submit handler
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
 
             const email = document.getElementById("inputEmail").value;
             const password = document.getElementById("inputPassword").value;
+            const rememberMe = document.getElementById("inputRememberPassword").checked;
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
             try {
@@ -74,7 +76,7 @@
                         "Content-Type": "application/json",
                         "RequestVerificationToken": token
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, rememberMe })
                 });
 
                 const contentType = res.headers.get("content-type") || "";
@@ -96,6 +98,14 @@
                 }
             } catch (err) {
                 showMsg("Sunucu hatası: " + err.message, "danger");
+            }
+        });
+
+        // Enter key fallback to submit when focused in inputs
+        form.addEventListener("keydown", function (evt) {
+            if (evt.key === "Enter") {
+                evt.preventDefault();
+                document.getElementById("loginButton").click();
             }
         });
     })();

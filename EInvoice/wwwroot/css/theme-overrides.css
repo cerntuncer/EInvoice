@@ -1,0 +1,48 @@
+/* Lightweight theme overrides for presentation polish */
+:root {
+  --brand-primary: #6f42c1; /* purple */
+  --brand-accent: #20c997;  /* teal */
+  --brand-bg: #f8f9fc;      /* light bg */
+}
+
+body {
+  background-color: var(--brand-bg);
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #5b36a2;
+  border-color: #5b36a2;
+}
+
+.card-header {
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+  color: #fff;
+}
+
+.sb-topnav.navbar {
+  background: linear-gradient(90deg, #212529, #343a40);
+}
+
+.sb-sidenav-dark {
+  background-color: #2b2f33;
+}
+
+.sb-sidenav .nav-link.active,
+.sb-sidenav .nav-link:hover {
+  color: var(--brand-accent);
+}
+
+/* Login specific tweaks */
+#layoutAuthentication .card {
+  border-radius: 0.75rem;
+}
+
+#layoutAuthentication .btn-primary {
+  box-shadow: 0 6px 14px rgba(111, 66, 193, 0.25);
+}
+
