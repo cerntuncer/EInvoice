@@ -1,8 +1,8 @@
 /* Lightweight theme overrides for presentation polish */
 :root {
-  --brand-primary: #6f42c1; /* purple */
-  --brand-accent: #20c997;  /* teal */
-  --brand-bg: #f8f9fc;      /* light bg */
+  --brand-primary: #4c1d95; /* deep indigo */
+  --brand-accent: #06b6d4;  /* cyan */
+  --brand-bg: #f4f6fb;      /* light bg */
 }
 
 body {
@@ -25,19 +25,11 @@ body {
   border-color: #5b36a2;
 }
 
-.card-header {
-  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
-  color: #fff;
-}
+.card-header { background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent)); color: #fff; }
 
-.sb-topnav.navbar {
-  background: linear-gradient(90deg, #ffffff, #f8f9fb);
-  border-bottom: 1px solid #eef0f4;
-}
+.sb-topnav.navbar { background: linear-gradient(90deg, #3f1a7a, #4c1d95); border-bottom: 0; }
 
-.sb-sidenav-dark {
-  background-color: #25282c;
-}
+.sb-sidenav-dark { background: linear-gradient(180deg, #2c1a4d, #1f1438); }
 
 .sb-sidenav .nav-link.active,
 .sb-sidenav .nav-link:hover {
@@ -48,8 +40,17 @@ body {
   transition: background-color .2s ease, color .2s ease;
 }
 .sb-sidenav .nav-link:hover {
-  background-color: rgba(111, 66, 193, 0.08);
+  background-color: rgba(76, 29, 149, 0.15);
 }
+
+/* simple-datatables unified controls */
+.dataTable-wrapper .dataTable-top { display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
+.dataTable-wrapper .dataTable-bottom { display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
+.dataTable-selector { appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 2rem; background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23666' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .5rem center; background-size: 12px; }
+.dataTable-input { max-width: 240px; }
+
+/* ensure controls are visible */
+.dataTable-top, .dataTable-bottom { display: flex !important; }
 
 /* Inputs */
 .form-control:focus {
