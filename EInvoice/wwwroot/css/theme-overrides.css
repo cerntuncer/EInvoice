@@ -46,7 +46,7 @@ body {
 /* simple-datatables unified controls */
 .dataTable-wrapper .dataTable-top { display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
 .dataTable-wrapper .dataTable-bottom { display: flex; gap: .75rem; align-items: center; justify-content: space-between; }
-.dataTable-selector { appearance: none; -webkit-appearance: none; -moz-appearance: none; padding: .375rem 2rem .375rem .5rem; line-height: 1.5; background-color: #fff; border: 1px solid #d8dbe2; border-radius: .375rem; background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23666' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .5rem center; background-size: 12px; }
+.dataTable-selector { appearance: none; -webkit-appearance: none; -moz-appearance: none; padding: .375rem 2rem .375rem .5rem; min-width: 84px; line-height: 1.5; background-color: #fff; border: 1px solid #d8dbe2; border-radius: .375rem; background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23666' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .5rem center; background-size: 12px; }
 .dataTable-selector:focus { outline: none; box-shadow: 0 0 0 .2rem rgba(76,29,149,.15); border-color: rgba(76,29,149,.6); }
 .dataTable-input { max-width: 240px; }
 
