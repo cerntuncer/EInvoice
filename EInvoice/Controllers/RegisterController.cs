@@ -25,10 +25,10 @@ namespace PresentationLayer.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterViewModel vm)
         {
             if (vm.UserType == 1 && vm.IdentityNumber?.Length != 11)
-                return Json(new { success = false, message = "Gerçek kişi için TCKN 11 haneli olmalıdır." });
+                return Json(new { success = false, message = "GerÃ§ek kiÅŸi iÃ§in TCKN 11 haneli olmalÄ±dÄ±r." });
 
             if (vm.UserType == 2 && vm.IdentityNumber?.Length != 10)
-                return Json(new { success = false, message = "Tüzel kişi için VKN 10 haneli olmalıdır." });
+                return Json(new { success = false, message = "TÃ¼zel kiÅŸi iÃ§in VKN 10 haneli olmalÄ±dÄ±r." });
 
             var body = new
             {
@@ -56,12 +56,12 @@ namespace PresentationLayer.Controllers
                 {
                     var errText = await response.Content.ReadAsStringAsync();
 
-                    // JSON formatını çözümleme
+                    // JSON formatÄ±nÄ± Ã§Ã¶zÃ¼mleme
                     try
                     {
                         var errObj = JsonSerializer.Deserialize<Dictionary<string, object>>(errText);
 
-                        // "errors" varsa oradan mesajları çek
+                        // "errors" varsa oradan mesajlarÄ± Ã§ek
                         if (errObj != null && errObj.ContainsKey("errors"))
                         {
                             var errors = (JsonElement)errObj["errors"];
@@ -84,18 +84,18 @@ namespace PresentationLayer.Controllers
                     }
                     catch
                     {
-                        // JSON parse edilemezse olduğu gibi döner
+                        // JSON parse edilemezse olduÄŸu gibi dÃ¶ner
                         return Json(new { success = false, message = errText });
                     }
 
-                    return Json(new { success = false, message = "Kayıt başarısız." });
+                    return Json(new { success = false, message = "KayÄ±t baÅŸarÄ±sÄ±z." });
                 }
                 
-                return Json(new { success = true, message = "Kayıt başarılı! Giriş yapabilirsiniz." });
+                return Json(new { success = true, message = "KayÄ±t baÅŸarÄ±lÄ±! GiriÅŸ yapabilirsiniz." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Sunucu hatası: {ex.Message}" });
+                return Json(new { success = false, message = $"Sunucu hatasÄ±: {ex.Message}" });
             }
         }
     }

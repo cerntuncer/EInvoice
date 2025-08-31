@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models;
 using System.Security.Claims;
@@ -20,7 +20,8 @@ public class LoginController : Controller
     public async Task<IActionResult> LoginUser([FromBody] LoginViewModel model)
     {
         var client = _httpClientFactory.CreateClient("Api");
-        var apiRes = await client.PostAsJsonAsync("/Auth/login", model);
+        // API'ye sadece gerekli alanları gönder
+        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { model.Email, model.Password });
 
         if (!apiRes.IsSuccessStatusCode)
             return BadRequest(new { message = "Giriş başarısız" });
@@ -44,10 +45,18 @@ public class LoginController : Controller
         var principal = new ClaimsPrincipal(identity);
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2),
-            AllowRefresh = false
+            IsPersistent = model.RememberMe
         };
+        if (model.RememberMe)
+        {
+            authProperties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14);
+        }
+        else
+        {
+            // Session cookie (tarayıcı kapanınca silinsin)
+            authProperties.ExpiresUtc = null;
+            authProperties.AllowRefresh = false;
+        }
         await HttpContext.SignInAsync("Cookies", principal, authProperties);
 
         // 3) AJAX�e ba�ar�l� JSON d�n � client taraf� Dashboard�a y�nlendirsin

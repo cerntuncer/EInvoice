@@ -1,4 +1,4 @@
-﻿@model PresentationLayer.Models.RegisterViewModel
+@model PresentationLayer.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Register Page";
 }
@@ -11,7 +11,7 @@
                         <div class="col-lg-7">
                             <div class="card shadow-lg border-0 rounded-lg mt-5">
                                 <div class="card-header">
-                                    <h3 class="text-center font-weight-light my-4">Create Account</h3>
+                                    <h3 class="text-center font-weight-light my-4">Hesap Oluştur</h3>
                                 </div>
                                 <div class="card-body">
                                     <form id="registerForm">
@@ -20,8 +20,8 @@
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <div class="form-floating mb-3 mb-md-0">
-                                                    <input asp-for="Name" class="form-control" placeholder="Ad Soyad Giriniz" />
-                                                    <label asp-for="Name"></label>
+                                                    <input asp-for="Name" class="form-control" placeholder="Ad Soyad" />
+                                                    <label>Ad Soyad</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -30,7 +30,7 @@
                                                         <option value="1">Gerçek kişi</option>
                                                         <option value="2">Tüzel kişi</option>
                                                     </select>
-                                                    <label asp-for="UserType"></label>
+                                                    <label>Kullanıcı Tipi</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -38,47 +38,47 @@
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <div class="form-floating mb-3 mb-md-0">
-                                                    <input asp-for="IdentityNumber" class="form-control" id="identityNumber" placeholder="TCKN / VKN Giriniz" maxlength="11" />
-                                                    <label asp-for="IdentityNumber"></label>
+                                                    <input asp-for="IdentityNumber" class="form-control" id="identityNumber" placeholder="TCKN / VKN" maxlength="11" />
+                                                    <label>TCKN / VKN</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-floating mb-3 mb-md-0">
-                                                    <input asp-for="TaxOffice" class="form-control" placeholder="Vergi Dairesi Giriniz" />
-                                                    <label asp-for="TaxOffice"></label>
+                                                    <input asp-for="TaxOffice" class="form-control" placeholder="Vergi Dairesi" />
+                                                    <label>Vergi Dairesi</label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="form-floating mb-3">
-                                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
-                                            <label asp-for="Email"></label>
+                                            <input asp-for="Email" class="form-control" placeholder="e-posta@example.com" />
+                                            <label>E-posta</label>
                                         </div>
 
                                         <div class="row mb-3">
                                             <div class="col-md-6">
                                                 <div class="form-floating mb-3 mb-md-0">
-                                                    <input asp-for="Password" class="form-control" type="password" placeholder="Create a password" />
-                                                    <label asp-for="Password"></label>
+                                                    <input asp-for="Password" class="form-control" type="password" placeholder="Şifre" />
+                                                    <label>Şifre</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-floating mb-3 mb-md-0">
-                                                    <input class="form-control" type="password" placeholder="Confirm password" />
-                                                    <label>Confirm Password</label>
+                                                    <input class="form-control" type="password" placeholder="Şifreyi doğrula" />
+                                                    <label>Şifreyi doğrula</label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="mt-4 mb-0">
                                             <div class="d-grid">
-                                                <button type="submit" class="btn btn-primary btn-block">Oluştur</button>
+                                                <button type="submit" class="btn btn-primary btn-block">Kaydı Oluştur</button>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
                                 <div class="card-footer text-center py-3">
-                                    <div class="small"><a asp-controller="Login" asp-action="Index">Have an account? Go to login</a></div>
+                                    <div class="small"><a asp-controller="Login" asp-action="Index">Hesabın var mı? Giriş yap</a></div>
                                 </div>
                             </div>
                         </div>
