@@ -3,11 +3,12 @@
     ViewData["Title"] = "Kullanıcı Bilgilerim";
 }
 
-<h1 class="mt-4">Kullanıcı Bilgilerim</h1>
-<ol class="breadcrumb mb-4">
-    <li class="breadcrumb-item"><a href="/">Ana Sayfa</a></li>
-    <li class="breadcrumb-item active">Kullanıcı Bilgilerim</li>
-</ol>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Kullanıcı Bilgilerim</h2>
+    <div></div>
+    @Html.AntiForgeryToken()
+
+</div>
 
 <div class="card mb-4">
     <div class="card-header">

@@ -51,7 +51,7 @@ namespace PresentationLayer.Controllers
             {
                 var client = _httpClientFactory.CreateClient("Api");
                 var response = await client.PostAsJsonAsync("User", body);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errText = await response.Content.ReadAsStringAsync();
@@ -77,9 +77,9 @@ namespace PresentationLayer.Controllers
 
                             return Json(new { success = false, message = string.Join(" | ", messages) });
                         }
-                        if(errObj != null && errObj.ContainsKey("message"))
+                        if (errObj != null && errObj.ContainsKey("message"))
                         {
-                            return Json(new { success = false, message = (JsonElement)errObj["message"]});
+                            return Json(new { success = false, message = (JsonElement)errObj["message"] });
                         }
                     }
                     catch
@@ -90,7 +90,7 @@ namespace PresentationLayer.Controllers
 
                     return Json(new { success = false, message = "Kayýt baþarýsýz." });
                 }
-                
+
                 return Json(new { success = true, message = "Kayýt baþarýlý! Giriþ yapabilirsiniz." });
             }
             catch (Exception ex)
