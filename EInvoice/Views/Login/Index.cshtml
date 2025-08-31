@@ -5,12 +5,12 @@
 <div id="layoutAuthentication">
     <div id="layoutAuthentication_content">
         <main>
-            <div class="container">
+            <div class="container login-center">
                 <div class="row justify-content-center">
                     <div class="col-lg-5">
                         <div class="card shadow-lg border-0 rounded-lg mt-5">
                             <div class="card-header">
-                                <h3 class="text-center font-weight-light my-4">Login</h3>
+                                <h3 class="text-center font-weight-light my-4">Giriş</h3>
                             </div>
                             <div class="card-body">
                                 <div id="loginMessage" class="alert d-none" role="alert"></div>
@@ -19,12 +19,12 @@
                                     @Html.AntiForgeryToken()
 
                                     <div class="form-floating mb-3">
-                                        <input class="form-control" id="inputEmail" name="email" type="email" placeholder="name@example.com" required />
-                                        <label for="inputEmail">Email address</label>
+                                        <input class="form-control" id="inputEmail" name="email" type="email" placeholder="E-posta" required />
+                                        <label for="inputEmail">E-posta</label>
                                     </div>
                                     <div class="form-floating mb-3">
-                                        <input class="form-control" id="inputPassword" name="password" type="password" placeholder="Password" required />
-                                        <label for="inputPassword">Password</label>
+                                        <input class="form-control" id="inputPassword" name="password" type="password" placeholder="Şifre" required />
+                                        <label for="inputPassword">Şifre</label>
                                     </div>
                                     
                                     <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
@@ -34,7 +34,7 @@
                                 </form>
                             </div>
                             <div class="card-footer text-center py-3">
-                                <div class="small"><a href="/Register/Index">Need an account? Sign up!</a></div>
+                                <div class="small"><a href="/Register/Index">Hesabın yok mu? Kayıt ol!</a></div>
                             </div>
                         </div>
                     </div>

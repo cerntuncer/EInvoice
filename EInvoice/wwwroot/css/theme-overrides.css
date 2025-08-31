@@ -9,6 +9,12 @@ body {
   background-color: var(--brand-bg);
 }
 
+.login-center {
+  min-height: calc(100vh - 8rem);
+  display: flex;
+  align-items: center;
+}
+
 .btn-primary {
   background-color: var(--brand-primary);
   border-color: var(--brand-primary);
@@ -35,6 +41,17 @@ body {
 .sb-sidenav .nav-link.active,
 .sb-sidenav .nav-link:hover {
   color: var(--brand-accent);
+}
+
+/* Inputs */
+.form-control:focus {
+  border-color: rgba(111, 66, 193, 0.6);
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* Table headers */
+.table thead th {
+  background-color: #f0f2f8;
 }
 
 /* Login specific tweaks */

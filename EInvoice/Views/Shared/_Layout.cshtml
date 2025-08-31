@@ -34,31 +34,31 @@
                 <div class="sb-sidenav-menu">
                     <div class="nav">
                         <div class="sb-sidenav-menu-heading">Menü</div>
-                        <a class="nav-link" href="/Dashboard">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Dashboard"?"active":"")" href="/Dashboard">
                             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                             Dashboard
                         </a>
-                        <a class="nav-link" href="/Invoices">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Invoices"?"active":"")" href="/Invoices">
                             <div class="sb-nav-link-icon"><i class="fas fa-file-invoice"></i></div>
                             Faturalar
                         </a>
-                        <a class="nav-link" href="/UserInfo">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="UserInfo"?"active":"")" href="/UserInfo">
                             <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                             Kullanıcı Bilgileri
                         </a>
-                        <a class="nav-link" href="/ProductsAndServices">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="ProductsAndServices"?"active":"")" href="/ProductsAndServices">
                             <div class="sb-nav-link-icon"><i class="fas fa-boxes-stacked"></i></div>
                             Ürünler ve Hizmetler
                         </a>
-                        <a class="nav-link" href="/Currents">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Currents"?"active":"")" href="/Currents">
                             <div class="sb-nav-link-icon"><i class="fas fa-address-book"></i></div>
                             Cariler
                         </a>
-                        <a class="nav-link" href="/Addresses">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Addresses"?"active":"")" href="/Addresses">
                             <div class="sb-nav-link-icon"><i class="fas fa-map-marker-alt"></i></div>
                             Adresler
                         </a>
-                        <a class="nav-link" href="/CustomersSuppliers">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="CustomersSuppliers"?"active":"")" href="/CustomersSuppliers">
                             <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                             Müşteri ve Tedarikçiler
                         </a>
