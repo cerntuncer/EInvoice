@@ -1,12 +1,47 @@
 ﻿@model PresentationLayer.Models.DashboardViewModel
 @{
-	ViewData["Title"] = "Dashboard";
+	ViewData["Title"] = "Ana Sayfa";
 }
 
-<h1 class="mt-4">Dashboard</h1>
+<h1 class="mt-4">Ana Sayfa</h1>
 <ol class="breadcrumb mb-4">
-	<li class="breadcrumb-item active">Dashboard</li>
+	<li class="breadcrumb-item active">Ana Sayfa</li>
 </ol>
+
+<div class="row mb-4">
+	<div class="col-xl-3 col-md-6">
+		<div class="card text-white mb-4" style="background: linear-gradient(45deg, #6f42c1, #20c997);">
+			<div class="card-body">Toplam Alış</div>
+			<div class="card-footer d-flex align-items-center justify-content-between">
+				<span class="fs-5 fw-bold">@Model.TotalPurchaseAmount.ToString("N2") ₺</span>
+			</div>
+		</div>
+	</div>
+	<div class="col-xl-3 col-md-6">
+		<div class="card text-white mb-4" style="background: linear-gradient(45deg, #20c997, #6f42c1);">
+			<div class="card-body">Toplam Satış</div>
+			<div class="card-footer d-flex align-items-center justify-content-between">
+				<span class="fs-5 fw-bold">@Model.TotalSalesAmount.ToString("N2") ₺</span>
+			</div>
+		</div>
+	</div>
+	<div class="col-xl-3 col-md-6">
+		<div class="card bg-light mb-4">
+			<div class="card-body">Fatura Sayısı</div>
+			<div class="card-footer d-flex align-items-center justify-content-between">
+				<span class="fs-5 fw-bold">@((Model.Invoices?.Count() ?? 0))</span>
+			</div>
+		</div>
+	</div>
+	<div class="col-xl-3 col-md-6">
+		<div class="card bg-light mb-4">
+			<div class="card-body">Cari Sayısı</div>
+			<div class="card-footer d-flex align-items-center justify-content-between">
+				<span class="fs-5 fw-bold">@((Model.Currents?.Count() ?? 0))</span>
+			</div>
+		</div>
+	</div>
+</div>
 
 <div class="row">
 	<div class="col-xl-6">
@@ -29,7 +64,7 @@
 				{
 					<div class="table-responsive">
 						<table class="table table-sm align-middle">
-							<thead>
+							<thead class="table-light">
 								<tr>
 									<th>Ad</th>
 									<th class="text-end">Bakiye</th>

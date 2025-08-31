@@ -8,21 +8,22 @@
     <meta name="author" content="" />
     <title>@ViewData["Title"] - EInvoice</title>
     <link href="/css/styles.css" rel="stylesheet" />
+    <link href="/css/theme-overrides.css" rel="stylesheet" />
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="sb-nav-fixed">
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-        <a class="navbar-brand ps-3" href="/">Ceren Tuncer</a>
+    <nav class="sb-topnav navbar navbar-expand navbar-dark shadow-sm">
+        <a class="navbar-brand ps-3" href="/">EInvoice</a>
         <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
         <ul class="navbar-nav ms-auto me-3 me-lg-4">
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <li><span class="dropdown-item-text">@User?.Identity?.Name</span></li>
+                    <li><span class="dropdown-item-text">@(ViewBag.UserFullName ?? User?.Identity?.Name)</span></li>
                     <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="/Login/Logout">Logout</a></li>
+                    <li><a class="dropdown-item" href="/Login/Logout">Çıkış Yap</a></li>
                 </ul>
             </li>
         </ul>
@@ -33,31 +34,31 @@
                 <div class="sb-sidenav-menu">
                     <div class="nav">
                         <div class="sb-sidenav-menu-heading">Menü</div>
-                        <a class="nav-link" href="/Dashboard">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")" href="/Dashboard">
                             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                            Dashboard
+                            Ana Sayfa
                         </a>
-                        <a class="nav-link" href="/Invoices">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invoices" ? "active" : "")" href="/Invoices">
                             <div class="sb-nav-link-icon"><i class="fas fa-file-invoice"></i></div>
                             Faturalar
                         </a>
-                        <a class="nav-link" href="/UserInfo">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserInfo" ? "active" : "")" href="/UserInfo">
                             <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                             Kullanıcı Bilgileri
                         </a>
-                        <a class="nav-link" href="/ProductsAndServices">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductsAndServices" ? "active" : "")" href="/ProductsAndServices">
                             <div class="sb-nav-link-icon"><i class="fas fa-boxes-stacked"></i></div>
                             Ürünler ve Hizmetler
                         </a>
-                        <a class="nav-link" href="/Currents">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Currents" ? "active" : "")" href="/Currents">
                             <div class="sb-nav-link-icon"><i class="fas fa-address-book"></i></div>
                             Cariler
                         </a>
-                        <a class="nav-link" href="/Addresses">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Addresses" ? "active" : "")" href="/Addresses">
                             <div class="sb-nav-link-icon"><i class="fas fa-map-marker-alt"></i></div>
                             Adresler
                         </a>
-                        <a class="nav-link" href="/CustomersSuppliers">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "CustomersSuppliers" ? "active" : "")" href="/CustomersSuppliers">
                             <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
                             Müşteri ve Tedarikçiler
                         </a>

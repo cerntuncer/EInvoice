@@ -4,12 +4,7 @@
 
 @section Styles {
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
-    <style>
-        /* Üstteki "entries per page" kısmını gizle */
-        .dataTable-top .dataTable-dropdown {
-            display: none !important;
-        }
-    </style>
+    <style></style>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -22,7 +17,7 @@
 
 <div class="card">
     <div class="card-body">
-        <table id="pasTable" class="table table-bordered table-striped" style="width:100%">
+        <table id="pasTable" class="table table-bordered table-striped table-hover align-middle" style="width:100%">
             <thead>
                 <tr>
                     <th>Ad</th>
@@ -161,7 +156,7 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#pasTable', { perPageSelect: false });
+            table = new simpleDatatables.DataTable('#pasTable', { perPage: 10, perPageSelect: [10,25,50,100], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok' , info: 'Toplam {rows} kayıttan {start}–{end} arası gösteriliyor' } });
         }
 
         async function onSave() {

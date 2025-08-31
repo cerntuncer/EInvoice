@@ -43,6 +43,21 @@ namespace EInvoice.Controllers
                 return View(model: null);
             }
 
+            // Fetch full name for navbar
+            try
+            {
+                var userResponse = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+                if (userResponse.IsSuccessStatusCode)
+                {
+                    var user = await userResponse.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+                    if (user != null && !user.Error)
+                    {
+                        ViewBag.UserFullName = user.PersonName;
+                    }
+                }
+            }
+            catch { }
+
             // Basit model
             var model = new DashboardViewModel();
 

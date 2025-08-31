@@ -1,0 +1,141 @@
+/* Lightweight theme overrides for presentation polish */
+:root {
+    --brand-primary: #4c1d95; /* deep indigo */
+    --brand-accent: #06b6d4; /* cyan */
+    --brand-bg: #f4f6fb; /* light bg */
+}
+
+body {
+    background-color: var(--brand-bg);
+}
+
+.login-center {
+    min-height: calc(100vh - 8rem);
+    display: flex;
+    align-items: center;
+}
+
+.btn-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+}
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+        background-color: #5b36a2;
+        border-color: #5b36a2;
+    }
+
+.card-header {
+    background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+    color: #fff;
+}
+
+.sb-topnav.navbar {
+    background: linear-gradient(90deg, #2b1654, #3f1a7a);
+    border-bottom: 0;
+}
+
+.sb-sidenav-dark {
+    background: linear-gradient(180deg, #2c1a4d, #1f1438);
+}
+
+.sb-sidenav .nav-link.active,
+.sb-sidenav .nav-link:hover {
+    color: var(--brand-accent);
+}
+
+.sb-sidenav .nav-link {
+    transition: background-color .2s ease, color .2s ease;
+}
+
+    .sb-sidenav .nav-link:hover {
+        background-color: rgba(76, 29, 149, 0.15);
+    }
+
+/* simple-datatables unified controls */
+.dataTable-wrapper .dataTable-top {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dataTable-wrapper .dataTable-bottom {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dataTable-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: .375rem 2rem .375rem .5rem;
+    line-height: 1.5;
+    background-color: #fff;
+    border: 1px solid #d8dbe2;
+    border-radius: .375rem;
+    background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23666' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .5rem center;
+    background-size: 12px;
+}
+
+    .dataTable-selector:focus {
+        outline: none;
+        box-shadow: 0 0 0 .2rem rgba(76,29,149,.15);
+        border-color: rgba(76,29,149,.6);
+    }
+
+.dataTable-input {
+    max-width: 240px;
+}
+
+/* ensure controls are visible */
+.dataTable-top, .dataTable-bottom {
+    display: flex !important;
+}
+
+/* Inputs */
+.form-control:focus {
+    border-color: rgba(111, 66, 193, 0.6);
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* Table headers */
+.table thead th {
+    background-color: #f0f2f8;
+}
+
+/* Login specific tweaks */
+#layoutAuthentication {
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fc, #eef1f7);
+}
+
+#layoutAuthentication_content {
+    width: 100%;
+}
+
+#layoutAuthentication .card {
+    border-radius: 0.75rem;
+    max-width: 560px;
+    margin: 2rem auto;
+}
+
+#layoutAuthentication .card-header {
+    padding: 1.25rem 1.5rem;
+}
+
+#layoutAuthentication .card-body {
+    padding: 2rem 1.5rem;
+}
+
+#layoutAuthentication .btn-primary {
+    box-shadow: 0 6px 14px rgba(111, 66, 193, 0.25);
+}
