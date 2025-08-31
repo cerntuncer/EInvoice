@@ -50,6 +50,8 @@
     (function () {
         const form = document.getElementById("loginForm");
         const msgBox = document.getElementById("loginMessage");
+        const btn = document.getElementById("loginButton");
+        let isSubmitting = false;
 
         function showMsg(text, type) {
             msgBox.className = "alert alert-" + type;
@@ -60,6 +62,11 @@
         // Submit handler
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
+            if (isSubmitting) return;
+            isSubmitting = true;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Giriş yapılıyor...";
 
             const email = document.getElementById("inputEmail").value;
             const password = document.getElementById("inputPassword").value;
@@ -94,6 +101,10 @@
                 }
             } catch (err) {
                 showMsg("Sunucu hatası: " + err.message, "danger");
+            } finally {
+                isSubmitting = false;
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         });
 
@@ -101,7 +112,9 @@
         form.addEventListener("keydown", function (evt) {
             if (evt.key === "Enter") {
                 evt.preventDefault();
-                document.getElementById("loginButton").click();
+                if (!isSubmitting) {
+                    form.requestSubmit(btn);
+                }
             }
         });
     })();
