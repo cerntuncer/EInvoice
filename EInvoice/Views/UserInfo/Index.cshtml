@@ -33,6 +33,10 @@
                         <input class="form-control" name="Name" value="@Model.Name" />
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label">E-posta</label>
+                        <input class="form-control" value="@Model.Email" readonly />
+                    </div>
+                    <div class="col-md-6 mt-3">
                         <label class="form-label">TCKN/VKN</label>
                         <input class="form-control" name="IdentityNumber" value="@Model.IdentityNumber" readonly />
                     </div>
@@ -56,6 +60,29 @@
         {
             <p>Bilgiler yüklenemedi.</p>
         }
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-key me-1"></i>
+        Şifreyi Değiştir
+    </div>
+    <div class="card-body">
+        <form id="changePasswordForm">
+            @Html.AntiForgeryToken()
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Mevcut Şifre</label>
+                    <input class="form-control" id="cpCurrent" type="password" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Yeni Şifre</label>
+                    <input class="form-control" id="cpNew" type="password" required />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">Şifreyi Güncelle</button>
+        </form>
     </div>
 </div>
 
@@ -93,6 +120,36 @@
                         });
                     }
                 });
+                const cpf = document.getElementById('changePasswordForm');
+                if (cpf) {
+                    cpf.addEventListener('submit', async function(e){
+                        e.preventDefault();
+                        const tokenEl = cpf.querySelector('input[name="__RequestVerificationToken"]');
+                        const antiForgeryToken = tokenEl ? tokenEl.value : '';
+                        const payload = {
+                            currentPassword: document.getElementById('cpCurrent').value,
+                            newPassword: document.getElementById('cpNew').value
+                        };
+                        try {
+                            const resp = await fetch('/UserInfo/ChangePassword', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': antiForgeryToken },
+                                body: JSON.stringify(payload)
+                            });
+                            const data = await resp.json();
+                            await Swal.fire({
+                                icon: data.success ? 'success' : 'error',
+                                title: data.success ? 'Başarılı' : 'Hata',
+                                text: data.message || (data.success ? 'Şifre güncellendi' : 'Şifre güncellenemedi')
+                            });
+                            if (data.success) {
+                                cpf.reset();
+                            }
+                        } catch (err) {
+                            await Swal.fire({ icon: 'error', title: 'Hata', text: 'Beklenmeyen bir hata oluştu.' });
+                        }
+                    });
+                }
             });
         </script>
     }

@@ -21,6 +21,6 @@ namespace PresentationLayer.Models
         public int PersonType { get; set; }
         public int PersonStatus { get; set; }
 
-        // Dashboard data
+        public string Email { get; set; }
     }
 }

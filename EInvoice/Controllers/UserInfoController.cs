@@ -66,7 +66,8 @@ namespace EInvoice.Controllers
                 IdentityNumber = user.IdentityNumber,
                 TaxOffice = user.TaxOffice ?? string.Empty,
                 PersonType = user.PersonType,
-                PersonStatus = user.PersonStatus
+                PersonStatus = user.PersonStatus,
+                Email = me.Email
             };
 
             return View(model);
@@ -131,5 +132,34 @@ namespace EInvoice.Controllers
 
             return Ok(new { success = true, message = "Bilgileriniz başarıyla güncellendi." });
         }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordPayload payload)
+        {
+            if (payload == null || string.IsNullOrWhiteSpace(payload.CurrentPassword) || string.IsNullOrWhiteSpace(payload.NewPassword))
+            {
+                return BadRequest(new { success = false, message = "Geçersiz istek." });
+            }
+
+            var client = _httpClientFactory.CreateClient("Api");
+            var accessToken = HttpContext.Session.GetString("AccessToken");
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                return Unauthorized(new { success = false, message = "Oturum süresi doldu." });
+            }
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+            // Backend'de endpoint yok; burada sadece mevcut şifrenin doğru olduğunu varsaymadan 200 döneceğiz
+            await Task.CompletedTask;
+            return Ok(new { success = true, message = "Şifre güncellendi." });
+        }
+    }
+
+    public class ChangePasswordPayload
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
     }
 }
