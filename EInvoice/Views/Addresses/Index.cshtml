@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Adresler";
 }
 
@@ -16,7 +16,7 @@
 
 <div class="card">
     <div class="card-body">
-        <table id="addressesTable" class="table table-bordered table-striped" style="width:100%">
+        <table id="addressesTable" class="table table-bordered table-striped table-hover align-middle" style="width:100%">
             <thead>
                 <tr>
                     <th>Tür</th>
@@ -165,7 +165,7 @@
                 body.appendChild(tr);
             });
 
-            table = new simpleDatatables.DataTable('#addressesTable');
+            table = new simpleDatatables.DataTable('#addressesTable', { perPage: 10, perPageSelect: [10,25,50,100], labels: { placeholder: 'Ara...', perPage: 'Sayfa başına', noRows: 'Kayıt yok', info: '{start}-{end} / {rows}' } });
         }
 
         async function onSave() {

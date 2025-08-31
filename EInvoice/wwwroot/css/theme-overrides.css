@@ -31,16 +31,24 @@ body {
 }
 
 .sb-topnav.navbar {
-  background: linear-gradient(90deg, #212529, #343a40);
+  background: linear-gradient(90deg, #ffffff, #f8f9fb);
+  border-bottom: 1px solid #eef0f4;
 }
 
 .sb-sidenav-dark {
-  background-color: #2b2f33;
+  background-color: #25282c;
 }
 
 .sb-sidenav .nav-link.active,
 .sb-sidenav .nav-link:hover {
   color: var(--brand-accent);
+}
+
+.sb-sidenav .nav-link {
+  transition: background-color .2s ease, color .2s ease;
+}
+.sb-sidenav .nav-link:hover {
+  background-color: rgba(111, 66, 193, 0.08);
 }
 
 /* Inputs */

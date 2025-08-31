@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Müşteri/Tedarikçi";
 }
 
@@ -21,7 +21,7 @@
 
 <div class="card">
     <div class="card-body">
-        <table id="csTable" class="table table-bordered table-striped" style="width:100%">
+        <table id="csTable" class="table table-bordered table-striped table-hover align-middle" style="width:100%">
             <thead>
                 <tr>
                     <th>Ad</th>
@@ -255,7 +255,7 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#csTable', { perPageSelect: false });
+            table = new simpleDatatables.DataTable('#csTable', { perPage: 10, perPageSelect: [10,25,50,100], labels: { placeholder: 'Ara...', perPage: 'Sayfa başına', noRows: 'Kayıt yok', info: '{start}-{end} / {rows}' } });
         }
 
         async function onSave() {

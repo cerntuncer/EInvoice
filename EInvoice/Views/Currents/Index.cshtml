@@ -1,4 +1,4 @@
-﻿@{
+@{
 	ViewData["Title"] = "Cariler";
 }
 
@@ -18,7 +18,7 @@
 
 <div class="card">
 	<div class="card-body">
-		<table id="currentsTable" class="table table-bordered table-striped" style="width:100%">
+		<table id="currentsTable" class="table table-bordered table-striped table-hover align-middle" style="width:100%">
 			<thead>
 				<tr>
 					<th>Ad</th>
@@ -240,7 +240,7 @@
 				body.appendChild(tr);
 			});
 
-			table = new simpleDatatables.DataTable('#currentsTable');
+			table = new simpleDatatables.DataTable('#currentsTable', { perPage: 10, perPageSelect: [10,25,50,100], labels: { placeholder: 'Ara...', perPage: 'Sayfa başına', noRows: 'Kayıt yok', info: '{start}-{end} / {rows}' } });
 		}
 
 		function renderDetails(r) {
