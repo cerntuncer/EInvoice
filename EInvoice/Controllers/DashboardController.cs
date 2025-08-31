@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using EInvoice.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +42,21 @@ namespace EInvoice.Controllers
                 TempData["ErrorMessage"] = me?.Message ?? "Kullanıcı bilgileri alınamadı.";
                 return View(model: null);
             }
+
+            // Fetch full name for navbar
+            try
+            {
+                var userResponse = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+                if (userResponse.IsSuccessStatusCode)
+                {
+                    var user = await userResponse.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+                    if (user != null && !user.Error)
+                    {
+                        ViewBag.UserFullName = user.PersonName;
+                    }
+                }
+            }
+            catch { }
 
             // Basit model
             var model = new DashboardViewModel();
