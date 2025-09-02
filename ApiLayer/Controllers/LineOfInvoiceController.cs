@@ -1,5 +1,6 @@
 ﻿using BusinessLogicLayer.Handler.LineOfInvoiceHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -17,6 +18,7 @@ namespace ApiLayer.Controllers
             _mediator = mediator;
         }
 
+        [Authorize]
         [HttpPost(Name = "CreateLineOfInvoice")]
         public async Task<IActionResult> Create(CreateLineOfInvoiceHandleRequest request)
         {
@@ -37,6 +39,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // 🔄 UPDATE
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> Update(UpdateLineOfInvoiceHandleRequest request)
         {
@@ -49,6 +52,7 @@ namespace ApiLayer.Controllers
         }
 
         // ❌ DELETE
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {

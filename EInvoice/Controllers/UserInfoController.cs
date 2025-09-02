@@ -151,9 +151,19 @@ namespace EInvoice.Controllers
             }
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-            // Backend'de endpoint yok; burada sadece mevcut şifrenin doğru olduğunu varsaymadan 200 döneceğiz
-            await Task.CompletedTask;
-            return Ok(new { success = true, message = "Şifre güncellendi." });
+            var apiResponse = await client.PostAsJsonAsync("/Credential/ChangePassword", new
+            {
+                currentPassword = payload.CurrentPassword,
+                newPassword = payload.NewPassword
+            });
+            if (!apiResponse.IsSuccessStatusCode)
+            {
+                var err = await apiResponse.Content.ReadFromJsonAsync<dynamic>();
+                var msg = err?.message?.ToString() ?? "Şifre değiştirilemedi.";
+                return BadRequest(new { success = false, message = msg });
+            }
+            var ok = await apiResponse.Content.ReadFromJsonAsync<dynamic>();
+            return Ok(new { success = true, message = (string?)ok?.message ?? "Şifre güncellendi." });
         }
     }
 

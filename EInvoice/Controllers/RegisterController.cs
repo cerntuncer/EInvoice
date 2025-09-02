@@ -37,7 +37,8 @@ namespace PresentationLayer.Controllers
                     name = vm.Name,
                     identityNumber = long.TryParse(vm.IdentityNumber, out var idNo) ? idNo : 0,
                     taxOffice = vm.TaxOffice ?? string.Empty,
-                    type = vm.UserType,
+                    // PersonType.User = 0
+                    type = 0,
                     status = 1
                 },
                 status = 1,

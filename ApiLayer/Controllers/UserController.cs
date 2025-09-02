@@ -1,6 +1,7 @@
 ﻿using BusinessLogicLayer.Handler.UserHandler.Commands;
 using BusinessLogicLayer.Handler.UserHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -18,6 +19,7 @@ namespace ApiLayer.Controllers
         }
         // POST: /User
 
+        [AllowAnonymous]
         [HttpPost(Name = "CreateUser")]
         public async Task<IActionResult> Create(CreateUserHandleRequest request)
         {
@@ -56,6 +58,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // PUT: /User
+        [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> Update(UpdateUserHandleRequest request)
         {
@@ -65,14 +68,15 @@ namespace ApiLayer.Controllers
             return Ok(result.Message);
         }
         // DELETE: /User/{id}?personId=5
+        [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(long id)
         {
             var result = await _mediator.Send(new DeleteUserHandleRequest { Id = id });
             if (result.Error)
-                return UnprocessableEntity(result); 
+                return UnprocessableEntity(result);
             return Ok(result.Message);
         }
-       
+
     }
 }
