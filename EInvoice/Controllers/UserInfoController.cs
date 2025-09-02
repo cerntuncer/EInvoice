@@ -78,12 +78,10 @@ namespace EInvoice.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update(ProfileViewModel model)
+        public async Task<IActionResult> Update([FromForm] ProfileViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { success = false, message = "Geçersiz form verisi." });
-            }
+            if (model == null || string.IsNullOrWhiteSpace(model.Name))
+                return BadRequest(new { success = false, message = "Ad Soyad zorunludur." });
 
             var client = _httpClientFactory.CreateClient("Api");
             var accessToken = HttpContext.Session.GetString("AccessToken");
@@ -171,7 +169,6 @@ namespace EInvoice.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordPayload payload)
         {
             if (payload == null || string.IsNullOrWhiteSpace(payload.CurrentPassword) || string.IsNullOrWhiteSpace(payload.NewPassword))
