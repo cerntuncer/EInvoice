@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
@@ -73,6 +73,22 @@ namespace BusinessLogicLayer.Handler.UserHandler.Commands
                 }
                 else
                 {
+                    // Kayıt tipi bazlı kimlik no uzunluk kontrolü
+                    var idLen = request.Person.IdentityNumber.ToString().Length;
+                    if (request.Type == UserType.NaturalPerson && idLen != 11)
+                    {
+                        message = "Gerçek kişi için TCKN 11 haneli olmalıdır.";
+                    }
+                    else if (request.Type == UserType.LegalEntity && idLen != 10)
+                    {
+                        message = "Tüzel kişi için VKN 10 haneli olmalıdır.";
+                    }
+
+                    if (message != null)
+                    {
+                        return new CreateUserHandleResponse { Error = true, Message = message };
+                    }
+
                     var newPerson = await _mediator.Send(request.Person, cancellationToken);
                     if (newPerson.Error == false && newPerson.Id.HasValue)
                     {
