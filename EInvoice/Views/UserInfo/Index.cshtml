@@ -126,10 +126,17 @@
                         e.preventDefault();
                         const tokenEl = cpf.querySelector('input[name="__RequestVerificationToken"]');
                         const antiForgeryToken = tokenEl ? tokenEl.value : '';
-                        const payload = {
-                            currentPassword: document.getElementById('cpCurrent').value,
-                            newPassword: document.getElementById('cpNew').value
-                        };
+                        const current = document.getElementById('cpCurrent').value;
+                        const next = document.getElementById('cpNew').value;
+                        if (!current || !next) {
+                            await Swal.fire({ icon: 'warning', title: 'Uyarı', text: 'Lütfen tüm alanları doldurun.' });
+                            return;
+                        }
+                        if (next.length < 6) {
+                            await Swal.fire({ icon: 'warning', title: 'Uyarı', text: 'Yeni şifre en az 6 karakter olmalıdır.' });
+                            return;
+                        }
+                        const payload = { currentPassword: current, newPassword: next };
                         try {
                             const resp = await fetch('/UserInfo/ChangePassword', {
                                 method: 'POST',
