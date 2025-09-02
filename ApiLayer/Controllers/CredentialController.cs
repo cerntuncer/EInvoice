@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
+using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -49,6 +49,7 @@ namespace ApiLayer.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordHandleRequest request)
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value
+                        ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
                         ?? User.Identity?.Name;
             if (string.IsNullOrWhiteSpace(email))
                 return Unauthorized(new { error = true, message = "Email bulunamadı, tekrar giriş yapın." });

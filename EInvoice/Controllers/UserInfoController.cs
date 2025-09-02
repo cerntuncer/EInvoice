@@ -1,10 +1,12 @@
-﻿using EInvoice.Models;
+using EInvoice.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 using PresentationLayer.Models;
 using PresentationLayer.Models.ApiRequests;
 using PresentationLayer.Models.ApiResponses;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace EInvoice.Controllers
 {
@@ -129,6 +131,40 @@ namespace EInvoice.Controllers
             {
                 return BadRequest(new { success = false, message = "Kişi bilgileri güncellenemedi." });
             }
+
+            // Kullanıcının cookie claim'indeki ad bilgisini güncelle
+            try
+            {
+                // Güncel kullanıcı adını tekrar çek
+                var refreshedUserRes = await client.GetAsync($"/User/WithPerson/{me.UserId}");
+                if (refreshedUserRes.IsSuccessStatusCode)
+                {
+                    var refreshedUser = await refreshedUserRes.Content.ReadFromJsonAsync<GetUserWithPersonByIdResponse>();
+                    var newFullName = refreshedUser?.PersonName ?? model.Name ?? User?.Identity?.Name;
+
+                    var currentClaims = User?.Claims?.ToList() ?? new List<Claim>();
+                    var nameId = currentClaims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? ("uid:" + (User?.Identity?.Name ?? me.Email));
+                    var email = currentClaims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? me.Email;
+
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, nameId),
+                        new Claim(ClaimTypes.Name, newFullName ?? email),
+                        new Claim(ClaimTypes.Email, email)
+                    };
+
+                    var identity = new ClaimsIdentity(claims, "Cookies");
+                    var principal = new ClaimsPrincipal(identity);
+                    var authProps = new AuthenticationProperties
+                    {
+                        IsPersistent = false,
+                        ExpiresUtc = null,
+                        AllowRefresh = false
+                    };
+                    await HttpContext.SignInAsync("Cookies", principal, authProps);
+                }
+            }
+            catch { /* claim yenileme başarısız olsa bile sessiz geç */ }
 
             return Ok(new { success = true, message = "Bilgileriniz başarıyla güncellendi." });
         }
