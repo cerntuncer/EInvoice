@@ -1,6 +1,7 @@
 using BusinessLogicLayer.Handler.PersonHandler;
 using BusinessLogicLayer.Handler.PersonHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -17,6 +18,7 @@ namespace ApiLayer.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpPost(Name = "CreatePerson")]
         public async Task<IActionResult> Create(CreatePersonHandleRequest request)
         {
@@ -37,6 +39,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
        // PUT :/Person/{id}
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> Update(UpdatePersonHandleRequest request)
         {
@@ -49,6 +52,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
        // DELETE :/Person/{id}
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {

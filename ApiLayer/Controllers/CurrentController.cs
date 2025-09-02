@@ -1,6 +1,7 @@
-﻿using BusinessLogicLayer.Handler.CurrentHandler;
+using BusinessLogicLayer.Handler.CurrentHandler;
 using BusinessLogicLayer.Handler.CurrentHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -14,6 +15,7 @@ public class CurrentController : ControllerBase
         _mediator = mediator;
     }
 
+    [Authorize]
     [HttpPost(Name = "CreateCurrent")]
     public async Task<IActionResult> Create(CreateCurrentHandleRequest request)
     {
@@ -46,6 +48,7 @@ public class CurrentController : ControllerBase
         return Ok(result);
     }
     //PUT: /Current
+    [Authorize]
     [HttpPut(Name = "UpdateCurrent")]
     public async Task<IActionResult> Update(UpdateCurrentHandleRequest request)
     {
@@ -55,6 +58,7 @@ public class CurrentController : ControllerBase
         return Ok(result);
     }
     //DELETE: /Current/{id}?userId=...
+    [Authorize]
     [HttpDelete("{id}", Name = "DeleteCurrent")]
     public async Task<IActionResult> Delete(long id, [FromQuery] long userId)
     {

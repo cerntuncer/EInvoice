@@ -1,5 +1,6 @@
-﻿using BusinessLogicLayer.Handler.AddressHandler.DTOs;
+using BusinessLogicLayer.Handler.AddressHandler.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiLayer.Controllers
@@ -20,6 +21,7 @@ namespace ApiLayer.Controllers
             }
 
             // POST: /Address
+            [Authorize]
             [HttpPost(Name = "CreateAddress")]
             public async Task<IActionResult> Create(CreateAddressHandleRequest request)
             {
@@ -62,6 +64,7 @@ namespace ApiLayer.Controllers
                 return Ok(result); // 200 - Başarılı
             }
         // PUT: /Address
+        [Authorize]
         [HttpPut(Name = "UpdateAddress")]
         public async Task<IActionResult> Update(UpdateAddressHandleRequest request)
         {
@@ -73,6 +76,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // DELETE: /Address/{id}?personId=...
+        [Authorize]
         [HttpDelete("{id}", Name = "DeleteAddress")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long personId)
         {

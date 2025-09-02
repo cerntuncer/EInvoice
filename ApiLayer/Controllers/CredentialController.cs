@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
+using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +14,7 @@ namespace ApiLayer.Controllers
         private readonly IMediator _mediator;
         public CredentialController(IMediator mediator) => _mediator = mediator;
 
+        [Authorize]
         [HttpPost(Name = "CreateCredential")]
         public async Task<IActionResult> Create([FromBody] CreateUserCredentialHandleRequest request)
         {

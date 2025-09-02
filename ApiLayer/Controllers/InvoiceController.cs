@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
+using BusinessLogicLayer.Handler.InvoiceHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +18,7 @@ namespace ApiLayer.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         [HttpPost(Name = "CreateInvoice")]
         public async Task<IActionResult> Create(CreateInvoiceHandleRequest request)
         {
@@ -50,6 +51,7 @@ namespace ApiLayer.Controllers
             return Ok(result);
         }
         // PUT: api/Invoice
+        [Authorize]
         [HttpPut(Name = "UpdateInvoice")]
         public async Task<IActionResult> Update(UpdateInvoiceHandleRequest request)
         {
@@ -62,6 +64,7 @@ namespace ApiLayer.Controllers
         }
 
         // DELETE: api/Invoice/{id}
+        [Authorize]
         [HttpDelete("{id}", Name = "DeleteInvoice")]
         public async Task<IActionResult> Delete(long id)
         {
