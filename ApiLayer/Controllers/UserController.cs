@@ -19,7 +19,7 @@ namespace ApiLayer.Controllers
         }
         // POST: /User
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost(Name = "CreateUser")]
         public async Task<IActionResult> Create(CreateUserHandleRequest request)
         {
