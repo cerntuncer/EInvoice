@@ -46,16 +46,16 @@
                 <form id="formCs">
                     <div class="mb-3">
                         <label class="form-label">Ad</label>
-                        <input type="text" class="form-control" name="personName" />
+                        <input type="text" class="form-control" name="personName" maxlength="50" autocomplete="name" required />
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">TC/Vergi No</label>
-                            <input type="text" class="form-control" name="identityNumber" />
+                            <input type="text" class="form-control" name="identityNumber" inputmode="numeric" pattern="[0-9]{10,11}" maxlength="11" autocomplete="off" required />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Vergi Dairesi</label>
-                            <input type="text" class="form-control" name="taxOffice" />
+                            <input type="text" class="form-control" name="taxOffice" maxlength="150" />
                         </div>
                     </div>
                     <div class="row">
@@ -125,7 +125,7 @@
                         </div>
                         <div class="col-md-12">
                             <label class="form-label">Adres Metni</label>
-                            <input type="text" class="form-control" name="text" />
+                            <input type="text" class="form-control" name="text" maxlength="200" required />
                         </div>
                     </div>
                 </form>
@@ -196,9 +196,17 @@
             });
             document.getElementById('statusFilter').addEventListener('change', renderTable);
 
-            document.getElementById('btnAddressCreate').addEventListener('click', () => {
+            document.getElementById('btnAddressCreate').addEventListener('click', (e) => {
+                const btn = e.currentTarget;
+                btn.setAttribute('disabled', 'disabled');
                 isAddressEdit = false; editingAddressId = null;
                 document.getElementById('formCsAddress').reset();
+                // Odak ilk alana
+                const form = document.getElementById('formCsAddress');
+                form.addressType.value = '1';
+                setTimeout(() => form.text.focus(), 0);
+                // Kısa bir debounce sonrası tekrar etkinleştir
+                setTimeout(() => btn.removeAttribute('disabled'), 300);
             });
             document.getElementById('btnAddressSave').addEventListener('click', onAddressSave);
             document.getElementById('csAddressesTable').addEventListener('click', (e) => {
@@ -260,22 +268,41 @@
 
         async function onSave() {
             const form = document.getElementById('formCs');
+            const saveBtn = document.getElementById('btnSave');
+            saveBtn.setAttribute('disabled', 'disabled');
 
-            const personNameVal = form.personName.value?.trim();
-            const identityNumberVal = form.identityNumber.value?.trim();
-            const taxOfficeVal = form.taxOffice.value?.trim();
+            const personNameVal = (form.personName.value || '').trim();
+            const identityNumberVal = (form.identityNumber.value || '').trim();
+            const taxOfficeVal = (form.taxOffice.value || '').trim();
             const statusVal = Number(form.status.value);
             const typeVal = Number(form.type.value);
 
-            if (!Number.isInteger(typeVal) || (typeVal !== 1 && typeVal !== 2)) { Swal.fire('Hata', 'Geçerli bir kayıt tipi seçiniz.', 'error'); return; }
-            if (!Number.isInteger(statusVal) || (statusVal !== 0 && statusVal !== 1)) { Swal.fire('Hata', 'Geçerli bir durum seçiniz.', 'error'); return; }
+            const errors = [];
+            if (!Number.isInteger(typeVal) || (typeVal !== 1 && typeVal !== 2)) errors.push('Geçerli bir kayıt tipi seçiniz.');
+            if (!Number.isInteger(statusVal) || (statusVal !== 0 && statusVal !== 1)) errors.push('Geçerli bir durum seçiniz.');
+
+            if (!isEdit) {
+                if (!personNameVal) errors.push('Kişi adı zorunludur.');
+                if (personNameVal && personNameVal.length > 50) errors.push('Kişi adı 50 karakterden uzun olamaz.');
+
+                if (!identityNumberVal) errors.push('TC/Vergi No zorunludur.');
+                if (identityNumberVal && !/^[0-9]+$/.test(identityNumberVal)) errors.push('TC/Vergi No sadece rakamlardan oluşmalıdır.');
+                if (identityNumberVal && (identityNumberVal.length < 10 || identityNumberVal.length > 11)) errors.push('TC/Vergi No 10-11 haneli olmalıdır.');
+
+                if (taxOfficeVal && taxOfficeVal.length > 150) errors.push('Vergi Dairesi 150 karakterden uzun olamaz.');
+            }
+
+            if (errors.length > 0) {
+                Swal.fire('Hata', `<ul style="text-align:left">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`, 'error');
+                saveBtn.removeAttribute('disabled');
+                return;
+            }
 
             let payload = { id: editingId, type: typeVal, status: statusVal };
             if (!isEdit) {
-                if (!personNameVal) { Swal.fire('Hata', 'Yeni kişi adını giriniz.', 'error'); return; }
                 payload.person = {
                     name: personNameVal,
-                    identityNumber: identityNumberVal ? Number(identityNumberVal) : 0,
+                    identityNumber: Number(identityNumberVal),
                     taxOffice: taxOfficeVal || '',
                     type: 1,
                     status: statusVal
@@ -286,6 +313,7 @@
                 const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
             }
+            saveBtn.removeAttribute('disabled');
         }
 
         function onEdit(id) {
@@ -367,18 +395,34 @@
 
         async function onAddressSave() {
             const form = document.getElementById('formCsAddress');
-            const payload = {
-                addressType: Number(form.addressType.value),
-                text: form.text.value
-            };
-            if (isAddressEdit) {
-                const body = { id: editingAddressId, ...payload };
-                const res = await fetch(`/CustomersSuppliers/UpdateAddress?id=${currentCsId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
-                if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
-                return;
+            const saveBtn = document.getElementById('btnAddressSave');
+            saveBtn.setAttribute('disabled', 'disabled');
+            try {
+                const addressTypeVal = Number(form.addressType.value);
+                const textVal = (form.text.value || '').trim();
+
+                const errors = [];
+                if (!Number.isInteger(addressTypeVal) || addressTypeVal < 1 || addressTypeVal > 5) errors.push('Geçerli bir adres türü seçiniz.');
+                if (!textVal) errors.push('Adres metni zorunludur.');
+                if (textVal && textVal.length > 200) errors.push('Adres metni 200 karakteri geçemez.');
+
+                if (errors.length > 0) {
+                    Swal.fire('Hata', `<ul style=\"text-align:left\">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`, 'error');
+                    return;
+                }
+
+                const payload = { addressType: addressTypeVal, text: textVal };
+                if (isAddressEdit) {
+                    const body = { id: editingAddressId, ...payload };
+                    const res = await fetch(`/CustomersSuppliers/UpdateAddress?id=${currentCsId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
+                    if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                    return;
+                }
+                const res = await fetch(`/CustomersSuppliers/CreateAddress?id=${currentCsId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+            } finally {
+                saveBtn.removeAttribute('disabled');
             }
-            const res = await fetch(`/CustomersSuppliers/CreateAddress?id=${currentCsId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-            if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
         }
 
         function onAddressEdit(id) {
