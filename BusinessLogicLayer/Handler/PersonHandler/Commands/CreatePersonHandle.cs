@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.PersonHandler.DTOs;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
