@@ -14,7 +14,7 @@
             <option value="1" selected>Aktif</option>
             <option value="0">Pasif</option>
         </select>
-        <button id="btnCreate" class="btn btn-primary btn-sm">Ekle</button>
+        <button id="btnCreate" class="btn btn-primary btn-sm" data-disable-on-click>Ekle</button>
     </div>
     @Html.AntiForgeryToken()
 </div>
@@ -78,7 +78,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                <button id="btnSave" class="btn btn-primary">Kaydet</button>
+                <button id="btnSave" class="btn btn-primary" data-disable-on-click>Kaydet</button>
             </div>
         </div>
     </div>
@@ -95,7 +95,7 @@
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <strong id="csAddressTitle"></strong>
-                    <button id="btnAddressCreate" class="btn btn-primary btn-sm">Adres Ekle</button>
+                    <button id="btnAddressCreate" class="btn btn-primary btn-sm" data-disable-on-click>Adres Ekle</button>
                 </div>
                 <table id="csAddressesTable" class="table table-bordered table-striped" style="width:100%">
                     <thead>
@@ -132,7 +132,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                <button id="btnAddressSave" class="btn btn-primary">Kaydet</button>
+                <button id="btnAddressSave" class="btn btn-primary" data-disable-on-click>Kaydet</button>
             </div>
         </div>
     </div>

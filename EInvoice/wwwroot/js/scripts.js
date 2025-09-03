@@ -3,7 +3,7 @@
     * Copyright 2013-2023 Start Bootstrap
     * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
     */
-    // 
+// 
 // Scripts
 // 
 
@@ -24,3 +24,27 @@ window.addEventListener('DOMContentLoaded', event => {
     }
 
 });
+
+// Global click guard to prevent rapid double-clicks on buttons
+(function () {
+    const lastClickMap = new WeakMap();
+    const DEFAULT_THROTTLE_MS = 700;
+    document.addEventListener('click', function (e) {
+        const el = e.target.closest('button, input[type="submit"], a.btn');
+        if (!el) return;
+        if (el.disabled) return;
+        const now = Date.now();
+        const last = lastClickMap.get(el) || 0;
+        const threshold = Number(el.getAttribute('data-guard-ms') || DEFAULT_THROTTLE_MS);
+        if (now - last < threshold) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        lastClickMap.set(el, now);
+        if (el.hasAttribute('data-disable-on-click')) {
+            el.disabled = true;
+            setTimeout(() => { try { el.disabled = false; } catch { } }, threshold);
+        }
+    }, true);
+})();

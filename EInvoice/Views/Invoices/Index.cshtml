@@ -16,7 +16,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Faturalar</h2>
-    <button id="btnCreate" class="btn btn-primary">Yeni Fatura</button>
+    <button id="btnCreate" class="btn btn-primary" data-disable-on-click data-guard-ms="800">Yeni Fatura</button>
 </div>
 
 <div class="card">
@@ -71,6 +71,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Müşteri/Tedarikçi</label>
+                            <input type="text" id="csSearch" class="form-control form-control-sm mb-1" placeholder="Ara..." />
                             <select class="form-select" name="customerSupplierId"></select>
                         </div>
                     </div>
@@ -78,7 +79,7 @@
                     <hr />
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0">Satırlar</h6>
-                        <button id="btnAddLine" type="button" class="btn btn-sm btn-outline-primary">Satır Ekle</button>
+                        <button id="btnAddLine" type="button" class="btn btn-sm btn-outline-primary" data-disable-on-click>Satır Ekle</button>
                     </div>
 
                     <div class="table-responsive">
@@ -108,7 +109,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                <button id="btnSave" class="btn btn-primary">Kaydet</button>
+                <button id="btnSave" class="btn btn-primary" data-disable-on-click>Kaydet</button>
             </div>
         </div>
     </div>
@@ -176,6 +177,8 @@
             document.getElementById('linesTable').addEventListener('input', onLineChanged);
             document.getElementById('linesTable').addEventListener('click', onLineRemove);
             document.getElementById('invForm').addEventListener('submit', (e) => e.preventDefault());
+            const csSearchEl = document.getElementById('csSearch');
+            if (csSearchEl) csSearchEl.addEventListener('input', onCsSearch);
             // CSRF token for modal form
             if (!document.querySelector('#invForm input[name="__RequestVerificationToken"]')) {
                 const hidden = document.createElement('input');
@@ -279,6 +282,8 @@
             document.querySelector('#invForm').reset();
             fillLookup(document.querySelector('select[name="currentId"]'), currents);
             fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
+            const csSearch = document.getElementById('csSearch');
+            if (csSearch) csSearch.value = '';
             renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: products[0]?.unitPrice || 0, vatRate: 0 }]);
             document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
             modal.show();
@@ -292,6 +297,28 @@
                 opt.textContent = it.name;
                 selectEl.appendChild(opt);
             });
+        }
+
+        function foldTr(text) {
+            const s = String(text || '').toLowerCase();
+            return s
+                .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+                .replaceAll('ı', 'i')
+                .replaceAll('ş', 's')
+                .replaceAll('ğ', 'g')
+                .replaceAll('ç', 'c')
+                .replaceAll('ö', 'o')
+                .replaceAll('ü', 'u');
+        }
+        function onCsSearch(e) {
+            const term = foldTr(e.target.value || '').trim();
+            const form = document.getElementById('invForm');
+            const filtered = term ? csList.filter(x => foldTr(x.name || '').includes(term)) : csList.slice();
+            const previous = form.customerSupplierId.value;
+            fillLookup(form.customerSupplierId, filtered);
+            if (filtered.some(x => String(x.id) === String(previous))) {
+                form.customerSupplierId.value = previous;
+            }
         }
 
         function addEmptyLine() {
@@ -366,7 +393,7 @@
                     <td><input name="vat" type="number" min="0" max="100" step="1" class="form-control" value="${vatRate}" /></td>
                     <td><input name="vatAmount" class="form-control" value="${vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
                     <td><input name="amount" class="form-control" value="${amountGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
-                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
                 body.appendChild(tr);
             });
             document.getElementById('sumTotal').innerText = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -441,6 +468,7 @@
                 }
                 fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
                 fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
+                const csSearch = document.getElementById('csSearch'); if (csSearch) csSearch.value = '';
                 const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ id: (l.id ?? l.Id) ?? null, productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice, vatRate: l.vatRate ?? l.VatRate ?? 0 }));
                 renderLines(lines);
                 document.querySelector('.modal-title').innerText = 'Fatura Güncelle';
