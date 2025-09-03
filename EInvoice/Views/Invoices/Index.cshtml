@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Faturalar";
 }
 
@@ -71,6 +71,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Müşteri/Tedarikçi</label>
+                            <input type="text" id="csSearch" class="form-control form-control-sm mb-1" placeholder="Ara..." />
                             <select class="form-select" name="customerSupplierId"></select>
                         </div>
                     </div>
@@ -176,6 +177,8 @@
             document.getElementById('linesTable').addEventListener('input', onLineChanged);
             document.getElementById('linesTable').addEventListener('click', onLineRemove);
             document.getElementById('invForm').addEventListener('submit', (e) => e.preventDefault());
+            const csSearchEl = document.getElementById('csSearch');
+            if (csSearchEl) csSearchEl.addEventListener('input', onCsSearch);
             // CSRF token for modal form
             if (!document.querySelector('#invForm input[name="__RequestVerificationToken"]')) {
                 const hidden = document.createElement('input');
@@ -279,6 +282,8 @@
             document.querySelector('#invForm').reset();
             fillLookup(document.querySelector('select[name="currentId"]'), currents);
             fillLookup(document.querySelector('select[name="customerSupplierId"]'), csList);
+            const csSearch = document.getElementById('csSearch');
+            if (csSearch) csSearch.value = '';
             renderLines([{ id: null, productAndServiceId: products[0]?.id ?? '', quantity: 1, unitPrice: products[0]?.unitPrice || 0, vatRate: 0 }]);
             document.querySelector('.modal-title').innerText = 'Fatura Oluştur';
             modal.show();
@@ -292,6 +297,17 @@
                 opt.textContent = it.name;
                 selectEl.appendChild(opt);
             });
+        }
+
+        function onCsSearch(e) {
+            const term = (e.target.value || '').toLowerCase().trim();
+            const form = document.getElementById('invForm');
+            const filtered = term ? csList.filter(x => (x.name || '').toLowerCase().includes(term)) : csList.slice();
+            const previous = form.customerSupplierId.value;
+            fillLookup(form.customerSupplierId, filtered);
+            if (filtered.some(x => String(x.id) === String(previous))) {
+                form.customerSupplierId.value = previous;
+            }
         }
 
         function addEmptyLine() {
@@ -441,6 +457,7 @@
                 }
                 fillLookup(form.currentId, currents); form.currentId.value = inv.currentId ?? inv.CurrentId;
                 fillLookup(form.customerSupplierId, csList); form.customerSupplierId.value = inv.customerSupplierId ?? inv.CustomerSupplierId;
+                const csSearch = document.getElementById('csSearch'); if (csSearch) csSearch.value = '';
                 const lines = (inv.lines ?? inv.Lines ?? []).map(l => ({ id: (l.id ?? l.Id) ?? null, productAndServiceId: l.productAndServiceId ?? l.ProductAndServiceId, quantity: l.quantity ?? l.Quantity, unitPrice: l.unitPrice ?? l.UnitPrice, vatRate: l.vatRate ?? l.VatRate ?? 0 }));
                 renderLines(lines);
                 document.querySelector('.modal-title').innerText = 'Fatura Güncelle';
