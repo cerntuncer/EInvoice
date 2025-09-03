@@ -196,9 +196,17 @@
             });
             document.getElementById('statusFilter').addEventListener('change', renderTable);
 
-            document.getElementById('btnAddressCreate').addEventListener('click', () => {
+            document.getElementById('btnAddressCreate').addEventListener('click', (e) => {
+                const btn = e.currentTarget;
+                btn.setAttribute('disabled', 'disabled');
                 isAddressEdit = false; editingAddressId = null;
                 document.getElementById('formCsAddress').reset();
+                // Odak ilk alana
+                const form = document.getElementById('formCsAddress');
+                form.addressType.value = '1';
+                setTimeout(() => form.text.focus(), 0);
+                // Kısa bir debounce sonrası tekrar etkinleştir
+                setTimeout(() => btn.removeAttribute('disabled'), 300);
             });
             document.getElementById('btnAddressSave').addEventListener('click', onAddressSave);
             document.getElementById('csAddressesTable').addEventListener('click', (e) => {
@@ -389,30 +397,32 @@
             const form = document.getElementById('formCsAddress');
             const saveBtn = document.getElementById('btnAddressSave');
             saveBtn.setAttribute('disabled', 'disabled');
-            const addressTypeVal = Number(form.addressType.value);
-            const textVal = (form.text.value || '').trim();
+            try {
+                const addressTypeVal = Number(form.addressType.value);
+                const textVal = (form.text.value || '').trim();
 
-            const errors = [];
-            if (!Number.isInteger(addressTypeVal) || addressTypeVal < 1 || addressTypeVal > 5) errors.push('Geçerli bir adres türü seçiniz.');
-            if (!textVal) errors.push('Adres metni zorunludur.');
-            if (textVal && textVal.length > 200) errors.push('Adres metni 200 karakteri geçemez.');
+                const errors = [];
+                if (!Number.isInteger(addressTypeVal) || addressTypeVal < 1 || addressTypeVal > 5) errors.push('Geçerli bir adres türü seçiniz.');
+                if (!textVal) errors.push('Adres metni zorunludur.');
+                if (textVal && textVal.length > 200) errors.push('Adres metni 200 karakteri geçemez.');
 
-            if (errors.length > 0) {
-                Swal.fire('Hata', `<ul style="text-align:left">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`, 'error');
+                if (errors.length > 0) {
+                    Swal.fire('Hata', `<ul style=\"text-align:left\">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`, 'error');
+                    return;
+                }
+
+                const payload = { addressType: addressTypeVal, text: textVal };
+                if (isAddressEdit) {
+                    const body = { id: editingAddressId, ...payload };
+                    const res = await fetch(`/CustomersSuppliers/UpdateAddress?id=${currentCsId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
+                    if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                    return;
+                }
+                const res = await fetch(`/CustomersSuppliers/CreateAddress?id=${currentCsId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
+                if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+            } finally {
                 saveBtn.removeAttribute('disabled');
-                return;
             }
-
-            const payload = { addressType: addressTypeVal, text: textVal };
-            if (isAddressEdit) {
-                const body = { id: editingAddressId, ...payload };
-                const res = await fetch(`/CustomersSuppliers/UpdateAddress?id=${currentCsId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(body) });
-                if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
-                return;
-            }
-            const res = await fetch(`/CustomersSuppliers/CreateAddress?id=${currentCsId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-            if (res.ok) { await loadAddresses(); Swal.fire('Başarılı', 'Adres oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
-            saveBtn.removeAttribute('disabled');
         }
 
         function onAddressEdit(id) {
