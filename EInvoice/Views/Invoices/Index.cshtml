@@ -299,10 +299,21 @@
             });
         }
 
+        function foldTr(text) {
+            const s = String(text || '').toLowerCase();
+            return s
+                .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+                .replaceAll('ı', 'i')
+                .replaceAll('ş', 's')
+                .replaceAll('ğ', 'g')
+                .replaceAll('ç', 'c')
+                .replaceAll('ö', 'o')
+                .replaceAll('ü', 'u');
+        }
         function onCsSearch(e) {
-            const term = (e.target.value || '').toLowerCase().trim();
+            const term = foldTr(e.target.value || '').trim();
             const form = document.getElementById('invForm');
-            const filtered = term ? csList.filter(x => (x.name || '').toLowerCase().includes(term)) : csList.slice();
+            const filtered = term ? csList.filter(x => foldTr(x.name || '').includes(term)) : csList.slice();
             const previous = form.customerSupplierId.value;
             fillLookup(form.customerSupplierId, filtered);
             if (filtered.some(x => String(x.id) === String(previous))) {
@@ -382,7 +393,7 @@
                     <td><input name="vat" type="number" min="0" max="100" step="1" class="form-control" value="${vatRate}" /></td>
                     <td><input name="vatAmount" class="form-control" value="${vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
                     <td><input name="amount" class="form-control" value="${amountGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" readonly /></td>
-                    <td class="text-center"><button class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
+                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" data-remove="${i}"><i class="fas fa-trash"></i></button></td>`;
                 body.appendChild(tr);
             });
             document.getElementById('sumTotal').innerText = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
