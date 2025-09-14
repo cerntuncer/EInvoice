@@ -4,7 +4,6 @@ using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
 
-
 namespace BusinessLogicLayer.Handler.PersonHandler.Commands
 {
     public class CreatePersonHandle : IRequestHandler<CreatePersonHandleRequest, CreatePersonHandleResponse>
@@ -27,12 +26,10 @@ namespace BusinessLogicLayer.Handler.PersonHandler.Commands
                 message = "İsim Zorunludur";
             else if (request.Name.Length > 50)
                 message = "İsim 50 karakterden uzun olamaz.";
-            else
-            {
-                var identityStr = request.IdentityNumber.ToString().Trim();
-                if (request.IdentityNumber <= 0 || (identityStr.Length != 10 && identityStr.Length != 11))
-                    message = "TCKN 11 hane, VKN 10 hane olmalıdır.";
-            }
+            else if (request.IdentityNumber <= 0 ||
+                     (request.IdentityNumber.ToString().Trim().Length != 10 &&
+                      request.IdentityNumber.ToString().Trim().Length != 11))
+                message = "TCKN 11 hane, VKN 10 hane olmalıdır.";
             else if (!string.IsNullOrWhiteSpace(request.TaxOffice) && request.TaxOffice.Length > 150)
                 message = "Vergi Dairesi adı uzunluğu 150 karakterden fazla olamaz";
             else if (!Enum.IsDefined(typeof(PersonType), request.Type))
