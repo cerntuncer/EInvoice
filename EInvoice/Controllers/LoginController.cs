@@ -4,6 +4,7 @@ using PresentationLayer.Models;
 using System.Security.Claims;
 using PresentationLayer.Models.ApiResponses;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 public class LoginController : Controller
 {
@@ -22,11 +23,28 @@ public class LoginController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForgotPasswordSubmit([FromBody] object payload)
+    public async Task<IActionResult> ForgotPasswordSubmit([FromBody] ForgotPasswordSubmitModel payload)
     {
-        // Not implemented at API level yet; return 200 to simulate success path
-        await Task.CompletedTask;
-        return Ok(new { success = true, message = "Doğrulama için talimatlar gönderildi." });
+        if (payload is null)
+            return BadRequest(new { success = false, message = "Geçersiz istek" });
+
+        var client = _httpClientFactory.CreateClient("Api");
+        var apiRes = await client.PostAsJsonAsync("/Credential/ChangePassword", new
+        {
+            Email = NormalizeEmail(payload.Email ?? string.Empty),
+            IdentityNumber = payload.IdentityNumber,
+            FullName = payload.FullName,
+            NewPassword = payload.NewPassword
+        });
+
+        var data = await apiRes.Content.ReadFromJsonAsync<GenericMessageResponse>();
+        if (!apiRes.IsSuccessStatusCode || data == null)
+        {
+            var raw = await apiRes.Content.ReadAsStringAsync();
+            return UnprocessableEntity(new { success = false, message = data?.Message ?? raw ?? "İşlem başarısız" });
+        }
+
+        return Ok(new { success = true, message = data.Message ?? "Parola sıfırlandı. Yeni şifre ile giriş yapabilirsiniz." });
     }
 
     [HttpPost]
@@ -35,14 +53,30 @@ public class LoginController : Controller
     {
         var client = _httpClientFactory.CreateClient("Api");
         // API'ye sadece gerekli alanları gönder
-        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { model.Email, model.Password });
+        // Normalize email on client side too (trim + lowercase + remove diacritics)
+        var email = (model.Email ?? string.Empty).Trim();
+        var emailNorm = NormalizeEmail(email);
+        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { Email = emailNorm, model.Password });
 
         if (!apiRes.IsSuccessStatusCode)
-            return BadRequest(new { message = "Giriş başarısız" });
+        {
+            if (apiRes.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return Unauthorized(new { message = "E‑posta veya şifre uyuşmuyor." });
+
+            var raw = await apiRes.Content.ReadAsStringAsync();
+            try
+            {
+                using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(raw) ? "{}" : raw);
+                if (doc.RootElement.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String)
+                    return BadRequest(new { message = m.GetString() });
+            }
+            catch { }
+            return BadRequest(new { message = string.IsNullOrWhiteSpace(raw) ? "İşlem başarısız" : raw });
+        }
 
         var data = await apiRes.Content.ReadFromJsonAsync<LoginResponse>();
         if (data is null || string.IsNullOrEmpty(data.AccessToken))
-            return BadRequest(new { message = "Token al�namad�." });
+            return BadRequest(new { message = "Giriş başarısız." });
 
         // 1) Tokenlar� Session�da tut (API �a�r�lar�nda kullanaca��z)
         HttpContext.Session.SetString("AccessToken", data.AccessToken);
@@ -114,5 +148,21 @@ public class LoginController : Controller
         HttpContext.Session.Remove("RefreshToken");
         await HttpContext.SignOutAsync("Cookies");
         return RedirectToAction("Index");
+    }
+    private static string NormalizeEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+        var trimmed = email.Trim();
+        var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(formD.Length);
+        foreach (var ch in formD)
+        {
+            var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(ch);
+            }
+        }
+        return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
     }
 }

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+ï»¿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models;
 using System.Text.Json;
@@ -25,10 +25,10 @@ namespace PresentationLayer.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterViewModel vm)
         {
             if (vm.UserType == 1 && vm.IdentityNumber?.Length != 11)
-                return Json(new { success = false, message = "Gerçek kiþi için TCKN 11 haneli olmalýdýr." });
+                return Json(new { success = false, message = "Gerï¿½ek kiï¿½i iï¿½in TCKN 11 haneli olmalï¿½dï¿½r." });
 
             if (vm.UserType == 2 && vm.IdentityNumber?.Length != 10)
-                return Json(new { success = false, message = "Tüzel kiþi için VKN 10 haneli olmalýdýr." });
+                return Json(new { success = false, message = "Tï¿½zel kiï¿½i iï¿½in VKN 10 haneli olmalï¿½dï¿½r." });
 
             var body = new
             {
@@ -43,7 +43,7 @@ namespace PresentationLayer.Controllers
                 },
                 status = 1,
                 type = vm.UserType,
-                email = vm.Email,
+                email = NormalizeEmail(vm.Email ?? string.Empty),
                 password = vm.Password,
                 lockoutEnabled = true
             };
@@ -57,12 +57,12 @@ namespace PresentationLayer.Controllers
                 {
                     var errText = await response.Content.ReadAsStringAsync();
 
-                    // JSON formatýný çözümleme
+                    // JSON formatï¿½nï¿½ ï¿½ï¿½zï¿½mleme
                     try
                     {
                         var errObj = JsonSerializer.Deserialize<Dictionary<string, object>>(errText);
 
-                        // "errors" varsa oradan mesajlarý çek
+                        // "errors" varsa oradan mesajlarï¿½ ï¿½ek
                         if (errObj != null && errObj.ContainsKey("errors"))
                         {
                             var errors = (JsonElement)errObj["errors"];
@@ -85,19 +85,36 @@ namespace PresentationLayer.Controllers
                     }
                     catch
                     {
-                        // JSON parse edilemezse olduðu gibi döner
+                        // JSON parse edilemezse olduï¿½u gibi dï¿½ner
                         return Json(new { success = false, message = errText });
                     }
 
-                    return Json(new { success = false, message = "Kayýt baþarýsýz." });
+                    return Json(new { success = false, message = "Kayï¿½t baï¿½arï¿½sï¿½z." });
                 }
 
-                return Json(new { success = true, message = "Kayýt baþarýlý! Giriþ yapabilirsiniz." });
+                return Json(new { success = true, message = "KayÄ±t baÅŸarÄ±lÄ±! GiriÅŸ yapabilirsiniz." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Sunucu hatasý: {ex.Message}" });
+                return Json(new { success = false, message = $"Sunucu hatasï¿½: {ex.Message}" });
             }
+        }
+
+        static string NormalizeEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+            var trimmed = email.Trim();
+            var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(formD.Length);
+            foreach (var ch in formD)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
         }
     }
 }

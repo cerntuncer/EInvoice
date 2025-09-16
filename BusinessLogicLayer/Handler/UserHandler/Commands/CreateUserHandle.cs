@@ -159,6 +159,8 @@ namespace BusinessLogicLayer.Handler.UserHandler.Commands
                 // UserId'yi EF kendisi doldurur (User Identity üretince) — aynı context olması şart.
             };
             cred.PasswordHash = _hasher.HashPassword(cred, request.Password);
+            // Email'i normalleştirerek kaydet (büyük/küçük, aksan farklarını gider)
+            cred.Email = NormalizeEmail(cred.Email);
 
             await _credentialRepository.AddAsync(cred);
 
@@ -175,6 +177,23 @@ namespace BusinessLogicLayer.Handler.UserHandler.Commands
                 CredentialId = cred.Id,         // Identity ise Save sonrası dolar
                 Email = cred.Email
             };
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+            var trimmed = email.Trim();
+            var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(formD.Length);
+            foreach (var ch in formD)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
         }
     }
 }

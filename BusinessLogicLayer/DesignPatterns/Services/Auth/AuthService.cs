@@ -28,7 +28,8 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
 
         public async Task<LoginResponse> LoginAsync(string email, string password)//giriş isteği
         {
-            var cred = await _credRepo.GetByEmailAsync(email);
+            var normalizedEmail = NormalizeEmail(email);
+            var cred = await _credRepo.GetByEmailAsync(normalizedEmail);
             if (cred is null) throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");//email yoksa 401 
 
             if (cred.LockoutEnabled && cred.LockoutEnd.HasValue && cred.LockoutEnd > DateTime.UtcNow)
@@ -67,6 +68,23 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
                 RefreshToken = refresh,
                 RefreshTokenExpiresAt = refreshExp
             };
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+            var trimmed = email.Trim();
+            var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(formD.Length);
+            foreach (var ch in formD)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
         }
 
         public async Task<LoginResponse> RefreshAsync(string refreshToken)//müşteri sadece refresh token gönderir,sunucu yeni access ve yeni refresh üretir

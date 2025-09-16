@@ -22,7 +22,7 @@
                                         <input class="form-control" id="inputEmail" name="email" type="email" placeholder="E-posta" required />
                                         <label for="inputEmail">E-posta</label>
                                     </div>
-                                    <div class="form-floating mb-3">
+                                    <div class="form-floating mb-3 mb-md-0">
                                         <input class="form-control" id="inputPassword" name="password" type="password" placeholder="Şifre" required />
                                         <label for="inputPassword">Şifre</label>
                                     </div>
@@ -72,7 +72,7 @@
             btn.disabled = true;
             btn.textContent = "Giriş yapılıyor...";
 
-            const email = document.getElementById("inputEmail").value;
+            const email = document.getElementById("inputEmail").value.trim();
             const password = document.getElementById("inputPassword").value;
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
@@ -101,8 +101,12 @@
                     }
                     window.location.href = "/Dashboard";
                 } else {
-                    const msg = (data && (data.message || data.error)) || raw || "Giriş başarısız";
-                    showMsg(msg, "danger");
+                    if (res.status === 401) {
+                        showMsg("E‑posta veya şifre uyuşmuyor.", "danger");
+                    } else {
+                        const msg = (data && (data.message || data.error)) || raw || "İşlem başarısız";
+                        showMsg(msg, "danger");
+                    }
                 }
             } catch (err) {
                 showMsg("Sunucu hatası: " + err.message, "danger");
