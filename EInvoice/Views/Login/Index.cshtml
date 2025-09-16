@@ -101,8 +101,12 @@
                     }
                     window.location.href = "/Dashboard";
                 } else {
-                    const msg = (data && (data.message || data.error)) || raw || "Giriş başarısız";
-                    showMsg(msg, "danger");
+                    if (res.status === 401) {
+                        showMsg("E‑posta veya şifre uyuşmuyor.", "danger");
+                    } else {
+                        const msg = (data && (data.message || data.error)) || raw || "İşlem başarısız";
+                        showMsg(msg, "danger");
+                    }
                 }
             } catch (err) {
                 showMsg("Sunucu hatası: " + err.message, "danger");

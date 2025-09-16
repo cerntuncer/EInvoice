@@ -4,6 +4,7 @@ using PresentationLayer.Models;
 using System.Security.Claims;
 using PresentationLayer.Models.ApiResponses;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 public class LoginController : Controller
 {
@@ -58,7 +59,20 @@ public class LoginController : Controller
         var apiRes = await client.PostAsJsonAsync("/Auth/login", new { Email = emailNorm, model.Password });
 
         if (!apiRes.IsSuccessStatusCode)
-            return BadRequest(new { message = "Giriş başarısız" });
+        {
+            if (apiRes.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return Unauthorized(new { message = "E‑posta veya şifre uyuşmuyor." });
+
+            var raw = await apiRes.Content.ReadAsStringAsync();
+            try
+            {
+                using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(raw) ? "{}" : raw);
+                if (doc.RootElement.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String)
+                    return BadRequest(new { message = m.GetString() });
+            }
+            catch { }
+            return BadRequest(new { message = string.IsNullOrWhiteSpace(raw) ? "İşlem başarısız" : raw });
+        }
 
         var data = await apiRes.Content.ReadFromJsonAsync<LoginResponse>();
         if (data is null || string.IsNullOrEmpty(data.AccessToken))
