@@ -71,7 +71,8 @@
                     toggleIcon.className = isPwd ? "bi bi-eye-slash" : "bi bi-eye";
                 }
             });
-            // Reveal while mouse is down or button focused (optional UX)
+            // Reveal while mouse is down/hover; hide on leave
+            toggleBtn.addEventListener("mouseenter", function () { pwdInput.setAttribute("type", "text"); });
             toggleBtn.addEventListener("mousedown", function () { pwdInput.setAttribute("type", "text"); });
             toggleBtn.addEventListener("mouseup", function () { pwdInput.setAttribute("type", "password"); });
             toggleBtn.addEventListener("mouseleave", function () { pwdInput.setAttribute("type", "password"); });
