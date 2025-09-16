@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.AuthHandler.Login;
 using DatabaseAccessLayer.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -28,7 +28,8 @@ namespace BusinessLogicLayer.DesignPatterns.Services.Auth
 
         public async Task<LoginResponse> LoginAsync(string email, string password)//giriş isteği
         {
-            var cred = await _credRepo.GetByEmailAsync(email);
+            var normalizedEmail = email?.Trim() ?? string.Empty;
+            var cred = await _credRepo.GetByEmailAsync(normalizedEmail);
             if (cred is null) throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");//email yoksa 401 
 
             if (cred.LockoutEnabled && cred.LockoutEnd.HasValue && cred.LockoutEnd > DateTime.UtcNow)

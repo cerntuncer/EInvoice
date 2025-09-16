@@ -72,7 +72,7 @@
             btn.disabled = true;
             btn.textContent = "Giriş yapılıyor...";
 
-            const email = document.getElementById("inputEmail").value;
+            const email = document.getElementById("inputEmail").value.trim();
             const password = document.getElementById("inputPassword").value;
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 

@@ -52,7 +52,8 @@ public class LoginController : Controller
     {
         var client = _httpClientFactory.CreateClient("Api");
         // API'ye sadece gerekli alanları gönder
-        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { model.Email, model.Password });
+        var email = model.Email?.Trim();
+        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { Email = email, model.Password });
 
         if (!apiRes.IsSuccessStatusCode)
             return BadRequest(new { message = "Giriş başarısız" });
