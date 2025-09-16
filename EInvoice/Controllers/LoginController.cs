@@ -76,7 +76,7 @@ public class LoginController : Controller
 
         var data = await apiRes.Content.ReadFromJsonAsync<LoginResponse>();
         if (data is null || string.IsNullOrEmpty(data.AccessToken))
-            return BadRequest(new { message = "Token al�namad�." });
+            return BadRequest(new { message = "Giriş başarısız." });
 
         // 1) Tokenlar� Session�da tut (API �a�r�lar�nda kullanaca��z)
         HttpContext.Session.SetString("AccessToken", data.AccessToken);

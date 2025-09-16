@@ -14,27 +14,14 @@ namespace DatabaseAccessLayer.Repositories
         public async Task<UserCredential?> GetByEmailAsync(string email)
         {
             var normLower = NormalizeEmail(email);
+            // Tamamen memory tarafında normalize ederek kıyasla (DB collation farklarını by-pass eder)
+            var creds = await _db.UserCredentials
+                                 .Include(c => c.User)
+                                 .ThenInclude(u => u.Person)
+                                 .AsNoTracking()
+                                 .ToListAsync();
 
-            // İlk deneme: server-side kıyas (daha performanslı)
-            var cred = await _db.UserCredentials
-                      .Include(c => c.User)
-                      .ThenInclude(u => u.Person)
-                      .FirstOrDefaultAsync(c => (c.Provider == "Local" || c.Provider == null || c.Provider == "") &&
-                                                c.Email != null &&
-                                                c.Email.Trim().ToLower() == normLower);
-
-            if (cred != null) return cred;
-
-            // İkinci deneme: accent-insensitive normalization (client-side)
-            cred = _db.UserCredentials
-                      .Include(c => c.User)
-                      .ThenInclude(u => u.Person)
-                      .AsNoTracking()
-                      .AsEnumerable()
-                      .FirstOrDefault(c => (c.Provider == "Local" || c.Provider == null || c.Provider == "") &&
-                                           c.Email != null &&
-                                           NormalizeEmail(c.Email) == normLower);
-            return cred;
+            return creds.FirstOrDefault(c => c.Email != null && NormalizeEmail(c.Email) == normLower);
         }
 
         private static string NormalizeEmail(string email)
