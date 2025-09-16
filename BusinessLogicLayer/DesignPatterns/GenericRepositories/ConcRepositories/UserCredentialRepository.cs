@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.BaseRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using DatabaseAccessLayer.Contexts;
 using DatabaseAccessLayer.Entities;
@@ -18,6 +18,7 @@ namespace DatabaseAccessLayer.Repositories
 
             return _db.UserCredentials
                       .Include(c => c.User)
+                      .ThenInclude(u => u.Person)
                       .FirstOrDefaultAsync(c => c.Provider == "Local" &&
                                                 c.Email.ToUpper() == norm);
         }

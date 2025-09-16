@@ -28,7 +28,7 @@ public class LoginController : Controller
             return BadRequest(new { success = false, message = "Geçersiz istek" });
 
         var client = _httpClientFactory.CreateClient("Api");
-        var apiRes = await client.PostAsJsonAsync("/Credential/ResetPassword", new
+        var apiRes = await client.PostAsJsonAsync("/Credential/ChangePassword", new
         {
             Email = payload.Email,
             IdentityNumber = payload.IdentityNumber,

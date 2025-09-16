@@ -45,27 +45,21 @@ namespace ApiLayer.Controllers
         }
 
         [HttpPost("ChangePassword")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordHandleRequest request)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value
+            var emailFromToken = User.FindFirst(ClaimTypes.Email)?.Value
                         ?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value
                         ?? User.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(email))
-                return Unauthorized(new { error = true, message = "Email bulunamadı, tekrar giriş yapın." });
 
-            // Email'i token'dan zorla
-            request.Email = email;
-            var result = await _mediator.Send(request);
-            if (result.Error)
-                return UnprocessableEntity(result);
-            return Ok(result);
-        }
-
-        [HttpPost("ResetPassword")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordHandleRequest request)
-        {
+            if (!string.IsNullOrWhiteSpace(emailFromToken))
+            {
+                request.Email = emailFromToken;
+            }
+            else if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { error = true, message = "Email zorunludur." });
+            }
             var result = await _mediator.Send(request);
             if (result.Error)
                 return UnprocessableEntity(result);
