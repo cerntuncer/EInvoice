@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using MediatR;
 
@@ -23,12 +23,14 @@ public class DeleteCustomerSupplierHandle : IRequestHandler<DeleteCustomerSuppli
             };
         }
 
-        _repository.Delete(entity);
+        // Soft delete: pasif işaretle, silme
+        entity.Status = DatabaseAccessLayer.Enumerations.Status.Passive;
+        _repository.Update(entity);
 
         return new DeleteCustomerSupplierHandleResponse
         {
             Error = false,
-            Message = "Müşteri/Tedarikçi silindi."
+            Message = "Müşteri/Tedarikçi pasif yapıldı."
         };
     }
 }

@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -28,6 +28,8 @@ public class UpdateCustomerSupplierHandle : IRequestHandler<UpdateCustomerSuppli
 
             if (message == null && !Enum.IsDefined(typeof(Status), request.Status))
                 message = "Geçersiz durum tipi.";
+
+            // Pasif yaparken ek kurallar vs burada ele alınabilir.
         }
 
         if (message != null)

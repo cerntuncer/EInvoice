@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Enumerations;
+using DatabaseAccessLayer.Enumerations;
 using DatabaseAccessLayer.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,7 +10,7 @@ namespace DatabaseAccessLayer.Entities
     {
 
         [Required]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Name { get; set; } 
         public long IdentityNumber { get; set; }
         [MaxLength(150)]

@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.UserHandler;
@@ -37,6 +37,32 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Commands
                     message = "PersonId ya da Yeni oluşturalacak Person Bilgileri iletilmelidir";
                 else
                 {
+                    // Kimlik numarası sadece rakam ve tip bazlı uzunluk doğrulaması
+                    var idStr = request.Person.IdentityNumber.ToString().Trim();
+                    if (!long.TryParse(idStr, out _))
+                    {
+                        message = "TC/Vergi No sadece rakamlardan oluşmalıdır.";
+                    }
+                    else if (request.Type == CustomerOrSupplierType.Customer && idStr.Length != 11)
+                    {
+                        message = "Müşteri için TCKN 11 haneli olmalıdır.";
+                    }
+                    else if (request.Type == CustomerOrSupplierType.Supplier && idStr.Length != 10)
+                    {
+                        message = "Tedarikçi için VKN 10 haneli olmalıdır.";
+                    }
+
+                    // Tedarikçi ise vergi dairesi zorunlu
+                    if (message == null && request.Type == CustomerOrSupplierType.Supplier && string.IsNullOrWhiteSpace(request.Person.TaxOffice))
+                    {
+                        message = "Tedarikçi için Vergi Dairesi zorunludur.";
+                    }
+
+                    if (message != null)
+                    {
+                        return new CreateCustomerSupplierHandleResponse { Error = true, Message = message };
+                    }
+
                     var newPerson = await _mediator.Send(request.Person, cancellationToken);
                     if (newPerson.Error == false)
                     {
@@ -94,7 +120,9 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Commands
             return new CreateCustomerSupplierHandleResponse
             {
                 Message = message,
-                Error = false
+                Error = false,
+                Id = customerSupplier.Id,
+                PersonId = personId
             };
         }
     }

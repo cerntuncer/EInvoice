@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Müşteri/Tedarikçi";
 }
 
@@ -46,12 +46,12 @@
                 <form id="formCs">
                     <div class="mb-3">
                         <label class="form-label">Ad</label>
-                        <input type="text" class="form-control" name="personName" maxlength="50" autocomplete="name" required />
+                        <input type="text" class="form-control" name="personName" maxlength="100" autocomplete="name" required />
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">TC/Vergi No</label>
-                            <input type="text" class="form-control" name="identityNumber" inputmode="numeric" pattern="[0-9]{10,11}" maxlength="11" autocomplete="off" required />
+                            <input type="text" class="form-control" name="identityNumber" inputmode="numeric" maxlength="11" autocomplete="off" required />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Vergi Dairesi</label>
@@ -73,6 +73,20 @@
                             <option value="1">Müşteri</option>
                             <option value="2">Tedarikçi</option>
                         </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefon</label>
+                            <input type="tel" class="form-control" name="phone" maxlength="20" autocomplete="tel" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-posta</label>
+                            <input type="email" class="form-control" name="email" maxlength="100" autocomplete="email" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Not</label>
+                        <textarea class="form-control" name="note" rows="2" maxlength="300" placeholder="İsteğe bağlı not"></textarea>
                     </div>
                 </form>
             </div>
@@ -185,6 +199,7 @@
                 modal.show();
             });
             document.getElementById('btnSave').addEventListener('click', onSave);
+            document.getElementById('formCs').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); onSave(); } });
             document.getElementById('csTable').addEventListener('click', (e) => {
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
@@ -195,6 +210,16 @@
                 else if (btn.dataset.action === 'addresses') openAddresses(id);
             });
             document.getElementById('statusFilter').addEventListener('change', renderTable);
+            // Kimlik numarası sadece rakam
+            const idInput = document.querySelector('#formCs input[name="identityNumber"]');
+            idInput.addEventListener('input', (e) => { e.target.value = (e.target.value || '').replace(/\D+/g, '').slice(0, 11); });
+            idInput.addEventListener('paste', (e) => { setTimeout(() => { idInput.value = (idInput.value || '').replace(/\D+/g, '').slice(0, 11); }, 0); });
+            // Dinamik tip değişiminde alan zorunlulukları
+            document.querySelector('#formCs select[name="type"]').addEventListener('change', (e) => {
+                const val = Number(e.target.value);
+                const taxOffice = document.querySelector('#formCs input[name="taxOffice"]');
+                taxOffice.required = (val === 2);
+            });
 
             document.getElementById('btnAddressCreate').addEventListener('click', (e) => {
                 const btn = e.currentTarget;
@@ -249,10 +274,11 @@
                 body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok</td></tr>`;
                 return;
             }
+            const esc = (s) => (s ?? '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             rows.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${r.personName}</td>
+                    <td>${esc(r.personName)}</td>
                     <td>${typeMap[r.type] ?? r.type}</td>
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
@@ -263,7 +289,11 @@
                     </td>`;
                 body.appendChild(tr);
             });
-            table = new simpleDatatables.DataTable('#csTable', { perPage: 10, perPageSelect: [10,25,50,100], labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok' , info: 'Toplam {rows} kayıttan {start}–{end} arası gösteriliyor' } });
+            table = new simpleDatatables.DataTable('#csTable', {
+                perPage: 10,
+                perPageSelect: [10, 25, 50, 100],
+                labels: { placeholder: 'Ara...', perPage: '', noRows: 'Kayıt yok', info: 'Toplam {rows} kayıttan {start}–{end} arası gösteriliyor' }
+            });
         }
 
         async function onSave() {
@@ -282,14 +312,17 @@
             if (!Number.isInteger(statusVal) || (statusVal !== 0 && statusVal !== 1)) errors.push('Geçerli bir durum seçiniz.');
 
             if (!isEdit) {
-                if (!personNameVal) errors.push('Kişi adı zorunludur.');
-                if (personNameVal && personNameVal.length > 50) errors.push('Kişi adı 50 karakterden uzun olamaz.');
+                if (!personNameVal) errors.push('Ad zorunludur.');
+                if (personNameVal && (personNameVal.length < 2 || personNameVal.length > 100)) errors.push('Ad 2-100 karakter olmalıdır.');
+                if (personNameVal && !/^[\p{L}0-9 ]+$/u.test(personNameVal)) errors.push('Ad yalnızca harf, rakam ve boşluk içermelidir.');
 
                 if (!identityNumberVal) errors.push('TC/Vergi No zorunludur.');
                 if (identityNumberVal && !/^[0-9]+$/.test(identityNumberVal)) errors.push('TC/Vergi No sadece rakamlardan oluşmalıdır.');
-                if (identityNumberVal && (identityNumberVal.length < 10 || identityNumberVal.length > 11)) errors.push('TC/Vergi No 10-11 haneli olmalıdır.');
+                if (typeVal === 1 && identityNumberVal.length !== 11) errors.push('Müşteri için TCKN 11 haneli olmalıdır.');
+                if (typeVal === 2 && identityNumberVal.length !== 10) errors.push('Tedarikçi için VKN 10 haneli olmalıdır.');
 
                 if (taxOfficeVal && taxOfficeVal.length > 150) errors.push('Vergi Dairesi 150 karakterden uzun olamaz.');
+                if (typeVal === 2 && !taxOfficeVal) errors.push('Tedarikçi için Vergi Dairesi zorunludur.');
             }
 
             if (errors.length > 0) {
@@ -308,7 +341,29 @@
                     status: statusVal
                 };
                 const res = await fetch('/CustomersSuppliers/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-                if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt oluşturuldu', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                if (res.ok) {
+                    // İsteğe bağlı: telefon/e-posta adres oluştur
+                    const j = await res.json().catch(() => ({}));
+                    const createdId = j.Id ?? j.id ?? null;
+                    const phoneVal = (form.phone.value || '').trim();
+                    const emailVal = (form.email.value || '').trim();
+                    try {
+                        if (createdId && phoneVal) {
+                            await fetch(`/CustomersSuppliers/CreateAddress?id=${createdId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify({ addressType: 4, text: phoneVal }) });
+                        }
+                        if (createdId && emailVal) {
+                            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+                            if (!emailOk) throw new Error('E-posta formatı geçersiz.');
+                            await fetch(`/CustomersSuppliers/CreateAddress?id=${createdId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify({ addressType: 1, text: emailVal }) });
+                        }
+                    } catch (e) {
+                        // Adres oluşturma yanlış ise sadece uyar; ana kayıt oluştu.
+                        console.warn('Adres oluşturulamadı', e);
+                    }
+                    modal.hide();
+                    await loadData();
+                    Swal.fire('Başarılı', 'Kayıt başarıyla eklendi', 'success');
+                } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
             } else {
                 const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
@@ -379,11 +434,12 @@
                 body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Kayıt yok</td></tr>`;
                 return;
             }
+            const esc = (s) => (s ?? '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             cachedAddresses.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${addressTypeMap[r.addressType] || r.addressType}</td>
-                    <td>${r.text}</td>
+                    <td>${esc(r.text)}</td>
                     <td>${r.status === 1 ? 'Aktif' : 'Pasif'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="${r.id}">Güncelle</button>

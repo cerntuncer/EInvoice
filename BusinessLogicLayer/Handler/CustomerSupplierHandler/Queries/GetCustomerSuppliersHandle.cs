@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using DatabaseAccessLayer.Enumerations;
 using MediatR;
@@ -34,8 +34,9 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Queries
             {
                 return new GetCustomerSuppliersHandleResponse
                 {
-                    Error = true,
-                    Message = "Kayıt bulunamadı."
+                    Error = false,
+                    Message = "Kayıt bulunamadı.",
+                    Items = new List<CustomerSupplierListItemDto>()
                 };
             }
 
