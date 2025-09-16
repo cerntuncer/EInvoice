@@ -74,20 +74,7 @@
                             <option value="2">Tedarikçi</option>
                         </select>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Telefon</label>
-                            <input type="tel" class="form-control" name="phone" maxlength="20" autocomplete="tel" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">E-posta</label>
-                            <input type="email" class="form-control" name="email" maxlength="100" autocomplete="email" />
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Not</label>
-                        <textarea class="form-control" name="note" rows="2" maxlength="300" placeholder="İsteğe bağlı not"></textarea>
-                    </div>
+                    
                 </form>
             </div>
             <div class="modal-footer">
@@ -341,29 +328,7 @@
                     status: statusVal
                 };
                 const res = await fetch('/CustomersSuppliers/Create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
-                if (res.ok) {
-                    // İsteğe bağlı: telefon/e-posta adres oluştur
-                    const j = await res.json().catch(() => ({}));
-                    const createdId = j.Id ?? j.id ?? null;
-                    const phoneVal = (form.phone.value || '').trim();
-                    const emailVal = (form.email.value || '').trim();
-                    try {
-                        if (createdId && phoneVal) {
-                            await fetch(`/CustomersSuppliers/CreateAddress?id=${createdId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify({ addressType: 4, text: phoneVal }) });
-                        }
-                        if (createdId && emailVal) {
-                            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
-                            if (!emailOk) throw new Error('E-posta formatı geçersiz.');
-                            await fetch(`/CustomersSuppliers/CreateAddress?id=${createdId}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify({ addressType: 1, text: emailVal }) });
-                        }
-                    } catch (e) {
-                        // Adres oluşturma yanlış ise sadece uyar; ana kayıt oluştu.
-                        console.warn('Adres oluşturulamadı', e);
-                    }
-                    modal.hide();
-                    await loadData();
-                    Swal.fire('Başarılı', 'Kayıt başarıyla eklendi', 'success');
-                } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
+                if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt başarıyla eklendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
             } else {
                 const res = await fetch('/CustomersSuppliers/Update', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getCsrf() }, body: JSON.stringify(payload) });
                 if (res.ok) { modal.hide(); await loadData(); Swal.fire('Başarılı', 'Kayıt güncellendi', 'success'); } else { Swal.fire('Hata', await getErrorMessage(res), 'error'); }
