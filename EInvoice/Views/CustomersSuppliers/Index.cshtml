@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Müşteri/Tedarikçi";
 }
 
@@ -46,12 +46,12 @@
                 <form id="formCs">
                     <div class="mb-3">
                         <label class="form-label">Ad</label>
-                        <input type="text" class="form-control" name="personName" maxlength="50" autocomplete="name" required />
+                        <input type="text" class="form-control" name="personName" maxlength="100" minlength="2" autocomplete="name" required />
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">TC/Vergi No</label>
-                            <input type="text" class="form-control" name="identityNumber" inputmode="numeric" pattern="[0-9]{10,11}" maxlength="11" autocomplete="off" required />
+                            <input type="text" class="form-control" name="identityNumber" inputmode="numeric" pattern="^[0-9]{11}$" maxlength="11" autocomplete="off" required />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Vergi Dairesi</label>
@@ -182,6 +182,7 @@
                 form.personName.disabled = false;
                 form.identityNumber.disabled = false;
                 form.taxOffice.disabled = false;
+                updateTypeDependentFields();
                 modal.show();
             });
             document.getElementById('btnSave').addEventListener('click', onSave);
@@ -195,6 +196,18 @@
                 else if (btn.dataset.action === 'addresses') openAddresses(id);
             });
             document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+            const form = document.getElementById('formCs');
+            form.type.addEventListener('change', updateTypeDependentFields);
+            form.identityNumber.addEventListener('input', () => {
+                form.identityNumber.value = (form.identityNumber.value || '').replace(/\D/g, '');
+            });
+            form.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onSave();
+                }
+            });
 
             document.getElementById('btnAddressCreate').addEventListener('click', (e) => {
                 const btn = e.currentTarget;
@@ -216,6 +229,20 @@
                 if (btn.dataset.action === 'edit') onAddressEdit(id);
                 else if (btn.dataset.action === 'delete') onAddressDelete(id);
             });
+        }
+
+        function updateTypeDependentFields() {
+            const form = document.getElementById('formCs');
+            const typeVal = Number(form.type.value);
+            if (typeVal === 2) { // Tedarikçi
+                form.identityNumber.maxLength = 10;
+                form.identityNumber.setAttribute('pattern', '^[0-9]{10}$');
+                form.taxOffice.setAttribute('required', 'required');
+            } else { // Müşteri
+                form.identityNumber.maxLength = 11;
+                form.identityNumber.setAttribute('pattern', '^[0-9]{11}$');
+                form.taxOffice.removeAttribute('required');
+            }
         }
 
         async function loadData() {
@@ -282,14 +309,20 @@
             if (!Number.isInteger(statusVal) || (statusVal !== 0 && statusVal !== 1)) errors.push('Geçerli bir durum seçiniz.');
 
             if (!isEdit) {
-                if (!personNameVal) errors.push('Kişi adı zorunludur.');
-                if (personNameVal && personNameVal.length > 50) errors.push('Kişi adı 50 karakterden uzun olamaz.');
+                if (!personNameVal) errors.push('Ad zorunludur.');
+                if (personNameVal && personNameVal.length < 2) errors.push('Ad en az 2 karakter olmalıdır.');
+                if (personNameVal && personNameVal.length > 100) errors.push('Ad 100 karakterden uzun olamaz.');
+                if (personNameVal && /[<>]/.test(personNameVal)) errors.push('Ad alanında geçersiz karakterler bulunmaktadır.');
+                if (personNameVal && !/^[A-Za-zÇĞİÖŞÜçğıöşü0-9 ]+$/.test(personNameVal)) errors.push('Ad sadece harf ve rakamlardan oluşmalıdır.');
 
                 if (!identityNumberVal) errors.push('TC/Vergi No zorunludur.');
                 if (identityNumberVal && !/^[0-9]+$/.test(identityNumberVal)) errors.push('TC/Vergi No sadece rakamlardan oluşmalıdır.');
-                if (identityNumberVal && (identityNumberVal.length < 10 || identityNumberVal.length > 11)) errors.push('TC/Vergi No 10-11 haneli olmalıdır.');
+                if (typeVal === 1 && identityNumberVal && identityNumberVal.length !== 11) errors.push('TC Kimlik numarası 11 haneli olmalıdır.');
+                if (typeVal === 2 && identityNumberVal && identityNumberVal.length !== 10) errors.push('Vergi kimlik numarası 10 haneli olmalıdır.');
 
+                if (typeVal === 2 && !taxOfficeVal) errors.push('Tedarikçi için vergi dairesi zorunludur.');
                 if (taxOfficeVal && taxOfficeVal.length > 150) errors.push('Vergi Dairesi 150 karakterden uzun olamaz.');
+                if (taxOfficeVal && /[<>]/.test(taxOfficeVal)) errors.push('Vergi Dairesi alanında geçersiz karakterler bulunmaktadır.');
             }
 
             if (errors.length > 0) {

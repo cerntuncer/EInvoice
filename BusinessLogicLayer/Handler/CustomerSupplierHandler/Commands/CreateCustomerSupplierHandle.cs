@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.ConcRepositories;
 using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.CustomerSupplierHandler.DTOs;
 using BusinessLogicLayer.Handler.UserHandler;
@@ -37,6 +37,23 @@ namespace BusinessLogicLayer.Handler.CustomerSupplierHandler.Commands
                     message = "PersonId ya da Yeni oluşturalacak Person Bilgileri iletilmelidir";
                 else
                 {
+                    // Additional server-side validations for TC/VKN and required tax office when Supplier
+                    var idLen = request.Person.IdentityNumber.ToString().Trim().Length;
+                    if (request.Type == CustomerOrSupplierType.Customer && idLen != 11)
+                        message = "TC Kimlik numarası 11 haneli olmalıdır.";
+                    else if (request.Type == CustomerOrSupplierType.Supplier && idLen != 10)
+                        message = "Vergi kimlik numarası 10 haneli olmalıdır.";
+                    else if (request.Type == CustomerOrSupplierType.Supplier && string.IsNullOrWhiteSpace(request.Person.TaxOffice))
+                        message = "Tedarikçi için vergi dairesi zorunludur.";
+
+                    if (message != null)
+                    {
+                        return new CreateCustomerSupplierHandleResponse
+                        {
+                            Message = message,
+                            Error = true
+                        };
+                    }
                     var newPerson = await _mediator.Send(request.Person, cancellationToken);
                     if (newPerson.Error == false)
                     {

@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
+using BusinessLogicLayer.DesignPatterns.GenericRepositories.InterfaceRepositories;
 using BusinessLogicLayer.Handler.PersonHandler.DTOs;
 using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Enumerations;
@@ -24,8 +24,12 @@ namespace BusinessLogicLayer.Handler.PersonHandler.Commands
                 message = "Request Boş Olamaz";
             else if (string.IsNullOrWhiteSpace(request.Name))
                 message = "İsim Zorunludur";
-            else if (request.Name.Length > 50)
-                message = "İsim 50 karakterden uzun olamaz.";
+            else if (request.Name.Trim().Length < 2)
+                message = "İsim en az 2 karakter olmalıdır.";
+            else if (request.Name.Length > 100)
+                message = "İsim 100 karakterden uzun olamaz.";
+            else if (request.Name.Any(c => c == '<' || c == '>'))
+                message = "İsim alanında geçersiz karakterler bulunmaktadır.";
             else if (request.IdentityNumber <= 0 ||
                      (request.IdentityNumber.ToString().Trim().Length != 10 &&
                       request.IdentityNumber.ToString().Trim().Length != 11))
@@ -36,6 +40,16 @@ namespace BusinessLogicLayer.Handler.PersonHandler.Commands
                 message = "Kullanıcı Tipi Uyumlu Değildir.";
             else if (!Enum.IsDefined(typeof(Status), request.Status))
                 message = "Durum bilgisi geçersiz.";
+
+            if (message == null)
+            {
+                // Uniqueness by IdentityNumber
+                var exists = _repository.Any(p => p.IdentityNumber == request.IdentityNumber);
+                if (exists)
+                {
+                    message = "Bu TC/Vergi No ile zaten bir kayıt bulunmaktadır.";
+                }
+            }
 
             if (message != null)
             {

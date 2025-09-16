@@ -1,4 +1,4 @@
-﻿using DatabaseAccessLayer.Entities;
+using DatabaseAccessLayer.Entities;
 using DatabaseAccessLayer.Options;
 using MAP.Options;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +39,7 @@ namespace DatabaseAccessLayer.Contexts
             modelBuilder.ApplyConfiguration(new UserMap());
             modelBuilder.ApplyConfiguration(new UserCredentialMap());
             modelBuilder.ApplyConfiguration(new ProductAndServiceMap());
+            modelBuilder.ApplyConfiguration(new PersonMap());
         }
 
         public async Task<IDbContextTransaction> BeginTransactionAsync()
