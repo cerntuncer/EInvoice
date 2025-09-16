@@ -14,13 +14,13 @@ namespace DatabaseAccessLayer.Repositories
         public Task<UserCredential?> GetByEmailAsync(string email)
         {
             var norm = email.Trim().ToUpperInvariant();
-            //Trim() + ToUpperInvariant(): basit normalizasyon (boşlukları at, büyük harfe çevir).
-
+            // Hem veritabanındaki e-postayı hem de girişi trim + upper ile karşılaştır
             return _db.UserCredentials
                       .Include(c => c.User)
                       .ThenInclude(u => u.Person)
-                      .FirstOrDefaultAsync(c => c.Provider == "Local" &&
-                                                c.Email.ToUpper() == norm);
+                      .FirstOrDefaultAsync(c => (c.Provider == "Local" || c.Provider == null || c.Provider == "") &&
+                                                c.Email != null &&
+                                                c.Email.Trim().ToUpper() == norm);
         }
 
         // Refresh token ile kimlik getir

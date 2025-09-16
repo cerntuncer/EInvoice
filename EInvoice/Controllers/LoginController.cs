@@ -30,7 +30,7 @@ public class LoginController : Controller
         var client = _httpClientFactory.CreateClient("Api");
         var apiRes = await client.PostAsJsonAsync("/Credential/ChangePassword", new
         {
-            Email = payload.Email,
+            Email = payload.Email?.Trim(),
             IdentityNumber = payload.IdentityNumber,
             FullName = payload.FullName,
             NewPassword = payload.NewPassword
