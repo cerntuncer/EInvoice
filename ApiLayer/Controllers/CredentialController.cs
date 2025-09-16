@@ -1,4 +1,4 @@
-﻿using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
+using BusinessLogicLayer.Handler.UserCredentialHandler.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -56,6 +56,16 @@ namespace ApiLayer.Controllers
 
             // Email'i token'dan zorla
             request.Email = email;
+            var result = await _mediator.Send(request);
+            if (result.Error)
+                return UnprocessableEntity(result);
+            return Ok(result);
+        }
+
+        [HttpPost("ResetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordHandleRequest request)
+        {
             var result = await _mediator.Send(request);
             if (result.Error)
                 return UnprocessableEntity(result);

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Login Page";
 }
 
@@ -22,9 +22,12 @@
                                         <input class="form-control" id="inputEmail" name="email" type="email" placeholder="E-posta" required />
                                         <label for="inputEmail">E-posta</label>
                                     </div>
-                                    <div class="form-floating mb-3">
+                                    <div class="form-floating mb-3 position-relative">
                                         <input class="form-control" id="inputPassword" name="password" type="password" placeholder="Şifre" required />
                                         <label for="inputPassword">Şifre</label>
+                                        <button type="button" id="togglePassword" class="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2" tabindex="-1" aria-label="Şifreyi göster/gizle">
+                                            <span id="toggleIcon" class="bi bi-eye"></span>
+                                        </button>
                                     </div>
 
                                     <div class="d-flex justify-content-end mb-3">
@@ -56,6 +59,23 @@
         const msgBox = document.getElementById("loginMessage");
         const btn = document.getElementById("loginButton");
         let isSubmitting = false;
+        // Password visibility toggle
+        const pwdInput = document.getElementById("inputPassword");
+        const toggleBtn = document.getElementById("togglePassword");
+        const toggleIcon = document.getElementById("toggleIcon");
+        if (toggleBtn && pwdInput) {
+            toggleBtn.addEventListener("click", function () {
+                const isPwd = pwdInput.getAttribute("type") === "password";
+                pwdInput.setAttribute("type", isPwd ? "text" : "password");
+                if (toggleIcon) {
+                    toggleIcon.className = isPwd ? "bi bi-eye-slash" : "bi bi-eye";
+                }
+            });
+            // Reveal while mouse is down or button focused (optional UX)
+            toggleBtn.addEventListener("mousedown", function () { pwdInput.setAttribute("type", "text"); });
+            toggleBtn.addEventListener("mouseup", function () { pwdInput.setAttribute("type", "password"); });
+            toggleBtn.addEventListener("mouseleave", function () { pwdInput.setAttribute("type", "password"); });
+        }
 
         function showMsg(text, type) {
             msgBox.className = "alert alert-" + type;

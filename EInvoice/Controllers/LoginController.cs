@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using PresentationLayer.Models;
 using System.Security.Claims;
@@ -22,11 +22,28 @@ public class LoginController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ForgotPasswordSubmit([FromBody] object payload)
+    public async Task<IActionResult> ForgotPasswordSubmit([FromBody] ForgotPasswordSubmitModel payload)
     {
-        // Not implemented at API level yet; return 200 to simulate success path
-        await Task.CompletedTask;
-        return Ok(new { success = true, message = "Doğrulama için talimatlar gönderildi." });
+        if (payload is null)
+            return BadRequest(new { success = false, message = "Geçersiz istek" });
+
+        var client = _httpClientFactory.CreateClient("Api");
+        var apiRes = await client.PostAsJsonAsync("/Credential/ResetPassword", new
+        {
+            Email = payload.Email,
+            IdentityNumber = payload.IdentityNumber,
+            FullName = payload.FullName,
+            NewPassword = payload.NewPassword
+        });
+
+        var data = await apiRes.Content.ReadFromJsonAsync<GenericMessageResponse>();
+        if (!apiRes.IsSuccessStatusCode || data == null)
+        {
+            var raw = await apiRes.Content.ReadAsStringAsync();
+            return UnprocessableEntity(new { success = false, message = data?.Message ?? raw ?? "İşlem başarısız" });
+        }
+
+        return Ok(new { success = true, message = data.Message ?? "Parola sıfırlandı. Yeni şifre ile giriş yapabilirsiniz." });
     }
 
     [HttpPost]
