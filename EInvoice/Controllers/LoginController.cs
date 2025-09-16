@@ -135,21 +135,20 @@ public class LoginController : Controller
         await HttpContext.SignOutAsync("Cookies");
         return RedirectToAction("Index");
     }
-}
-
-static string NormalizeEmail(string email)
-{
-    if (string.IsNullOrWhiteSpace(email)) return string.Empty;
-    var trimmed = email.Trim();
-    var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
-    var sb = new System.Text.StringBuilder(formD.Length);
-    foreach (var ch in formD)
+    private static string NormalizeEmail(string email)
     {
-        var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
-        if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+        if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+        var trimmed = email.Trim();
+        var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(formD.Length);
+        foreach (var ch in formD)
         {
-            sb.Append(ch);
+            var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(ch);
+            }
         }
+        return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
     }
-    return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
 }
