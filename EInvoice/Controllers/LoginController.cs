@@ -30,7 +30,7 @@ public class LoginController : Controller
         var client = _httpClientFactory.CreateClient("Api");
         var apiRes = await client.PostAsJsonAsync("/Credential/ChangePassword", new
         {
-            Email = payload.Email?.Trim(),
+            Email = NormalizeEmail(payload.Email ?? string.Empty),
             IdentityNumber = payload.IdentityNumber,
             FullName = payload.FullName,
             NewPassword = payload.NewPassword
@@ -52,8 +52,10 @@ public class LoginController : Controller
     {
         var client = _httpClientFactory.CreateClient("Api");
         // API'ye sadece gerekli alanları gönder
-        var email = model.Email?.Trim();
-        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { Email = email, model.Password });
+        // Normalize email on client side too (trim + lowercase + remove diacritics)
+        var email = (model.Email ?? string.Empty).Trim();
+        var emailNorm = NormalizeEmail(email);
+        var apiRes = await client.PostAsJsonAsync("/Auth/login", new { Email = emailNorm, model.Password });
 
         if (!apiRes.IsSuccessStatusCode)
             return BadRequest(new { message = "Giriş başarısız" });
@@ -133,4 +135,21 @@ public class LoginController : Controller
         await HttpContext.SignOutAsync("Cookies");
         return RedirectToAction("Index");
     }
+}
+
+static string NormalizeEmail(string email)
+{
+    if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+    var trimmed = email.Trim();
+    var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+    var sb = new System.Text.StringBuilder(formD.Length);
+    foreach (var ch in formD)
+    {
+        var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+        if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+        {
+            sb.Append(ch);
+        }
+    }
+    return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
 }

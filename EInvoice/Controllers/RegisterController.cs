@@ -43,7 +43,7 @@ namespace PresentationLayer.Controllers
                 },
                 status = 1,
                 type = vm.UserType,
-                email = vm.Email,
+                email = NormalizeEmail(vm.Email ?? string.Empty),
                 password = vm.Password,
                 lockoutEnabled = true
             };
@@ -98,6 +98,23 @@ namespace PresentationLayer.Controllers
             {
                 return Json(new { success = false, message = $"Sunucu hatas�: {ex.Message}" });
             }
+        }
+
+        static string NormalizeEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+            var trimmed = email.Trim();
+            var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(formD.Length);
+            foreach (var ch in formD)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
         }
     }
 }

@@ -11,16 +11,48 @@ namespace DatabaseAccessLayer.Repositories
     {
         public UserCredentialRepository(MyContext db) : base(db){}
 
-        public Task<UserCredential?> GetByEmailAsync(string email)
+        public async Task<UserCredential?> GetByEmailAsync(string email)
         {
-            var norm = email.Trim().ToUpperInvariant();
-            // Hem veritabanındaki e-postayı hem de girişi trim + upper ile karşılaştır
-            return _db.UserCredentials
+            var normLower = NormalizeEmail(email);
+
+            // İlk deneme: server-side kıyas (daha performanslı)
+            var cred = await _db.UserCredentials
                       .Include(c => c.User)
                       .ThenInclude(u => u.Person)
                       .FirstOrDefaultAsync(c => (c.Provider == "Local" || c.Provider == null || c.Provider == "") &&
                                                 c.Email != null &&
-                                                c.Email.Trim().ToUpper() == norm);
+                                                c.Email.Trim().ToLower() == normLower);
+
+            if (cred != null) return cred;
+
+            // İkinci deneme: accent-insensitive normalization (client-side)
+            cred = _db.UserCredentials
+                      .Include(c => c.User)
+                      .ThenInclude(u => u.Person)
+                      .AsNoTracking()
+                      .AsEnumerable()
+                      .FirstOrDefault(c => (c.Provider == "Local" || c.Provider == null || c.Provider == "") &&
+                                           c.Email != null &&
+                                           NormalizeEmail(c.Email) == normLower);
+            return cred;
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return string.Empty;
+            var trimmed = email.Trim();
+            // Unicode normalization + diacritic removal + invariant lower
+            var formD = trimmed.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(formD.Length);
+            foreach (var ch in formD)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(ch);
+                }
+            }
+            return sb.ToString().Normalize(System.Text.NormalizationForm.FormC).ToLowerInvariant();
         }
 
         // Refresh token ile kimlik getir
